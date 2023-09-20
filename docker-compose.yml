@@ -1,0 +1,13 @@
+# for local development
+version: '3.7'
+services:
+  frontend:
+    build:
+      context: ./frontend
+      target: 'base'
+    ports:
+    - '8080:8080'
+    volumes:
+    - './frontend:/app'
+    - '/app/node_modules'
+    command: /bin/sh -c "npm run dev"
