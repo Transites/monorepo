@@ -7,3 +7,9 @@ Este repositório contém o frontend do projeto Transites desenvolvido na discip
 ```
 docker-compose up
 ```
+
+## Como parar de rodar o projeto
+
+```
+docker-compose down
+```
