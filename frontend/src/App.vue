@@ -1,53 +1,31 @@
-<script setup>
-</script>
-
 <template>
-
-<v-app>
-  <v-footer class="footer">
-    <div class="about md6">
-      <h2>Sobre nós</h2>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et odio vitae est gravida ultrices. Sed mattis,
-      dolor eget luctus ultricies, arcu lectus cursus tortor, vel ultricies tortor augue eget ipsum. Fusce tempus dolor
-      libero, vel pharetra odio finibus vel.
+  <v-app>
+    <div>
+      <h1>Welcome to My Vue Homepage</h1>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et odio vitae est
+        gravida ultrices. Sed mattis, dolor eget luctus ultricies, arcu lectus cursus tortor, vel
+        ultricies tortor augue eget ipsum. Fusce tempus dolor libero, vel pharetra odio finibus
+        vel..
+      </p>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et odio vitae est
+        gravida ultrices. Sed mattis, dolor eget luctus ultricies, arcu lectus cursus tortor, vel
+        ultricies tortor augue eget ipsum. Fusce tempus dolor libero, vel pharetra odio finibus
+        vel..
+      </p>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et odio vitae est
+        gravida ultrices. Sed mattis, dolor eget luctus ultricies, arcu lectus cursus tortor, vel
+        ultricies tortor augue eget ipsum. Fusce tempus dolor libero, vel pharetra odio finibus
+        vel..
+      </p>
     </div>
-    <div class="midia md6">
-      <h2>Redes Sociais</h2>
-      <div class="icones">
-        <v-btn v-for="icon in icons" :key="icon" class="mx-4" :icon="icon" variant="text"></v-btn>
-      </div>
-
-    </div>
-  </v-footer>
-</v-app>
+    <Footer />
+  </v-app>
 </template>
 
-<style scoped></style>
-
-<script>
-export default {
-  data: () => ({
-    icons: [
-      'mdi-facebook',
-      'mdi-twitter',
-      'mdi-linkedin',
-      'mdi-instagram',
-    ],
-  }),
-}
+<script setup>
+import Footer from './components/Footer.vue'
 </script>
 
-<style>
-body {
-  margin:0;
-}
-
-.footer {
-  display: flex;
-}
-
-.icones {
-  display: flex;
-  flex-flow: row;
-}
-</style>
