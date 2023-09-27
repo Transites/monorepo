@@ -1,28 +1,30 @@
 <template>
-  <h1>Novidades</h1>
-  <v-conteiner class="news-content">
-    <div class="d-flex">
-      <div v-for="column in entries" class="column" :key="column">
-        <v-card class="news-cards" v-for="entry in column" :key="entry"
-          :title="entry.title"
-          :subtitle="entry.category"
-        >
-        </v-card>
+  <div>
+    <h1>Novidades</h1>
+    <v-conteiner class="news-content">
+      <div class="d-flex">
+        <div v-for="column in entries" class="column" :key="column">
+          <v-card class="news-cards" v-for="entry in column" :key="entry"
+            :title="entry.title"
+            :subtitle="entry.category"
+          >
+          </v-card>
+        </div>
       </div>
-    </div>
-    <v-card
-      width="200"
-      height="300"
-    >
-      <v-img
-        class="align-end text-white"
-        src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Mona_Lisa-restored.jpg/1200px-Mona_Lisa-restored.jpg"
-        cover
+      <v-card
+        width="200"
+        height="300"
       >
-        <v-card-title>Verbete</v-card-title>
-      </v-img>
-    </v-card>
-  </v-conteiner>
+        <v-img
+          class="align-end text-white"
+          src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Mona_Lisa-restored.jpg/1200px-Mona_Lisa-restored.jpg"
+          cover
+        >
+          <v-card-title>Verbete</v-card-title>
+        </v-img>
+      </v-card>
+    </v-conteiner>
+  </div>
 </template>
 
 
