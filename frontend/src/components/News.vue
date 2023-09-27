@@ -2,8 +2,8 @@
   <h1>Novidades</h1>
   <v-conteiner class="news-content">
     <div class="d-flex">
-      <div v-for="column in entries" class="column">
-        <v-card class="news-cards" v-for="entry in column"
+      <div v-for="column in entries" class="column" :key="column">
+        <v-card class="news-cards" v-for="entry in column" :key="entry"
           :title="entry.title"
           :subtitle="entry.category"
         >
