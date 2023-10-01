@@ -21,11 +21,13 @@
         vel..
       </p>
     </div>
+    <Contribuitions />
     <Footer />
   </v-app>
 </template>
 
 <script setup>
 import Footer from './components/Footer.vue'
+import Contribuitions from './components/Contribuitions.vue'
 </script>
 
