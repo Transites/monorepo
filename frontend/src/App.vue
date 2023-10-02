@@ -1,16 +1,6 @@
 <template>
   <v-app>
-    <div>
-      <v-toolbar>
-        <v-app-bar-nav-icon></v-app-bar-nav-icon>
-        <v-toolbar-title>Transites</v-toolbar-title>
-        <v-text-field
-          hide-details
-          prepend-inner-icon="mdi-magnify"
-          single-line
-        ></v-text-field>
-      </v-toolbar>
-    </div>
+    <NavigationBar />
     <div>
       <h1>Welcome to My Vue Homepage</h1>
       <p>
@@ -37,6 +27,7 @@
 </template>
 
 <script setup>
+import NavigationBar from './components/NavigationBar.vue'
 import Footer from './components/Footer.vue'
 </script>
 
