@@ -21,11 +21,13 @@
         vel..
       </p>
     </div>
+    <News />
     <Footer />
   </v-app>
 </template>
 
 <script setup>
 import Footer from './components/Footer.vue'
+import News from './components/News.vue'
 </script>
 
