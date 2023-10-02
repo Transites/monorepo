@@ -12,11 +12,5 @@ import About from './components/About.vue'
 import Footer from './components/Footer.vue'
 </script>
 
-<style>
-.about{
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-</style>
+
 

@@ -1,4 +1,5 @@
-<v-container>
+<template>
+  <v-container>
       <v-row>
         <v-col>
           <div class="about">
@@ -41,3 +42,12 @@
         </v-col>
       </v-row>
     </v-container>
+</template>
+
+<style>
+.about{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+</style>
