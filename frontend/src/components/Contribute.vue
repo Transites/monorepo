@@ -2,10 +2,10 @@
   <v-container>
     <v-row>
       <v-col cols="5">
-        <div class="contribuition-container">
+        <div class="contribute-container">
           <div class="d-flex flex-row">
-            <img class="contribuition-icon" src="https://cdn-icons-png.flaticon.com/512/1105/1105791.png">
-            <h1 class="contribuition-title">Contribua com <br>o Transites</h1>
+            <img class="contribute-icon" src="https://cdn-icons-png.flaticon.com/512/1105/1105791.png">
+            <h1 class="contribute-title">Contribua com <br>o Transites</h1>
           </div>
           <p>Envie sua sugestão, elogio ou crítica</p>
         </div>
@@ -31,17 +31,17 @@
 </template>
 
 <style scoped>
-.contribuition-container {
+.contribute-container {
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
   height: 100%;
 }
-.contribuition-icon {
+.contribute-icon {
   width: 50%;
 }
-.contribuition-title {
+.contribute-title {
   font-size: 2em;
 }
 </style>
