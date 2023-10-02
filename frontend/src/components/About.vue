@@ -44,7 +44,7 @@
     </v-container>
 </template>
 
-<style>
+<style scoped>
 .about{
   display: flex;
   flex-direction: row;
