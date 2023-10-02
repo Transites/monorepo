@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container >
       <v-row>
         <v-col>
           <div class="about">
