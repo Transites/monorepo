@@ -1,0 +1,10 @@
+<template>
+  <v-toolbar>
+    <v-app-bar-nav-icon></v-app-bar-nav-icon>
+    <v-toolbar-title>Transites</v-toolbar-title>
+    <v-text-field
+      hide-details
+      prepend-inner-icon="mdi-magnify"
+    ></v-text-field>
+  </v-toolbar>
+</template>
