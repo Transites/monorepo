@@ -30,7 +30,7 @@ body {
 
 .footer {
   background-color: black;
-  color: white; 
+  color: white;
 }
 
 .icones {
