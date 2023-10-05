@@ -5,7 +5,6 @@
     <v-text-field
       hide-details
       prepend-inner-icon="mdi-magnify"
-      single-line
     ></v-text-field>
   </v-toolbar>
 </template>
