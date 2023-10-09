@@ -19,9 +19,9 @@
           </v-carousel>
         </v-col>
         <v-col cols="6" class="bannerTextColumn">
-          <v-card-text>
+          <p>
             {{ items[counter].text }}
-          </v-card-text>
+          </p>
         </v-col>
       </v-row>
     </v-card>
@@ -37,19 +37,19 @@ export default {
         src: 'https://cdn.vuetifyjs.com/images/carousel/squirrel.jpg',
         title: 'Título 1',
         subtitle: 'Subtítulo 1',
-        text: 'Texto do primeiro titulo da pagina'
+        text: 'Algum tempo hesitei se devia abrir estas memórias pelo princípio ou pelo fim, isto é, se poria em primeiro lugar o meu nascimento ou a minha morte. Suposto o uso vulgar seja começar pelo nascimento, duas considerações me levaram a adotar diferente método: a primeira'
       },
       {
         src: 'https://cdn.vuetifyjs.com/images/carousel/sky.jpg',
         title: 'Título 2',
         subtitle: 'Subtítulo 2',
-        text: 'Texto do segundo titulo da pagina'
+        text: ' é que eu não sou propriamente um autor defunto, mas um defunto autor, para quem a campa foi outro berço'
       },
       {
         src: 'https://cdn.vuetifyjs.com/images/carousel/bird.jpg',
         title: 'Título 3',
         subtitle: 'Subtítulo 3',
-        text: 'Texto do terceiro titulo da pagina'
+        text: '" a segunda é que o escrito ficaria assim mais galante e mais novo. Moisés, que também contou a sua morte, não a pôs no intróito, mas no cabo; diferença radical entre este livro e o Pentateuco."'
       }
     ]
   })
