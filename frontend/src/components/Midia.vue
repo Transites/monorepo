@@ -6,7 +6,7 @@
         <v-col
           cols="12"
           lg="6"
-          v-for="(id, i) in videos"
+          v-for="(id, i) in videoIds"
           :key="i"
         >
           <iframe
@@ -24,7 +24,7 @@
 <script>
 export default {
   data: () => ({
-    videos: [
+    videoIds: [
       '',
       '',
     ]
