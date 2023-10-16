@@ -6,7 +6,7 @@ import Banner from '../components/Banner.vue'
 
 <template>
   <main>
-    <Banner color="var(--transites-red)"/>
+    <Banner />
     <About />
     <News />
   </main>
