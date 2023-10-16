@@ -2,14 +2,21 @@
   <div>
     <h1>Mídias</h1>
     <v-container>
-      <iframe
-        v-for="(link, i) in links"
-        :key="i"
-        width="500"
-        height="315"
-        :src="link.url"
-        allowfullscreen
-      ></iframe>
+      <v-row>
+        <v-col
+          cols="12"
+          lg="6"
+          v-for="(id, i) in videos"
+          :key="i"
+        >
+          <iframe
+            width="100%"
+            style="aspect-ratio: auto 16/9"
+            :src="'https://www.youtube.com/embed/' + id"
+            allowfullscreen
+          ></iframe>
+        </v-col>
+      </v-row>
     </v-container>
   </div>
 </template>
@@ -17,12 +24,9 @@
 <script>
 export default {
   data: () => ({
-    links: [
-      {
-        url: 'https://www.youtube.com/embed/'
-      },
-      { url: 'https://www.youtube.com/embed/' },
-      { url: 'https://www.youtube.com/embed/' }
+    videos: [
+      '',
+      '',
     ]
   })
 }
