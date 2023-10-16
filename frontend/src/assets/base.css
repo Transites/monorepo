@@ -21,6 +21,14 @@
   --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
 }
 
+:root {
+  --transites-red: #d1313d;
+  --transites-light-red: #e5625c;
+  --transites-yellow: #f9bf76;
+  --transites-blue: #8eb2c5;
+  --transites-gray-purple: #615375;
+}
+
 /* semantic color variables for this project */
 :root {
   --color-background: var(--vt-c-white);

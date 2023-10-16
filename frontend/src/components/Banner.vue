@@ -1,7 +1,11 @@
 <template>
-  <div>
-    <v-card class="carouselCard">
-      <v-row>
+  <div class="carouselContainer" :style="propStyle">
+    <v-card
+      class="carouselCard"
+      color="var(--prop-color)"
+      variant="outlined"
+    >
+      <v-row no-gutters>
         <v-col cols="6">
           <v-carousel hide-delimiters cycle interval="2000" v-model="counter">
             <v-carousel-item
@@ -30,6 +34,14 @@
 
 <script>
 export default {
+  props: {
+    color: {
+      default: "var(--transites-red)"
+    },
+    padding: {
+      default: "70px"
+    }
+  },
   data: () => ({
     counter: 2,
     items: [
@@ -52,14 +64,27 @@ export default {
         text: 'Texto do terceiro titulo da pagina'
       }
     ]
-  })
+  }),
+  computed: {
+    propStyle () {
+        return{
+            '--prop-color': this.color,
+            '--prop-padding': this.padding,
+        }
+    }
+  }
 }
 </script>
 
 <style>
+.carouselContainer {
+  --border-width: 4px;
+  padding: var(--prop-padding);
+}
 .carouselCard {
   display: flex;
   flex-flow: row;
+  border-width: var(--border-width) !important;
 }
 .cardItem {
   display: flex;
@@ -79,6 +104,7 @@ export default {
 .bannerTextColumn {
   display: flex;
   align-items: center;
+  border-left: var(--border-width) solid var(--prop-color);
 }
 </style>
 
