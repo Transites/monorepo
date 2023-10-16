@@ -72,7 +72,6 @@ export default {
   })
 }
 </script>
-
 <style>
 .column {
   display: flex;
