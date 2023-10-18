@@ -2,7 +2,7 @@
   <main>
     <Banner />
     <About />
-    <Midia />
+    <Media />
     <News />
   </main>
 </template>
@@ -11,7 +11,7 @@
 import About from '../components/About.vue'
 import News from '../components/News.vue'
 import Banner from '../components/Banner.vue'
-import Midia from '../components/Midia.vue'
+import Media from '../components/Media.vue'
 </script>
 
 <style>
