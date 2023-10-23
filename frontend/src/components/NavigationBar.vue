@@ -2,6 +2,7 @@
   <div>
     <v-app-bar flat fixed>
       <v-app-bar-nav-icon
+        class="hidden-sm-and-up"
         @click.stop="drawer = !drawer"
       ></v-app-bar-nav-icon>
       <v-toolbar-title><b class="title">Transites</b></v-toolbar-title>
