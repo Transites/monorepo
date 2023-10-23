@@ -1,18 +1,54 @@
 <template>
-  <v-toolbar>
-    <v-app-bar-nav-icon></v-app-bar-nav-icon>
-    <v-toolbar-title>Transites</v-toolbar-title>
+  <div>
+    <v-app-bar flat fixed>
+      <v-app-bar-nav-icon
+        @click.stop="drawer = !drawer"
+      ></v-app-bar-nav-icon>
+      <v-toolbar-title><b class="title">Transites</b></v-toolbar-title>
 
-    <v-spacer></v-spacer>
+      <v-spacer></v-spacer>
 
-    <v-text-field
-      clearable
-      rounded
-      variant="solo"
-      hide-details
-      prepend-inner-icon="mdi-magnify"
-    ></v-text-field>
-
-    <v-btn rounded="lg" prepend-icon="mdi-tune" variant="flat"> Busca avançada </v-btn>
-  </v-toolbar>
+      <v-text-field
+        class="hidden-sm-and-down"
+        clearable
+        rounded
+        variant="solo"
+        hide-details
+        prepend-inner-icon="mdi-magnify"
+      ></v-text-field>
+      <v-btn
+        class="text-white hidden-sm-and-down"
+        color="var(--transites-red)"
+        rounded="lg"
+        prepend-icon="mdi-tune"
+        variant="flat"
+      >
+        Busca avançada
+      </v-btn>
+    </v-app-bar>
+    <v-navigation-drawer v-model="drawer" temporary>
+      <v-text-field label="Pesquisa"></v-text-field>
+      <v-btn>Busca Avançada</v-btn>
+    </v-navigation-drawer>
+  </div>
 </template>
+
+<script>
+export default {
+  data: () => ({
+    drawer: false
+  }),
+  computed: {
+    isMobile() {
+      return this.$vuetify.breakpoint.mdAndDown
+    }
+  }
+}
+</script>
+
+<style>
+.title {
+  color: var(--transites-red);
+  font-size: 30px;
+}
+</style>
