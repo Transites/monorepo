@@ -2,9 +2,9 @@
   <div :style="propStyle" class="news-container">
     <h1>Novidades</h1>
     <v-conteiner>
-      <v-row align="center" justify="center">
+      <v-row align="center">
         <v-col cols="12" lg="9">
-          <v-row justify="space-between">
+          <v-row>
             <v-col
               cols="12"
               sm="6"
