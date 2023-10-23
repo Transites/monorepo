@@ -1,11 +1,11 @@
 <template>
   <div>
-    <h1>Novidades</h1>
+    <h1 style="color: var(--transites-blue)">Novidades</h1>
     <v-conteiner class="news-content">
       <div class="d-flex">
         <div v-for="column in entries" class="column" :key="column">
           <v-card
-            class="news-cards"
+            class="news-cards" style="color: var(--transites-blue)"
             v-for="entry in column"
             :key="entry"
             :title="entry.title"
@@ -20,7 +20,7 @@
           src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Mona_Lisa-restored.jpg/1200px-Mona_Lisa-restored.jpg"
           cover
         >
-          <v-card-title>Verbete</v-card-title>
+          <v-card-title style="color: var(--transites-blue)">Verbete</v-card-title>
         </v-img>
       </v-card>
     </v-conteiner>
@@ -68,7 +68,7 @@ export default {
           category: 'categoria 4'
         }
       ]
-    }
+    },
   })
 }
 </script>

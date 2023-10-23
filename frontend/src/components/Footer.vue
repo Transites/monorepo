@@ -2,7 +2,7 @@
   <v-footer class="footer">
     <div class="about md6">
       <h2>Sobre nós</h2>
-      <p>
+      <p style="color: white">
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et odio vitae est
         gravida ultrices. Sed mattis, dolor eget luctus ultricies, arcu lectus cursus tortor, vel
         ultricies tortor augue eget ipsum. Fusce tempus dolor libero, vel pharetra odio finibus vel.
@@ -11,26 +11,14 @@
   </v-footer>
 </template>
 
-<script>
-export default {
-  data: () => ({
-    icons: ['mdi-facebook', 'mdi-twitter', 'mdi-linkedin', 'mdi-instagram']
-  })
-}
-</script>
-
 <style scoped>
 body {
   margin: 0;
 }
 
 .footer {
-  background-color: black;
+  background-color: var(--transites-gray-purple);
   color: white;
 }
 
-.icones {
-  display: flex;
-  flex-flow: row;
-}
 </style>

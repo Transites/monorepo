@@ -1,21 +1,21 @@
 <template>
   <v-container>
     <v-row>
-      <v-col cols="4">
+      <v-col cols="12" md="4">
         <div class="contribute-container">
           <div class="d-flex flex-row">
             <img class="contribute-icon" src="https://cdn-icons-png.flaticon.com/512/1105/1105791.png">
             <h1 class="contribute-title">Contribua com <br>o Transites</h1>
           </div>
-          <p>Envie sua sugestão, elogio ou crítica...
+          <p style="color: var(--transites-gray-purple)">Envie sua sugestão, elogio ou crítica...
           <br><br>
           ...ou contribua com um verbete! (Clique <u>aqui</u> para conferir nossas normas de publicação)
           </p>
         </div>
       </v-col>
-      <v-col cols="8">
-        <v-form>
-          <v-text-field
+      <v-col cols="12" md="8">
+        <v-form class="form-container">
+          <v-text-field 
             v-model="firstName"
             :rules="rules"
             label="Nome completo"
@@ -35,7 +35,9 @@
             :rules="rules"
             label="Mensagem"
           ></v-textarea>
-          <v-btn type="submit" block class="mt-2">Enviar</v-btn>
+          <v-btn type="submit" color="var(--transites-gray-purple)" block class="mt-2">
+            <span style="color: white">Enviar</span>
+          </v-btn>
         </v-form>
       </v-col>
     </v-row>
@@ -73,5 +75,10 @@ export default {
 }
 .contribute-title {
   font-size: 2em;
+  color: var(--transites-gray-purple);
+}
+
+.form-container {
+  margin-left: 20px;
 }
 </style>
