@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div :style="propStyle" class="news-container">
     <h1>Novidades</h1>
     <v-conteiner>
       <v-row align="center" justify="center">
@@ -43,6 +43,11 @@
 
 <script>
 export default {
+  props: {
+    padding: {
+      default: "70px"
+    }
+  },
   data: () => ({
     entries: [
       {
@@ -78,9 +83,19 @@ export default {
         category: 'categoria 4'
       }
     ]
-  })
+  }),
+  computed: {
+    propStyle () {
+      return {
+        '--prop-padding': this.padding,
+      }
+    }
+  }
 }
 </script>
 
 <style>
+.news-container {
+  padding: var(--prop-padding);
+}
 </style>
