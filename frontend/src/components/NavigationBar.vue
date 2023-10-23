@@ -18,8 +18,7 @@
         prepend-inner-icon="mdi-magnify"
       ></v-text-field>
       <v-btn
-        class="text-white hidden-sm-and-down"
-        color="var(--transites-red)"
+        class="hidden-sm-and-down"
         rounded="lg"
         prepend-icon="mdi-tune"
         variant="flat"
@@ -39,17 +38,5 @@ export default {
   data: () => ({
     drawer: false
   }),
-  computed: {
-    isMobile() {
-      return this.$vuetify.breakpoint.mdAndDown
-    }
-  }
 }
 </script>
-
-<style>
-.title {
-  color: var(--transites-red);
-  font-size: 30px;
-}
-</style>
