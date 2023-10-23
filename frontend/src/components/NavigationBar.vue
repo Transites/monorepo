@@ -2,7 +2,7 @@
   <v-toolbar style="background-color: white;">
     <v-app-bar-nav-icon></v-app-bar-nav-icon>
     <v-toolbar-title style="color: var(--transites-red);">Transites</v-toolbar-title>
-    
+
     <v-spacer></v-spacer>
 
     <v-text-field
