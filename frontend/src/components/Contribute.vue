@@ -35,7 +35,7 @@
             :rules="rules"
             label="Mensagem"
           ></v-textarea>
-          <v-btn type="submit" color="var(--transites-gray-purple)" block class="text-white-mt-2">Enviar</v-btn>
+          <v-btn class="text-white" type="submit" color="var(--transites-gray-purple)" block>Enviar</v-btn>
         </v-form>
       </v-col>
     </v-row>
