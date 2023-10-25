@@ -7,7 +7,7 @@
     >
       <v-row no-gutters>
         <v-col cols="6">
-          <v-carousel hide-delimiters cycle interval="2000" v-model="counter" delimiter-icon>
+          <v-carousel hide-delimiters cycle interval="2000" v-model="counter">
             <v-carousel-item
               class="cardItem"
               v-for="(item, i) in items"
@@ -22,7 +22,7 @@
             </v-carousel-item>
           </v-carousel>
         </v-col>
-        <v-col cols="6" md="" class="bannerTextColumn">
+        <v-col cols="6" class="bannerTextColumn">
           <p>
             {{ items[counter].text }}
           </p>

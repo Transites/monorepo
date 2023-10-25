@@ -21,7 +21,7 @@
     </div>
   </template>
   
-  <script>
+<script>
   export default {
     data: () => ({
       videoIds: [
@@ -30,4 +30,4 @@
       ]
     })
   }
-  </script>
+</script>

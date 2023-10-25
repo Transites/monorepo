@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-row>
-      <v-col cols="12" md="4">
+      <v-col cols="4">
         <div class="contribute-container">
           <div class="d-flex flex-row">
             <img class="contribute-icon" src="https://cdn-icons-png.flaticon.com/512/1105/1105791.png">
@@ -13,7 +13,7 @@
           </p>
         </div>
       </v-col>
-      <v-col cols="12" md="8">
+      <v-col cols="8">
         <v-form class="form-container">
           <v-text-field 
             v-model="firstName"
@@ -35,9 +35,7 @@
             :rules="rules"
             label="Mensagem"
           ></v-textarea>
-          <v-btn type="submit" color="var(--transites-gray-purple)" block class="mt-2">
-            <span style="color: white">Enviar</span>
-          </v-btn>
+          <v-btn type="submit" color="var(--transites-gray-purple)" block class="text-white-mt-2">Enviar</v-btn>
         </v-form>
       </v-col>
     </v-row>
@@ -61,7 +59,6 @@ export default {
 }
 </script>
 
-
 <style scoped>
 .contribute-container {
   display: flex;
@@ -78,7 +75,4 @@ export default {
   color: var(--transites-gray-purple);
 }
 
-.form-container {
-  margin-left: 20px;
-}
 </style>

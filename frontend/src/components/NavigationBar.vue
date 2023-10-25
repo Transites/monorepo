@@ -17,14 +17,13 @@
       </template>
     </v-text-field>
 
-    <v-btn color="var(--transites-red)" rounded="lg" prepend-icon="mdi-tune" variant="flat"> 
-      
-      <template v-slot:prepend>
-        <v-icon color="white"></v-icon>
-      </template>
-
-      <span style="color: white;">Busca avançada</span> 
-
+    <v-btn class="text-white" 
+    color="var(--transites-red)" 
+    rounded="lg" 
+    prepend-icon="mdi-tune" 
+    variant="flat"> 
+    Busca avançada
     </v-btn>
+    
   </v-toolbar>
 </template>
