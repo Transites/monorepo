@@ -12,9 +12,6 @@
       hide-details
       prepend-inner-icon="mdi-magnify"
     >
-      <template v-slot:prepend>
-        <v-icon color="var(--transites-red)"></v-icon>
-      </template>
     </v-text-field>
 
     <v-btn class="text-white" 
