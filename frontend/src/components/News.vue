@@ -1,6 +1,6 @@
 <template>
   <div :style="propStyle" class="news-container">
-    <h1>Novidades</h1>
+    <h1 style="color: var(--transites-blue)">Novidades</h1>
     <v-conteiner>
       <v-row align="center">
         <v-col cols="12" lg="9">
@@ -12,6 +12,7 @@
               :key="entry"
             >
               <v-card
+                style="color: var(--transites-blue)"
                 :title="entry.title"
                 :subtitle="entry.category"
               >
@@ -31,7 +32,7 @@
               cover
               align="start"
             >
-              <v-card-title>Verbete</v-card-title>
+              <v-card-title style="color: var(--transites-blue)">Verbete</v-card-title>
             </v-img>
           </v-card>
         </v-col>

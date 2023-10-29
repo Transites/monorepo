@@ -1,7 +1,7 @@
 <template>
-  <v-toolbar>
+  <v-toolbar style="background-color: white;">
     <v-app-bar-nav-icon></v-app-bar-nav-icon>
-    <v-toolbar-title>Transites</v-toolbar-title>
+    <v-toolbar-title style="color: var(--transites-red);">Transites</v-toolbar-title>
 
     <v-spacer></v-spacer>
 
@@ -11,8 +11,16 @@
       variant="solo"
       hide-details
       prepend-inner-icon="mdi-magnify"
-    ></v-text-field>
+    >
+    </v-text-field>
 
-    <v-btn rounded="lg" prepend-icon="mdi-tune" variant="flat"> Busca avançada </v-btn>
+    <v-btn class="text-white" 
+    color="var(--transites-red)" 
+    rounded="lg" 
+    prepend-icon="mdi-tune" 
+    variant="flat"> 
+    Busca avançada
+    </v-btn>
+    
   </v-toolbar>
 </template>
