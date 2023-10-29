@@ -2,7 +2,7 @@
   <div>
     <v-app-bar flat fixed>
       <v-app-bar-nav-icon
-        class="hidden-sm-and-up"
+        class="hidden-md-and-up"
         @click.stop="drawer = !drawer"
       ></v-app-bar-nav-icon>
       <v-toolbar-title><b class="title">Transites</b></v-toolbar-title>
@@ -17,12 +17,7 @@
         hide-details
         prepend-inner-icon="mdi-magnify"
       ></v-text-field>
-      <v-btn
-        class="hidden-sm-and-down"
-        rounded="lg"
-        prepend-icon="mdi-tune"
-        variant="flat"
-      >
+      <v-btn class="hidden-sm-and-down" rounded="lg" prepend-icon="mdi-tune" variant="flat">
         Busca avançada
       </v-btn>
     </v-app-bar>
@@ -37,6 +32,6 @@
 export default {
   data: () => ({
     drawer: false
-  }),
+  })
 }
 </script>
