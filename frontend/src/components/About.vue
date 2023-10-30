@@ -4,19 +4,19 @@
       <v-col class="aboutColumn">
         <div class="about">
           <img src="https://cdn.iconscout.com/icon/free/png-256/free-people-1767899-1502152.png" />
-          <h1>Sobre o Transites</h1>
+          <h1 style="color: var(--transites-light-red)">Sobre o Transites</h1>
         </div>
-        <p>Saiba mais sobre nossa história e colaboradores.</p>
+        <p style="color: var(--transites-light-red)">Saiba mais sobre nossa história e colaboradores.</p>
       </v-col>
 
       <v-col class="aboutColumn">
-        <p>
+        <p style="color: var(--transites-light-red)">
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et odio vitae est
           gravida ultrices. Sed mattis, dolor eget luctus ultricies, arcu lectus cursus tortor, vel
           ultricies tortor augue eget ipsum. Fusce tempus dolor libero, vel pharetra odio finibus
           vel..
         </p>
-        <p>
+        <p style="color: var(--transites-light-red)">
           Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et odio vitae est
           gravida ultrices. Sed mattis, dolor eget luctus ultricies, arcu lectus cursus tortor, vel
           ultricies tortor augue eget ipsum. Fusce tempus dolor libero, vel pharetra odio finibus
