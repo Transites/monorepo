@@ -5,6 +5,7 @@
 
     <v-spacer></v-spacer>
 
+    <v-btn to="'../views/Article.vue'"></v-btn>
     <v-text-field
       clearable
       rounded

@@ -4,9 +4,11 @@
         <h1>Título do verbete</h1>
     </div>
     <v-row class="tags">
-        <v-col><v-btn rounded>TAG</v-btn></v-col>
-        <v-col><v-btn rounded>TAG</v-btn></v-col>
-        <v-col><v-btn rounded>TAG</v-btn></v-col>
+        <v-col
+        v-for="tag in tags"
+        :key="tag">
+            <v-btn rounded>{{ tag.title }}</v-btn>
+        </v-col>
     </v-row>
     <div>
         <h3>Local de nascimento, XX/XX/XXXX</h3>
@@ -73,11 +75,19 @@
 </template>
 
 <script setup>
-import About from '../components/About.vue'
-import News from '../components/News.vue'
-import Banner from '../components/Banner.vue'
-import Media from '../components/Media.vue'
-import Contribute from '../components/Contribute.vue'
+    data: () => ({
+        entries: [
+            {
+                title: 'Pessoa'
+            },
+            {
+                title: 'Jornalismo'
+            },
+            {
+                title: 'Literatura'
+            },
+        ]
+    })
 </script>
   
 <style scoped>
