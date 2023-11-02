@@ -62,18 +62,16 @@
 
         </v-conteiner>
 
-       <div>
+        <div>
             <v-expansion-panels>
-
                 <v-expansion-panel class="section"
                     v-for="(section, index) in sections"
                     :key="section"
-                    :style="{ 'color': getPanelColor(index) }"
+                    :style="{ 'color': getPanelColor(index, sections.length) }"
                 >
                     <v-divider
                         :thickness="5"
                         class="border-opacity-100"
-                        :style="{ 'color': getPanelColor(index) }"
                     ></v-divider>
                     <v-expansion-panel-title style="font-size: x-large;">{{ section.title }}</v-expansion-panel-title>
                     <v-expansion-panel-text>{{ section.content }}</v-expansion-panel-text>
@@ -103,9 +101,10 @@ export default {
     };
   },
   methods: {
-    getPanelColor(index) {
+    getPanelColor(index, length) {
       // Dynamically select a color from the panelColors array based on the index
-      return `var(${this.panelColors[index % this.panelColors.length]})`;
+      const panelColorIndex = Math.floor(this.panelColors.length * index / length)
+      return `var(${this.panelColors[panelColorIndex]})`;
     },
   },
 };
