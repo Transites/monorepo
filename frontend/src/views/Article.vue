@@ -7,7 +7,7 @@
         <p>Publicado em: XX/XX/XXXX | Atualizado em: XX/XX/XXXX</p>
       </div>
 
-      <v-divider thickness="5" class="divider"></v-divider>
+      <v-divider thickness="5" class="border-opacity-100" style="margin: 10px 0 5px"></v-divider>
 
       <div>
         <v-btn
@@ -16,13 +16,13 @@
           :key="tag"
           color="var(--transites-red)"
           rounded
-          style="margin-right: 10px"
+          style="margin: 5px 10px 5px 0px"
         >
           {{ tag }}
         </v-btn>
       </div>
 
-      <v-divider thickness="5" class="divider"></v-divider>
+      <v-divider thickness="5" class="border-opacity-100" style="margin: 5px 0 10px"></v-divider>
 
       <div>
         <h3>Local de nascimento, XX/XX/XXXX</h3>
@@ -136,10 +136,5 @@ export default {
   flex-wrap: wrap;
   flex-direction: column;
   margin: 10px;
-}
-
-.divider {
-  opacity: 100%;
-  margin: 15px 0 15px;
 }
 </style>
