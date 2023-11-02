@@ -7,7 +7,7 @@
         <p>Publicado em: XX/XX/XXXX | Atualizado em: XX/XX/XXXX</p>
       </div>
 
-      <v-divider :thickness="5" class="divider"></v-divider>
+      <v-divider thickness="5" class="divider"></v-divider>
 
       <div>
         <v-btn
@@ -22,7 +22,7 @@
         </v-btn>
       </div>
 
-      <v-divider :thickness="5" class="divider"></v-divider>
+      <v-divider thickness="5" class="divider"></v-divider>
 
       <div>
         <h3>Local de nascimento, XX/XX/XXXX</h3>
@@ -69,7 +69,7 @@
           :key="section"
           :style="{ color: getPanelColor(index, sections.length) }"
         >
-          <v-divider :thickness="5" class="border-opacity-100"></v-divider>
+          <v-divider thickness="5" class="border-opacity-100"></v-divider>
           <v-expansion-panel-title style="font-size: x-large">{{
             section.title
           }}</v-expansion-panel-title>
