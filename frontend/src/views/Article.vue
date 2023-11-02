@@ -30,33 +30,25 @@
       </div>
     </div>
 
-    <v-conteiner>
-      <v-row class="d-flex d-row">
-        <v-col cols="12" sm="6" md="6">
-          <div class="d-flex align-center justify-center">
-            <v-img
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Mona_Lisa-restored.jpg/1200px-Mona_Lisa-restored.jpg"
-              aspect-ratio="16/9"
-              max-width="300"
-            ></v-img>
-          </div>
-          <div>
-            <p class="d-flex align-center justify-center" style="color: var(--transites-red)">
-              Legenda da imagem: Lorem ipsum dolor sit amet, consectetur adipiscing.
-            </p>
-          </div>
+    <v-conteiner style="color: var(--transites-red)">
+      <v-row>
+        <v-col cols="12" sm="6" align="center">
+          <v-img
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Mona_Lisa-restored.jpg/1200px-Mona_Lisa-restored.jpg"
+            aspect-ratio="16/9"
+            max-width="300"
+          ></v-img>
+          <p>Legenda da imagem: Lorem ipsum dolor sit amet, consectetur adipiscing.</p>
         </v-col>
-        <v-col cols="12" sm="6" md="6" class="articleText">
-          <div>
-            <p class="d-flex align-center justify-center" style="color: var(--transites-red)">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate lacus nec leo
-              luctus consectetur. Cras eget lectus orci. Praesent euismod auctor velit, sed vehicula
-              ligula mollis sed. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc
-              vulputate lacus nec leo luctus consectetur. Cras eget lectus orci. Praesent euismod
-              auctor velit, sed vehicula ligula mollis sed. [RESUMO DA TRAJETÓRIA DA PESSOA
-              APRESENTADA]
-            </p>
-          </div>
+        <v-col cols="12" sm="6">
+          <p>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate lacus nec leo
+            luctus consectetur. Cras eget lectus orci. Praesent euismod auctor velit, sed vehicula
+            ligula mollis sed. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc
+            vulputate lacus nec leo luctus consectetur. Cras eget lectus orci. Praesent euismod
+            auctor velit, sed vehicula ligula mollis sed. [RESUMO DA TRAJETÓRIA DA PESSOA
+            APRESENTADA]
+          </p>
         </v-col>
       </v-row>
     </v-conteiner>
