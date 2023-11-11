@@ -30,7 +30,7 @@
       </div>
     </div>
 
-    <v-conteiner style="color: var(--transites-red)">
+    <v-container style="color: var(--transites-red)">
       <v-row>
         <v-col cols="12" sm="6" align="center">
           <v-img
@@ -51,7 +51,7 @@
           </p>
         </v-col>
       </v-row>
-    </v-conteiner>
+    </v-container>
 
     <div>
       <v-expansion-panels>
