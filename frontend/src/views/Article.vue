@@ -1,8 +1,8 @@
 <template>
-  <div style="padding-left: 30px; padding-right: 30px">
+  <div style="padding: 60px 30px 0 30px;">
     <div style="color: var(--transites-red); padding-bottom: 20px">
       <div>
-        <h1 style="margin: 10px 0 10px">Título do verbete</h1>
+        <h1>Título do verbete</h1>
         <h2>Autor do verbete</h2>
         <p>Publicado em: XX/XX/XXXX | Atualizado em: XX/XX/XXXX</p>
       </div>
