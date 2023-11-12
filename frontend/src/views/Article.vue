@@ -55,9 +55,7 @@
           <p>{{ article.attributes.image.data.attributes.caption }}</p>
         </v-col>
         <v-col cols="12" sm="6">
-          <p>
-            {{ article.attributes.summary }}
-          </p>
+          <div v-html="markdown.render(article.attributes.summary)"></div>
         </v-col>
       </v-row>
     </v-container>
@@ -71,10 +69,12 @@
           :style="{ color: getPanelColor(index, article.attributes.sections.length) }"
         >
           <v-divider thickness="5" class="border-opacity-100"></v-divider>
-          <v-expansion-panel-title style="font-size: x-large">{{
-            section.title
-          }}</v-expansion-panel-title>
-          <v-expansion-panel-text>{{ section.content }}</v-expansion-panel-text>
+          <v-expansion-panel-title style="font-size: x-large">
+            {{ section.title }}
+          </v-expansion-panel-title>
+          <v-expansion-panel-text>
+            <div :class="{'markdown': section.title === 'Artigo'}" v-html="markdown.render(section.content)"></div>
+          </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
     </div>
@@ -84,11 +84,13 @@
 <script>
 import { useRoute } from 'vue-router'
 import axios from 'axios'
+import markdownIt from 'markdown-it'
 
 export default {
   setup() {
     return {
-      route: useRoute()
+      route: useRoute(),
+      markdown: markdownIt()
     }
   },
   mounted() {
@@ -148,5 +150,14 @@ export default {
   flex-wrap: wrap;
   flex-direction: column;
   margin: 10px;
+}
+
+.markdown > :deep(p:first-of-type) {
+  text-indent: 0px !important;
+}
+
+.markdown > :deep(p) {
+  text-indent: 4em;
+  margin-bottom: 1.3em;
 }
 </style>
