@@ -1,6 +1,6 @@
 <template>
   <div style="padding: 60px 30px 0 30px" v-if="!!article">
-    <div style="color: var(--transites-red); padding-bottom: 20px">
+    <div style="color: var(--transites-red)">
       <div>
         <h1>{{ article.attributes.title }}</h1>
         <h2>{{ article.attributes.alternativeTitles }}</h2>
@@ -44,17 +44,23 @@
       </div>
     </div>
 
-    <v-container style="color: var(--transites-red)">
+    <v-container style="color: var(--transites-red)" fluid>
       <v-row>
-        <v-col cols="12" sm="6" align="center">
+        <v-card
+          style="border-width: 4px; margin: 20px;"
+          variant="outlined"
+          width="min(400px, 100%)"
+          class="rounded-lg"
+        >
           <v-img
             :src="getUrlToStrapiImage(article.attributes.image.data.attributes.url)"
-            aspect-ratio="16/9"
-            max-width="300"
+            cover
           ></v-img>
-          <p>{{ article.attributes.image.data.attributes.caption }}</p>
-        </v-col>
-        <v-col cols="12" sm="6">
+          <v-card-title>
+            {{ article.attributes.image.data.attributes.caption }}
+          </v-card-title>
+        </v-card>
+        <v-col cols="12" md="6" style="padding: 20px">
           <div v-html="markdown.render(article.attributes.summary)"></div>
         </v-col>
       </v-row>
