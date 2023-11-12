@@ -1,10 +1,20 @@
 <template>
-  <div style="padding: 60px 30px 0 30px;">
+  <div style="padding: 60px 30px 0 30px" v-if="!!article">
     <div style="color: var(--transites-red); padding-bottom: 20px">
       <div>
-        <h1>Título do verbete</h1>
-        <h2>Autor do verbete</h2>
-        <p>Publicado em: XX/XX/XXXX | Atualizado em: XX/XX/XXXX</p>
+        <h1>{{ article.attributes.title }}</h1>
+        <h2>{{ article.attributes.alternativeTitles }}</h2>
+        <h3>
+          Author:
+          <span v-for="(author, index) in article.attributes.authors.data">
+            <span>{{ author.attributes.name }}</span>
+            <span v-if="index + 1 < article.attributes.authors.data.length">, </span>
+          </span>
+        </h3>
+        <p>
+          Publicado em: {{ formatDateToLocale(article.attributes.publishedAt) }} | Atualizado em:
+          {{ formatDateToLocale(article.attributes.updatedAt) }}
+        </p>
       </div>
 
       <v-divider thickness="5" class="border-opacity-100" style="margin: 10px 0 5px"></v-divider>
@@ -12,21 +22,25 @@
       <div>
         <v-btn
           class="tags text-white"
-          v-for="tag in tags"
+          v-for="tag in article.attributes.tags.data"
           :key="tag"
           color="var(--transites-red)"
           rounded
           style="margin: 5px 10px 5px 0px"
         >
-          {{ tag }}
+          {{ tag.attributes.name }}
         </v-btn>
       </div>
 
       <v-divider thickness="5" class="border-opacity-100" style="margin: 5px 0 10px"></v-divider>
 
       <div>
-        <h3>Local de nascimento, XX/XX/XXXX</h3>
-        <h3>Local de falecimento, XX/XX/XXXX</h3>
+        <h3 v-if="!!article.attributes.birth">
+          Nascimento: {{ article.attributes.birth.place }}, {{ article.attributes.birth.date }}
+        </h3>
+        <h3 v-if="!!article.attributes.death">
+          Falecimento: {{ article.attributes.death.place }}, {{ article.attributes.death.date }}
+        </h3>
       </div>
     </div>
 
@@ -34,20 +48,15 @@
       <v-row>
         <v-col cols="12" sm="6" align="center">
           <v-img
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Mona_Lisa-restored.jpg/1200px-Mona_Lisa-restored.jpg"
+            :src="getUrlToStrapiImage(article.attributes.image.data.attributes.url)"
             aspect-ratio="16/9"
             max-width="300"
           ></v-img>
-          <p>Legenda da imagem: Lorem ipsum dolor sit amet, consectetur adipiscing.</p>
+          <p>{{ article.attributes.image.data.attributes.caption }}</p>
         </v-col>
         <v-col cols="12" sm="6">
           <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate lacus nec leo
-            luctus consectetur. Cras eget lectus orci. Praesent euismod auctor velit, sed vehicula
-            ligula mollis sed. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc
-            vulputate lacus nec leo luctus consectetur. Cras eget lectus orci. Praesent euismod
-            auctor velit, sed vehicula ligula mollis sed. [RESUMO DA TRAJETÓRIA DA PESSOA
-            APRESENTADA]
+            {{ article.attributes.summary }}
           </p>
         </v-col>
       </v-row>
@@ -57,9 +66,9 @@
       <v-expansion-panels>
         <v-expansion-panel
           class="section"
-          v-for="(section, index) in sections"
+          v-for="(section, index) in article.attributes.sections"
           :key="section"
-          :style="{ color: getPanelColor(index, sections.length) }"
+          :style="{ color: getPanelColor(index, article.attributes.sections.length) }"
         >
           <v-divider thickness="5" class="border-opacity-100"></v-divider>
           <v-expansion-panel-title style="font-size: x-large">{{
@@ -73,32 +82,31 @@
 </template>
 
 <script>
+import { useRoute } from 'vue-router'
+import axios from 'axios'
+
 export default {
+  setup() {
+    return {
+      route: useRoute()
+    }
+  },
+  mounted() {
+    const id = this.route.params.id
+    const type = this.route.params.type
+    const base_url = import.meta.env.VITE_STRAPI_BASE_URL
+
+    try {
+      axios.get(`${base_url}/api/${type}-articles/${id}?populate=*`).then((response) => {
+        this.article = response.data.data
+      })
+    } catch (error) {
+      this.error = error
+    }
+  },
   data() {
     return {
-      tags: ['TAG 1', 'TAG 2', 'TAG 3'],
-      sections: [
-        {
-          title: 'Artigo',
-          content:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate lacus nec leo luctus consectetur.'
-        },
-        {
-          title: 'Publicações',
-          content:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate lacus nec leo luctus consectetur.'
-        },
-        {
-          title: 'Premiações',
-          content:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate lacus nec leo luctus consectetur.'
-        },
-        {
-          title: 'Bibliografia',
-          content:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate lacus nec leo luctus consectetur.'
-        }
-      ],
+      article: null,
       panelColors: [
         '--transites-light-red',
         '--transites-yellow',
@@ -112,6 +120,18 @@ export default {
       // Dynamically select a color from the panelColors array based on the index
       const panelColorIndex = Math.floor((this.panelColors.length * index) / length)
       return `var(${this.panelColors[panelColorIndex]})`
+    },
+
+    formatDateToLocale(date_text) {
+      const date = new Date(date_text)
+      return date.toLocaleString([], {
+        hour12: false
+      })
+    },
+
+    getUrlToStrapiImage(path) {
+      const base_url = import.meta.env.VITE_STRAPI_BASE_URL
+      return `${base_url}${path}`
     }
   }
 }
