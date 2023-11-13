@@ -103,17 +103,7 @@ export default {
     }
   },
   mounted() {
-    const id = this.route.params.id
-    const type = this.route.params.type
-    const base_url = import.meta.env.VITE_STRAPI_BASE_URL
-
-    try {
-      axios.get(`${base_url}/api/${type}-articles/${id}?populate=*`).then((response) => {
-        this.article = response.data.data
-      })
-    } catch (error) {
-      this.error = error
-    }
+    this.fetchDataFromStrapi()
   },
   data() {
     return {
@@ -143,6 +133,20 @@ export default {
     getUrlToStrapiImage(path) {
       const base_url = import.meta.env.VITE_STRAPI_BASE_URL
       return `${base_url}${path}`
+    },
+
+    fetchDataFromStrapi() {
+      const id = this.route.params.id
+      const type = this.route.params.type
+      const base_url = import.meta.env.VITE_STRAPI_BASE_URL
+
+      try {
+        axios.get(`${base_url}/api/${type}-articles/${id}?populate=*`).then((response) => {
+          this.article = response.data.data
+        })
+      } catch (error) {
+        this.error = error
+      }
     }
   }
 }
