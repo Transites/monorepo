@@ -6,7 +6,7 @@
         <h2>{{ article.attributes.alternativeTitles }}</h2>
         <h3>
           Author:
-          <span v-for="(author, index) in article.attributes.authors.data">
+          <span v-for="(author, index) in article.attributes.authors.data" :key="author">
             <span>{{ author.attributes.name }}</span>
             <span v-if="index + 1 < article.attributes.authors.data.length">, </span>
           </span>
@@ -47,7 +47,7 @@
     <v-container style="color: var(--transites-red)" fluid>
       <v-row>
         <v-card
-          style="border-width: 4px; margin: 20px;"
+          style="border-width: 4px; margin: 20px"
           variant="outlined"
           width="min(400px, 100%)"
           class="rounded-lg"
@@ -79,7 +79,10 @@
             {{ section.title }}
           </v-expansion-panel-title>
           <v-expansion-panel-text>
-            <div :class="{'markdown': section.title === 'Artigo'}" v-html="markdown.render(section.content)"></div>
+            <div
+              :class="{ markdown: section.title === 'Artigo' }"
+              v-html="markdown.render(section.content)"
+            ></div>
           </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
