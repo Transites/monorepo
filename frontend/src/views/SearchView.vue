@@ -3,7 +3,9 @@
     <v-form ref="emailForm">
       <v-container>
         <v-row>
-          <v-text-field label="Pesquisa Textual"></v-text-field>
+          <v-col>
+            <v-text-field label="Pesquisa Textual"></v-text-field>
+          </v-col>
         </v-row>
         <v-row>
           <v-col>
@@ -34,14 +36,16 @@
           </v-col>
         </v-row>
         <v-row>
-          <v-btn
-            class="text-white"
-            type="submit"
-            color="var(--transites-red)"
-            @click.prevent="applySearch"
-            block
-            >Buscar</v-btn
-          >
+          <v-col>
+            <v-btn
+              class="text-white"
+              type="submit"
+              color="var(--transites-red)"
+              @click.prevent="applySearch"
+              block
+              >Buscar</v-btn
+            >
+          </v-col>
         </v-row>
       </v-container>
     </v-form>
