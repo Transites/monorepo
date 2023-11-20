@@ -67,7 +67,7 @@
     </v-container>
 
     <div>
-      <v-expansion-panels>
+      <v-expansion-panels multiple>
         <v-expansion-panel
           class="section"
           v-for="(section, index) in article.attributes.sections"
