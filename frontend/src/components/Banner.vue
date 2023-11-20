@@ -6,8 +6,18 @@
       variant="outlined"
     >
       <v-row no-gutters>
-        <v-col cols="6">
+        <v-col cols="12" md="6" style="border: var(--border-width) solid var(--prop-color)">
           <v-carousel hide-delimiters cycle interval="2000" v-model="counter">
+            <template v-slot:prev>
+              <v-btn icon color="var(--transites-red)" @click="prevSlide">
+                <v-icon style="color: white">mdi-chevron-left</v-icon>
+              </v-btn>
+            </template>
+            <template v-slot:next>
+              <v-btn icon color="var(--transites-red)" @click="nextSlide">
+                <v-icon style="color: white">mdi-chevron-right</v-icon>
+              </v-btn>
+            </template>
             <v-carousel-item
               class="cardItem"
               v-for="(item, i) in items"
@@ -22,8 +32,8 @@
             </v-carousel-item>
           </v-carousel>
         </v-col>
-        <v-col cols="6" class="bannerTextColumn">
-          <p>
+        <v-col cols="12" md="6" class="bannerTextColumn" style="border: var(--border-width) solid var(--prop-color)">
+          <p style="padding: 30px">
             {{ items[counter].text }}
           </p>
         </v-col>
@@ -65,6 +75,14 @@ export default {
       }
     ]
   }),
+  methods: {
+    prevSlide() {
+      this.counter = (this.counter - 1 + this.items.length) % this.items.length;
+    },
+    nextSlide() {
+      this.counter = (this.counter + 1) % this.items.length;
+    },
+  },
   computed: {
     propStyle () {
         return{
@@ -84,27 +102,26 @@ export default {
 .carouselCard {
   display: flex;
   flex-flow: row;
-  border-width: var(--border-width) !important;
 }
 .cardItem {
   display: flex;
   align-items: flex-end;
-}
-.cardTitleSubtitle {
-  text-align: center;
-  background-color: black;
-  color: white;
 }
 .TitleSubtitleContainer {
   height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  
+}
+.cardTitleSubtitle {
+  text-align: center;
+  background-color: var(--transites-red);
+  color: white;
 }
 .bannerTextColumn {
   display: flex;
   align-items: center;
-  border-left: var(--border-width) solid var(--prop-color);
 }
 </style>
 
