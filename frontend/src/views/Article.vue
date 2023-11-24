@@ -51,6 +51,7 @@
           variant="outlined"
           width="min(400px, 100%)"
           class="rounded-lg"
+          v-if="!!article.attributes.image.data"
         >
           <v-img
             :src="article.attributes.image.data.attributes.formats.small.url"
