@@ -124,12 +124,11 @@ export default {
         '--transites-yellow',
         '--transites-blue',
         '--transites-gray-purple'
-      ] // Define an array of colors
+      ]
     }
   },
   methods: {
     getPanelColor(index, length) {
-      // Dynamically select a color from the panelColors array based on the index
       const panelColorIndex = Math.floor((this.panelColors.length * index) / length)
       return `var(${this.panelColors[panelColorIndex]})`
     },
