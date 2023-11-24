@@ -53,7 +53,7 @@
           class="rounded-lg"
         >
           <v-img
-            :src="getUrlToStrapiImage(article.attributes.image.data.attributes.url)"
+            :src="article.attributes.image.data.attributes.formats.small.url"
             cover
           ></v-img>
           <v-card-title>
@@ -128,11 +128,6 @@ export default {
       return date.toLocaleString([], {
         hour12: false
       })
-    },
-
-    getUrlToStrapiImage(path) {
-      const base_url = import.meta.env.VITE_STRAPI_BASE_URL
-      return `${base_url}${path}`
     },
 
     fetchDataFromStrapi() {
