@@ -22,6 +22,16 @@
       <div>
         <v-btn
           class="tags text-white"
+          v-for="category in article.attributes.categories.data"
+          :key="category"
+          color="var(--transites-red)"
+          rounded
+          style="margin: 5px 10px 5px 0px"
+        >
+          {{ category.attributes.name }}
+        </v-btn>
+        <v-btn
+          class="tags text-white"
           v-for="tag in article.attributes.tags.data"
           :key="tag"
           color="var(--transites-red)"
