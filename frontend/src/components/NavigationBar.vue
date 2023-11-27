@@ -5,7 +5,7 @@
         class="hidden-md-and-up"
         @click.stop="drawer = !drawer"
       ></v-app-bar-nav-icon>
-      <v-toolbar-title><b class="title">Transites</b></v-toolbar-title>
+      <v-toolbar-title style="cursor: pointer" @click="$router.push('/')"><b class="title">Transites</b></v-toolbar-title>
 
       <v-spacer></v-spacer>
       <v-text-field
