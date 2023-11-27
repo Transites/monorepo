@@ -1,10 +1,20 @@
 <template>
-  <div style="padding-left: 30px; padding-right: 30px">
-    <div style="color: var(--transites-red); padding-bottom: 20px">
+  <div style="padding: 60px 30px 0 30px" v-if="!!article">
+    <div style="color: var(--transites-red)">
       <div>
-        <h1 style="margin: 10px 0 10px">Título do verbete</h1>
-        <h2>Autor do verbete</h2>
-        <p>Publicado em: XX/XX/XXXX | Atualizado em: XX/XX/XXXX</p>
+        <h1>{{ article.attributes.title }}</h1>
+        <h2>{{ article.attributes.alternativeTitles }}</h2>
+        <h3>
+          Author:
+          <span v-for="(author, index) in article.attributes.authors.data" :key="author">
+            <span>{{ author.attributes.name }}</span>
+            <span v-if="index + 1 < article.attributes.authors.data.length">, </span>
+          </span>
+        </h3>
+        <p>
+          Publicado em: {{ formatDateToLocale(article.attributes.publishedAt) }} | Atualizado em:
+          {{ formatDateToLocale(article.attributes.updatedAt) }}
+        </p>
       </div>
 
       <v-divider thickness="5" class="border-opacity-100" style="margin: 10px 0 5px"></v-divider>
@@ -12,60 +22,79 @@
       <div>
         <v-btn
           class="tags text-white"
-          v-for="tag in tags"
+          v-for="category in article.attributes.categories.data"
+          :key="category"
+          color="var(--transites-red)"
+          rounded
+          style="margin: 5px 10px 5px 0px"
+        >
+          {{ category.attributes.name }}
+        </v-btn>
+        <v-btn
+          class="tags text-white"
+          v-for="tag in article.attributes.tags.data"
           :key="tag"
           color="var(--transites-red)"
           rounded
           style="margin: 5px 10px 5px 0px"
         >
-          {{ tag }}
+          {{ tag.attributes.name }}
         </v-btn>
       </div>
 
       <v-divider thickness="5" class="border-opacity-100" style="margin: 5px 0 10px"></v-divider>
 
       <div>
-        <h3>Local de nascimento, XX/XX/XXXX</h3>
-        <h3>Local de falecimento, XX/XX/XXXX</h3>
+        <h3 v-if="!!article.attributes.birth">
+          Nascimento: {{ article.attributes.birth.place }}, {{ article.attributes.birth.date }}
+        </h3>
+        <h3 v-if="!!article.attributes.death">
+          Falecimento: {{ article.attributes.death.place }}, {{ article.attributes.death.date }}
+        </h3>
       </div>
     </div>
 
-    <v-conteiner style="color: var(--transites-red)">
+    <v-container style="color: var(--transites-red)" fluid>
       <v-row>
-        <v-col cols="12" sm="6" align="center">
+        <v-card
+          style="border-width: 4px; margin: 20px"
+          variant="outlined"
+          width="min(400px, 100%)"
+          class="rounded-lg"
+          v-if="!!article.attributes.image.data"
+        >
           <v-img
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Mona_Lisa-restored.jpg/1200px-Mona_Lisa-restored.jpg"
-            aspect-ratio="16/9"
-            max-width="300"
+            :src="article.attributes.image.data.attributes.formats.small.url"
+            cover
           ></v-img>
-          <p>Legenda da imagem: Lorem ipsum dolor sit amet, consectetur adipiscing.</p>
-        </v-col>
-        <v-col cols="12" sm="6">
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate lacus nec leo
-            luctus consectetur. Cras eget lectus orci. Praesent euismod auctor velit, sed vehicula
-            ligula mollis sed. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc
-            vulputate lacus nec leo luctus consectetur. Cras eget lectus orci. Praesent euismod
-            auctor velit, sed vehicula ligula mollis sed. [RESUMO DA TRAJETÓRIA DA PESSOA
-            APRESENTADA]
-          </p>
+          <v-card-title>
+            {{ article.attributes.image.data.attributes.caption }}
+          </v-card-title>
+        </v-card>
+        <v-col cols="12" md="6" style="padding: 20px">
+          <div v-html="markdown.render(article.attributes.summary)"></div>
         </v-col>
       </v-row>
-    </v-conteiner>
+    </v-container>
 
     <div>
-      <v-expansion-panels>
+      <v-expansion-panels multiple>
         <v-expansion-panel
           class="section"
-          v-for="(section, index) in sections"
+          v-for="(section, index) in article.attributes.sections"
           :key="section"
-          :style="{ color: getPanelColor(index, sections.length) }"
+          :style="{ color: getPanelColor(index, article.attributes.sections.length) }"
         >
           <v-divider thickness="5" class="border-opacity-100"></v-divider>
-          <v-expansion-panel-title style="font-size: x-large">{{
-            section.title
-          }}</v-expansion-panel-title>
-          <v-expansion-panel-text>{{ section.content }}</v-expansion-panel-text>
+          <v-expansion-panel-title style="font-size: x-large">
+            {{ section.title }}
+          </v-expansion-panel-title>
+          <v-expansion-panel-text>
+            <div
+              :class="{ markdown: section.title === 'Artigo' }"
+              v-html="markdown.render(section.content)"
+            ></div>
+          </v-expansion-panel-text>
         </v-expansion-panel>
       </v-expansion-panels>
     </div>
@@ -73,45 +102,56 @@
 </template>
 
 <script>
+import { useRoute } from 'vue-router'
+import axios from 'axios'
+import markdownIt from 'markdown-it'
+
 export default {
+  setup() {
+    return {
+      route: useRoute(),
+      markdown: markdownIt()
+    }
+  },
+  mounted() {
+    this.fetchDataFromStrapi()
+  },
   data() {
     return {
-      tags: ['TAG 1', 'TAG 2', 'TAG 3'],
-      sections: [
-        {
-          title: 'Artigo',
-          content:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate lacus nec leo luctus consectetur.'
-        },
-        {
-          title: 'Publicações',
-          content:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate lacus nec leo luctus consectetur.'
-        },
-        {
-          title: 'Premiações',
-          content:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate lacus nec leo luctus consectetur.'
-        },
-        {
-          title: 'Bibliografia',
-          content:
-            'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc vulputate lacus nec leo luctus consectetur.'
-        }
-      ],
+      article: null,
       panelColors: [
         '--transites-light-red',
         '--transites-yellow',
         '--transites-blue',
         '--transites-gray-purple'
-      ] // Define an array of colors
+      ]
     }
   },
   methods: {
     getPanelColor(index, length) {
-      // Dynamically select a color from the panelColors array based on the index
       const panelColorIndex = Math.floor((this.panelColors.length * index) / length)
       return `var(${this.panelColors[panelColorIndex]})`
+    },
+
+    formatDateToLocale(date_text) {
+      const date = new Date(date_text)
+      return date.toLocaleString([], {
+        hour12: false
+      })
+    },
+
+    fetchDataFromStrapi() {
+      const id = this.route.params.id
+      const type = this.route.params.type
+      const base_url = import.meta.env.VITE_STRAPI_BASE_URL
+
+      try {
+        axios.get(`${base_url}/api/${type}-articles/${id}?populate=*`).then((response) => {
+          this.article = response.data.data
+        })
+      } catch (error) {
+        this.error = error
+      }
     }
   }
 }
@@ -128,5 +168,14 @@ export default {
   flex-wrap: wrap;
   flex-direction: column;
   margin: 10px;
+}
+
+.markdown > :deep(p:first-of-type) {
+  text-indent: 0px !important;
+}
+
+.markdown > :deep(p) {
+  text-indent: 4em;
+  margin-bottom: 1.3em;
 }
 </style>

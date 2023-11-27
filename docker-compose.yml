@@ -10,4 +10,4 @@ services:
     volumes:
     - './frontend:/app'
     - '/app/node_modules'
-    command: /bin/sh -c "npm run dev"
+    command: npm run dev
