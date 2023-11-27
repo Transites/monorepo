@@ -49,6 +49,80 @@
         </v-row>
       </v-container>
     </v-form>
+    <div>
+      <v-card
+    class="mx-auto my-8"
+    max-width="344"
+    elevation="16"
+  >
+    <v-card-item>
+      <v-card-title>
+        Card title
+      </v-card-title>
+      <v-card-subtitle>
+        Card subtitle secondary text
+      </v-card-subtitle>
+    </v-card-item>
+
+    <v-card-text>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    </v-card-text>
+  </v-card>
+  <v-card
+    class="mx-auto my-8"
+    max-width="344"
+    elevation="16"
+  >
+    <v-card-item>
+      <v-card-title>
+        Card title
+      </v-card-title>
+      <v-card-subtitle>
+        Card subtitle secondary text
+      </v-card-subtitle>
+    </v-card-item>
+
+    <v-card-text>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    </v-card-text>
+  </v-card>
+  <v-card
+    class="mx-auto my-8"
+    max-width="344"
+    elevation="16"
+  >
+    <v-card-item>
+      <v-card-title>
+        Card title
+      </v-card-title>
+      <v-card-subtitle>
+        Card subtitle secondary text
+      </v-card-subtitle>
+    </v-card-item>
+
+    <v-card-text>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    </v-card-text>
+  </v-card>
+  <v-card
+    class="mx-auto my-8"
+    max-width="344"
+    elevation="16"
+  >
+    <v-card-item>
+      <v-card-title>
+        Card title
+      </v-card-title>
+      <v-card-subtitle>
+        Card subtitle secondary text
+      </v-card-subtitle>
+    </v-card-item>
+
+    <v-card-text>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    </v-card-text>
+  </v-card>
+    </div>
   </div>
 </template>
 
