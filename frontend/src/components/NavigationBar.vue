@@ -5,7 +5,11 @@
         class="hidden-md-and-up"
         @click.stop="drawer = !drawer"
       ></v-app-bar-nav-icon>
-      <v-toolbar-title><b style="cursor: pointer" @click="$router.push('/')" class="title">Transites</b></v-toolbar-title>
+
+      <div style="cursor: pointer" @click="$router.push('/')" class="titleIcon">
+        <img src="../assets/transites-icon.png" alt="Icon" height="50" width="70" style="padding: 0 10px 0 10px">
+        <v-toolbar-title><b class="title">Transites</b></v-toolbar-title>
+      </div>
 
       <v-spacer></v-spacer>
       <v-text-field
@@ -45,4 +49,10 @@ export default {
 .title {
   color: var(--transites-red);
 }
+
+.titleIcon {
+  display: flex;
+  align-items: center;
+}
+
 </style>
