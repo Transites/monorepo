@@ -4,7 +4,7 @@
       <div>
         <h1>{{ article.attributes.title }}</h1>
         <h2>{{ article.attributes.alternativeTitles }}</h2>
-        <h3>
+        <h3 v-if="article.attributes.authors.data.length > 0">
           Author:
           <span v-for="(author, index) in article.attributes.authors.data" :key="author">
             <span>{{ author.attributes.name }}</span>
@@ -63,15 +63,12 @@
           class="rounded-lg"
           v-if="!!article.attributes.image.data"
         >
-          <v-img
-            :src="article.attributes.image.data.attributes.formats.small.url"
-            cover
-          ></v-img>
+          <v-img :src="article.attributes.image.data.attributes.formats.small.url" cover></v-img>
           <v-card-title>
             {{ article.attributes.image.data.attributes.caption }}
           </v-card-title>
         </v-card>
-        <v-col cols="12" md="6" style="padding: 20px">
+        <v-col cols="12" md="6" style="padding: 20px" v-if="!!article.attributes.summary">
           <div v-html="markdown.render(article.attributes.summary)"></div>
         </v-col>
       </v-row>
