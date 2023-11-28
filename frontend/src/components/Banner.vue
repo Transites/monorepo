@@ -7,7 +7,8 @@
     >
       <v-row no-gutters>
         <v-col cols="12" md="6" style="border: var(--border-width) solid var(--prop-color)">
-          <v-carousel hide-delimiters cycle interval="2000" v-model="counter">
+          <!-- <v-carousel hide-delimiters cycle interval="2000" v-model="counter"> -->
+          <v-carousel hide-delimiters v-model="counter">
             <template v-slot:prev>
               <v-btn icon color="var(--transites-red)" @click="prevSlide">
                 <v-icon style="color: white">mdi-chevron-left</v-icon>
@@ -49,7 +50,7 @@ export default {
       default: "var(--transites-red)"
     },
     padding: {
-      default: "70px"
+      default: "70px 5% 30px 5%"
     }
   },
   data: () => ({
@@ -59,7 +60,7 @@ export default {
         src: 'https://cdn.vuetifyjs.com/images/carousel/squirrel.jpg',
         title: 'Título 1',
         subtitle: 'Subtítulo 1',
-        text: 'Algum tempo hesitei se devia abrir estas memórias pelo princípio ou pelo fim, isto é, se poria em primeiro lugar o meu nascimento ou a minha morte. Suposto o uso vulgar seja começar pelo nascimento, duas considerações me levaram a adotar diferente método: a primeira'
+        text: 'Algum tempo hesitei se devia abrir estas memórias pelo princípio ou pelo fim, isto é, se poria em primeiro lugar o meu nascimento ou a minha morte. Suposto o uso vulgar seja começar pelo nascimento, duas considerações me levaram a adotar diferente método: a primeira Algum tempo hesitei se devia abrir estas'
       },
       {
         src: 'https://cdn.vuetifyjs.com/images/carousel/sky.jpg',
@@ -122,6 +123,8 @@ export default {
 .bannerTextColumn {
   display: flex;
   align-items: center;
+  width: 360px;
+  height: 240px;
 }
 </style>
 
