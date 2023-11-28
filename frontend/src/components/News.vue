@@ -1,7 +1,7 @@
 <template>
   <div :style="propStyle" class="news-container">
     <h1 style="color: var(--transites-blue)">Novidades</h1>
-    <v-conteiner>
+    <v-container>
       <v-row align="center">
         <v-col cols="12" lg="9">
           <v-row>
@@ -37,7 +37,7 @@
           </v-card>
         </v-col>
       </v-row>
-    </v-conteiner>
+    </v-container>
   </div>
 </template>
 
