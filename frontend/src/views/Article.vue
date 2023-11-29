@@ -1,5 +1,5 @@
 <template>
-  <div style="padding: 60px 30px 0 30px" v-if="!!article">
+  <div style="padding: 0 30px 0 30px" v-if="!!article">
     <div style="color: var(--transites-red)">
       <div>
         <h1>{{ article.attributes.title }}</h1>
