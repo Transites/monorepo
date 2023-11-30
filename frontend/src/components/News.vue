@@ -43,52 +43,44 @@
 
 
 <script>
+import axios from 'axios'
 export default {
   props: {
     padding: {
       default: "70px"
     }
   },
+  mounted() {
+    this.fetchDataFromStrapi()
+  },
   data: () => ({
-    entries: [
-      {
-        title: 'Título do verbete 1',
-        category: 'categoria 1'
-      },
-      {
-        title: 'Título do verbete 2',
-        category: 'categoria 2'
-      },
-      {
-        title: 'Título do verbete 3',
-        category: 'categoria 3'
-      },
-      {
-        title: 'Título do verbete 4',
-        category: 'categoria 4'
-      },
-      {
-        title: 'Título do verbete 1',
-        category: 'categoria 1'
-      },
-      {
-        title: 'Título do verbete 2',
-        category: 'categoria 2'
-      },
-      {
-        title: 'Título do verbete 3',
-        category: 'categoria 3'
-      },
-      {
-        title: 'Título do verbete 4',
-        category: 'categoria 4'
-      }
-    ]
+    entries: null
   }),
   computed: {
     propStyle () {
       return {
         '--prop-padding': this.padding,
+      }
+    }
+  },
+  methods:{
+  fetchDataFromStrapi() {
+      const base_url = import.meta.env.VITE_STRAPI_BASE_URL
+
+      try {
+        axios.get(`${base_url}/api/person-articles/?_limit=20&populate=categories&_sort=createdAt:DESC`).then((response) => {
+          this.raw_response = response.data.data
+          this.entries = this.raw_response.map((entry) => {
+          return {
+            title: entry.attributes.title,
+            category: entry.attributes.categories.data.length
+              ? entry.attributes.categories.data[0].attributes.name
+              : 'Uncategorized'
+          }
+          })
+        })
+      } catch (error) {
+        this.error = error
       }
     }
   }
