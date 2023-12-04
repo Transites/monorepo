@@ -1,10 +1,6 @@
 <template>
   <div class="carouselContainer" :style="propStyle">
-    <v-card
-      class="carouselCard"
-      color="var(--prop-color)"
-      variant="outlined"
-    >
+    <v-card class="carouselCard" color="var(--prop-color)" variant="outlined">
       <v-row no-gutters>
         <v-col cols="12" md="6" style="border: var(--border-width) solid var(--prop-color)">
           <v-carousel hide-delimiters cycle interval="2000" v-model="counter">
@@ -32,9 +28,19 @@
             </v-carousel-item>
           </v-carousel>
         </v-col>
-        <v-col cols="12" md="6" class="bannerTextColumn" :style="$vuetify.display.smAndDown ? 'height: 150px' : ''">
+        <v-col
+          cols="12"
+          md="6"
+          class="bannerTextColumn"
+          :style="$vuetify.display.smAndDown ? 'height: 150px' : ''"
+        >
           <v-card-text>
-            <p class="bannerText" :style="$vuetify.display.smAndDown ? '-webkit-line-clamp: 6' : '-webkit-line-clamp: 20'">
+            <p
+              class="bannerText"
+              :style="
+                $vuetify.display.smAndDown ? '-webkit-line-clamp: 6' : '-webkit-line-clamp: 20'
+              "
+            >
               {{ items[counter].text }}
             </p>
           </v-card-text>
@@ -48,10 +54,10 @@
 export default {
   props: {
     color: {
-      default: "var(--transites-red)"
+      default: 'var(--transites-red)'
     },
     padding: {
-      default: "70px 5% 30px 5%"
+      default: '70px 5% 30px 5%'
     }
   },
   data: () => ({
@@ -79,18 +85,18 @@ export default {
   }),
   methods: {
     prevSlide() {
-      this.counter = (this.counter - 1 + this.items.length) % this.items.length;
+      this.counter = (this.counter - 1 + this.items.length) % this.items.length
     },
     nextSlide() {
-      this.counter = (this.counter + 1) % this.items.length;
-    },
+      this.counter = (this.counter + 1) % this.items.length
+    }
   },
   computed: {
-    propStyle () {
-        return{
-            '--prop-color': this.color,
-            '--prop-padding': this.padding,
-        }
+    propStyle() {
+      return {
+        '--prop-color': this.color,
+        '--prop-padding': this.padding
+      }
     }
   }
 }
@@ -114,7 +120,6 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  
 }
 .cardTitleSubtitle {
   text-align: center;
