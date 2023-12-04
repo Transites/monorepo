@@ -143,13 +143,11 @@ export default {
       const type = this.route.params.type
       const base_url = import.meta.env.VITE_STRAPI_BASE_URL
 
-      try {
-        axios.get(`${base_url}/api/${type}-articles/${id}?populate=*`).then((response) => {
-          this.article = response.data.data
-        })
-      } catch (error) {
-        this.error = error
-      }
+      axios.get(`${base_url}/api/${type}-articles/${id}?populate=*`).then((response) => {
+        this.article = response.data.data
+      }).catch(error => {
+        this.$router.push('/404')
+      });
     }
   }
 }
