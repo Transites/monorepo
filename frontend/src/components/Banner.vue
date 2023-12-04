@@ -33,9 +33,11 @@
           </v-carousel>
         </v-col>
         <v-col cols="12" md="6" class="bannerTextColumn" style="border: var(--border-width) solid var(--prop-color)">
-            <p class="bannerText" style="padding: 30px">
+          <v-card-text>
+            <p class="bannerText">
               {{ items[counter].text }}
             </p>
+          </v-card-text>
         </v-col>
       </v-row>
     </v-card>
@@ -125,9 +127,8 @@ export default {
 }
 
 .bannerText {
-  width: 100%;
   display: -webkit-box;
-  -webkit-line-clamp: 10;  /*number of visible lines */
+  -webkit-line-clamp: 10;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
