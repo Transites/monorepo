@@ -63,7 +63,7 @@
           class="rounded-lg"
           v-if="!!article.attributes.image.data"
         >
-          <v-img :src="article.attributes.image.data.attributes.formats.small.url" cover></v-img>
+          <v-img :src="article.attributes.image.data.attributes.formats[Object.keys(article.attributes.image.data.attributes.formats)[0]].url" cover></v-img>
           <v-card-title>
             {{ article.attributes.image.data.attributes.caption }}
           </v-card-title>
