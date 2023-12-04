@@ -2,7 +2,7 @@
   <div :style="propStyle">
     <v-card
       class="rounded-xl"
-      style="margin: 20vh 20px; padding: 30px; border: 5px solid var(--prop-color); color: var(--prop-color);"
+      style="padding: 30px; border: 5px solid var(--prop-color); color: var(--prop-color);"
       variant="tonal"
       outlined
     >
