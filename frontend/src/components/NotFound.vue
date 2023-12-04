@@ -42,7 +42,7 @@ export default {
       default: "Página não encontrada"
     },
     buttonText: {
-      default: "Voltar"
+      default: "Voltar para a página inicial"
     },
     buttonCallback: {
       type: Function,
