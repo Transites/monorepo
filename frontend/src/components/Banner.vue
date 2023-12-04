@@ -32,9 +32,9 @@
             </v-carousel-item>
           </v-carousel>
         </v-col>
-        <v-col cols="12" md="6" class="bannerTextColumn" style="border: var(--border-width) solid var(--prop-color)">
+        <v-col cols="12" md="6" class="bannerTextColumn" :style="$vuetify.display.smAndDown ? 'height: 150px' : ''">
           <v-card-text>
-            <p class="bannerText">
+            <p class="bannerText" :style="$vuetify.display.smAndDown ? '-webkit-line-clamp: 6' : '-webkit-line-clamp: 20'">
               {{ items[counter].text }}
             </p>
           </v-card-text>
@@ -124,14 +124,12 @@ export default {
 .bannerTextColumn {
   display: flex;
   align-items: center;
+  border: var(--border-width) solid var(--prop-color);
 }
 
 .bannerText {
   display: -webkit-box;
-  -webkit-line-clamp: 10;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 </style>
-
-
