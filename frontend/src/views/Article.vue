@@ -1,4 +1,5 @@
 <template>
+  <v-progress-linear indeterminate v-if="!article" color="var(--transites-red)"></v-progress-linear>
   <div style="padding: 0 30px 0 30px" v-if="!!article">
     <div style="color: var(--transites-red)">
       <div>
