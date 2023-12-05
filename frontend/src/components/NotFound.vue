@@ -1,5 +1,5 @@
 <template>
-  <div :style="propStyle">
+  <div :style="propStyle" :class="center ? 'center' : ''">
     <v-card
       class="rounded-xl"
       style="padding: 30px; border: 5px solid var(--prop-color); color: var(--prop-color);"
@@ -18,7 +18,7 @@
       </v-card-text>
 
       <v-card-actions>
-        <v-btn @click=buttonClick class="home-button">
+        <v-btn @click=buttonClick>
           {{ buttonText }}
         </v-btn>
       </v-card-actions>
@@ -47,6 +47,9 @@ export default {
     buttonCallback: {
       type: Function,
       default: function() { this.$router.push('/') }
+    },
+      center: {
+      default: true
     }
   },
   methods: {
@@ -65,15 +68,10 @@ export default {
 </script>
 
 <style>
-.home-button {
-  height: auto !important;
-  max-width: 100%;
-  white-space: normal;
-  &.v-btn:not(.v-btn--round).v-size--default {
-    padding: 10px 16px;
-  }
-  .v-btn__content {
-    flex: 1 0 fit-content;
-  }
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
 }
 </style>

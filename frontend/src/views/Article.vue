@@ -1,9 +1,7 @@
 <template>
-  <div>
+  <div style="height: 100%">
     <v-progress-linear indeterminate v-if="!article && !error" color="var(--transites-red)"></v-progress-linear>
-    <div class="d-flex align-center justify-center" style="margin: 12vh 20px 20vh 20px" v-if="error">
-      <NotFound />
-    </div>
+    <NotFound v-if="error" />
     <div style="padding: 0 30px 0 30px" v-if="!!article">
       <div style="color: var(--transites-red)">
         <div>
