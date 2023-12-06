@@ -63,7 +63,7 @@
           class="rounded-lg"
           v-if="!!article.attributes.image.data"
         >
-          <v-img :src="article.attributes.image.data.attributes.formats[Object.keys(article.attributes.image.data.attributes.formats)[0]].url" cover></v-img>
+          <v-img :src="articleImage" cover></v-img>
           <v-card-title>
             {{ article.attributes.image.data.attributes.caption }}
           </v-card-title>
@@ -112,6 +112,16 @@ export default {
   },
   mounted() {
     this.fetchDataFromStrapi()
+  },
+  computed: {
+    articleImage() {
+      if (!this.article.attributes.image.data) return "";
+
+      const formats = this.article.attributes.image.data.attributes.formats;
+      const key = Object.keys(formats)[0];
+
+      return formats[key].url;
+    }
   },
   data() {
     return {
