@@ -23,7 +23,7 @@
           </v-carousel>
         </v-col>
         <v-col cols="6" class="bannerTextColumn">
-          <p>
+          <p style="color: black; font-size: medium;">
             {{ items[counter].text }}
           </p>
         </v-col>
