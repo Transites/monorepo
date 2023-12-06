@@ -68,7 +68,7 @@ export default {
       const base_url = import.meta.env.VITE_STRAPI_BASE_URL
 
       try {
-        axios.get(`${base_url}/api/person-articles/?_limit=20&populate=categories&_sort=createdAt:DESC`).then((response) => {
+        axios.get(`${base_url}/api/person-articles/?pagination[limit]=8&populate=categories&sort=createdAt:desc`).then((response) => {
           this.raw_response = response.data.data
           this.entries = this.raw_response.map((entry) => {
           return {
