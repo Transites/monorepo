@@ -22,13 +22,14 @@
         prepend-icon="mdi-tune"
         variant="flat"
         color="var(--transites-red)"
+        @click="$router.push('/search')"
       >
         Busca avançada
       </v-btn>
     </v-app-bar>
     <v-navigation-drawer v-model="drawer" temporary>
       <v-text-field label="Pesquisa"></v-text-field>
-      <v-btn>Busca Avançada</v-btn>
+      <v-btn @click="$router.push('/search')">Busca Avançada</v-btn>
     </v-navigation-drawer>
   </div>
 </template>

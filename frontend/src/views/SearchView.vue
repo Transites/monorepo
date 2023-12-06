@@ -49,84 +49,32 @@
         </v-row>
       </v-container>
     </v-form>
-    <div>
+    <div class="results">
+
       <v-card
-    class="mx-auto my-8"
-    max-width="344"
-    elevation="16"
-  >
-    <v-card-item>
-      <v-card-title>
-        Card title
-      </v-card-title>
-      <v-card-subtitle>
-        Card subtitle secondary text
-      </v-card-subtitle>
-    </v-card-item>
+        v-for="entry in searchResult"
+        :key="entry"
+        class="mx-auto my-8"
+        max-width="344"
+        elevation="16"
+        @click="$router.push(`/article/person/${entry.id}`)"
+      >
+        <v-card-item>
+          <v-card-title> {{ entry.title }} </v-card-title>
+          <v-card-subtitle> {{ entry.subtitle }} </v-card-subtitle>
+        </v-card-item>
 
-    <v-card-text>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-    </v-card-text>
-  </v-card>
-  <v-card
-    class="mx-auto my-8"
-    max-width="344"
-    elevation="16"
-  >
-    <v-card-item>
-      <v-card-title>
-        Card title
-      </v-card-title>
-      <v-card-subtitle>
-        Card subtitle secondary text
-      </v-card-subtitle>
-    </v-card-item>
-
-    <v-card-text>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-    </v-card-text>
-  </v-card>
-  <v-card
-    class="mx-auto my-8"
-    max-width="344"
-    elevation="16"
-  >
-    <v-card-item>
-      <v-card-title>
-        Card title
-      </v-card-title>
-      <v-card-subtitle>
-        Card subtitle secondary text
-      </v-card-subtitle>
-    </v-card-item>
-
-    <v-card-text>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-    </v-card-text>
-  </v-card>
-  <v-card
-    class="mx-auto my-8"
-    max-width="344"
-    elevation="16"
-  >
-    <v-card-item>
-      <v-card-title>
-        Card title
-      </v-card-title>
-      <v-card-subtitle>
-        Card subtitle secondary text
-      </v-card-subtitle>
-    </v-card-item>
-
-    <v-card-text>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-    </v-card-text>
-  </v-card>
+        <v-card-text>
+          {{ entry.text }}
+        </v-card-text>
+      </v-card>
     </div>
   </div>
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   data: () => ({
     Search: {
@@ -134,12 +82,38 @@ export default {
       SecondaryValue: []
     },
     PrimaryTags: ['Artes', 'Ciências'],
-    SecondaryTags: ['Pessoa', 'Obra', 'Instituição', 'Logradouro']
+    SecondaryTags: ['Pessoa', 'Obra', 'Instituição', 'Logradouro'],
+    searchResult: []
   }),
   methods: {
-    applySearch() {}
+    applySearch() {
+      const base_url = import.meta.env.VITE_STRAPI_BASE_URL
+      axios
+        .get(`${base_url}/api/person-articles?populate=tags`)
+        .then((response) => {
+          this.raw_response = response.data.data
+          this.searchResult = this.raw_response.map((entry) => {
+            return {
+              id: entry.id,
+              title: entry.attributes.title,
+              text: entry.attributes.summary,
+              tags: entry.attributes.tags.data.map(tag => {
+                tag.attributes.name
+              })
+            }
+          })
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    }
   }
 }
 </script>
 
-<style></style>
+<style>
+.results {
+  display: flex;
+  flex-wrap: wrap;
+}
+</style>
