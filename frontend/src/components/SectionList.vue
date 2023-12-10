@@ -12,8 +12,8 @@
       </v-expansion-panel-title>
       <v-expansion-panel-text>
         <div
-          :class="{ markdown }"
-          v-html="markdown.render(section.content)"
+          :class="section.class"
+          v-html="section.html"
         ></div>
       </v-expansion-panel-text>
     </v-expansion-panel>
@@ -21,11 +21,23 @@
 </template>
 
 <script>
-import markdownIt from 'markdown-it'
+import { useMarkdown } from '@/composables/markdown.js';
+
+function parseSection(section) {
+  switch(section.title) {
+    case "Publicações":
+      section.content = section.content.replace(/\n/g, '\n\n')
+      break;
+    default:
+      section.class = 'markdown';
+  }
+  section.html = useMarkdown(section.content)
+}
+
 export default {
-  setup() {
-    return {
-      markdown: markdownIt()
+  mounted() {
+    for (const section of this.sections) {
+      parseSection(section);
     }
   },
   props: {

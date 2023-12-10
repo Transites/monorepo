@@ -72,7 +72,7 @@
             </v-card-title>
           </v-card>
           <v-col cols="12" md="6" style="padding: 20px" v-if="!!article.attributes.summary">
-            <div v-html="markdown.render(article.attributes.summary)"></div>
+            <div v-html="useMarkdown(article.attributes.summary)"></div>
           </v-col>
         </v-row>
       </v-container>
@@ -87,13 +87,13 @@ import NotFound from '@/components/NotFound.vue'
 import SectionList from '@/components/SectionList.vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
-import markdownIt from 'markdown-it'
+import { useMarkdown } from '@/composables/markdown.js';
 
 export default {
   setup() {
     return {
       route: useRoute(),
-      markdown: markdownIt()
+      useMarkdown: useMarkdown
     }
   },
   mounted() {
