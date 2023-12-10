@@ -77,33 +77,14 @@
         </v-row>
       </v-container>
 
-      <div>
-        <v-expansion-panels multiple>
-          <v-expansion-panel
-            class="section"
-            v-for="(section, index) in article.attributes.sections"
-            :key="section"
-            :style="{ color: getPanelColor(index, article.attributes.sections.length) }"
-          >
-            <v-divider thickness="5" class="border-opacity-100"></v-divider>
-            <v-expansion-panel-title style="font-size: x-large">
-              {{ section.title }}
-            </v-expansion-panel-title>
-            <v-expansion-panel-text>
-              <div
-                :class="{ markdown: section.title === 'Artigo' }"
-                v-html="markdown.render(section.content)"
-              ></div>
-            </v-expansion-panel-text>
-          </v-expansion-panel>
-        </v-expansion-panels>
-      </div>
+      <SectionList :sections="article.attributes.sections" :colors="sectionColors" />
     </div>
   </div>
 </template>
 
 <script>
-import NotFound from '../components/NotFound.vue'
+import NotFound from '@/components/NotFound.vue'
+import SectionList from '@/components/SectionList.vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
 import markdownIt from 'markdown-it'
@@ -131,7 +112,7 @@ export default {
   data() {
     return {
       article: null,
-      panelColors: [
+      sectionColors: [
         '--transites-light-red',
         '--transites-yellow',
         '--transites-blue',
@@ -141,11 +122,6 @@ export default {
     }
   },
   methods: {
-    getPanelColor(index, length) {
-      const panelColorIndex = Math.floor((this.panelColors.length * index) / length)
-      return `var(${this.panelColors[panelColorIndex]})`
-    },
-
     formatDateToLocale(date_text) {
       const date = new Date(date_text)
       return date.toLocaleString([], {
@@ -166,7 +142,8 @@ export default {
     }
   },
   components: {
-    NotFound: NotFound
+    NotFound: NotFound,
+    SectionList: SectionList
   }
 }
 </script>
@@ -176,20 +153,5 @@ export default {
   flex-wrap: wrap;
   flex-direction: column;
   color: white;
-}
-
-.section {
-  flex-wrap: wrap;
-  flex-direction: column;
-  margin: 10px;
-}
-
-.markdown > :deep(p:first-of-type) {
-  text-indent: 0px !important;
-}
-
-.markdown > :deep(p) {
-  text-indent: 4em;
-  margin-bottom: 1.3em;
 }
 </style>
