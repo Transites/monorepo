@@ -50,7 +50,6 @@
       </v-container>
     </v-form>
     <div class="results">
-
       <v-card
         v-for="entry in searchResult"
         :key="entry"
@@ -62,6 +61,7 @@
         <v-card-item>
           <v-card-title> {{ entry.title }} </v-card-title>
           <v-card-subtitle> {{ entry.subtitle }} </v-card-subtitle>
+          <v-chip v-for="tag in entry.tags" :key="tag" color="primary"> {{ tag.name }}</v-chip>
         </v-card-item>
 
         <v-card-text>
@@ -97,8 +97,10 @@ export default {
               id: entry.id,
               title: entry.attributes.title,
               text: entry.attributes.summary,
-              tags: entry.attributes.tags.data.map(tag => {
-                tag.attributes.name
+              tags: entry.attributes.tags.data.map((tag) => {
+                return {
+                  name: tag.attributes.name
+                }
               })
             }
           })
