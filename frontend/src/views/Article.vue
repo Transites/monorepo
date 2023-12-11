@@ -22,28 +22,7 @@
 
         <v-divider thickness="5" class="border-opacity-100" style="margin: 10px 0 5px"></v-divider>
 
-        <div>
-          <v-btn
-            class="tags text-white"
-            v-for="category in article.attributes.categories.data"
-            :key="category"
-            color="var(--transites-red)"
-            rounded
-            style="margin: 5px 10px 5px 0px"
-          >
-            {{ category.attributes.name }}
-          </v-btn>
-          <v-btn
-            class="tags text-white"
-            v-for="tag in article.attributes.tags.data"
-            :key="tag"
-            color="var(--transites-red)"
-            rounded
-            style="margin: 5px 10px 5px 0px"
-          >
-            {{ tag.attributes.name }}
-          </v-btn>
-        </div>
+        <ChipList :chips="categoriesAndTags" color="--transites-red" />
 
         <v-divider thickness="5" class="border-opacity-100" style="margin: 5px 0 10px"></v-divider>
 
@@ -85,10 +64,25 @@
 <script>
 import NotFound from '@/components/NotFound.vue'
 import SectionList from '@/components/SectionList.vue'
+import ChipList from '@/components/ChipList.vue'
+
 import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { useMarkdown } from '@/composables/markdown.js';
 
+function createChipList(article) {
+  const formatChip = (item) => {
+    return {
+      id: item.id,
+      name: item.attributes.name
+    }
+  }
+
+  const categories = article.attributes.categories.data.map(formatChip);
+  const tags = article.attributes.tags.data.map(formatChip);
+
+  return categories.concat(tags);
+}
 export default {
   setup() {
     return {
@@ -135,23 +129,21 @@ export default {
       const base_url = import.meta.env.VITE_STRAPI_BASE_URL
 
       axios.get(`${base_url}/api/${type}-articles/${id}?populate=*`).then((response) => {
-        this.article = response.data.data
+        this.article = response.data.data;
+        this.categoriesAndTags = createChipList(this.article);
       }).catch(error => {
+        console.log(error);
         this.error = true;
       });
     }
   },
   components: {
     NotFound: NotFound,
-    SectionList: SectionList
+    SectionList: SectionList,
+    ChipList: ChipList,
   }
 }
 </script>
 
 <style scoped>
-.tags {
-  flex-wrap: wrap;
-  flex-direction: column;
-  color: white;
-}
 </style>
