@@ -28,7 +28,7 @@
           >
             <v-img
               class="align-end text-white"
-              src="fetchImagesFromStrapi"
+              :src="url_news_image"
               cover
               align="start"
             >
@@ -55,7 +55,8 @@ export default {
     this.fetchImagesFromStrapi()
   },
   data: () => ({
-    entries: null
+    entries: null,
+    url_news_image : ""
   }),
   computed: {
     propStyle () {
@@ -95,7 +96,9 @@ export default {
               if (item.attributes.image.data) {
                 const formats = item.attributes.image.data.attributes.formats;
                 const key = Object.keys(formats)[0];
-                return formats[key].url
+
+                this.url_news_image = formats[key].url;
+                return null;
               }
             }
           }
