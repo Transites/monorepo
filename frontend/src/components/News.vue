@@ -15,6 +15,7 @@
                 style="color: var(--transites-blue)"
                 :title="entry.title"
                 :subtitle="entry.category"
+                @click="$router.push(`article/person/${entry.id}`)"
               >
               </v-card>
             </v-col>
@@ -75,6 +76,7 @@ export default {
           this.entries = this.raw_response.map((entry) => {
           return {
             title: entry.attributes.title,
+            id: entry.id,
             category: entry.attributes.categories.data.length
               ? entry.attributes.categories.data[0].attributes.name
               : 'Uncategorized'
