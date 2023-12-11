@@ -1,7 +1,7 @@
 <template>
   <div :style="propStyle" class="news-container">
     <h1 style="color: var(--transites-blue)">Novidades</h1>
-    <v-conteiner>
+    <v-container>
       <v-row align="center">
         <v-col cols="12" lg="9">
           <v-row>
@@ -37,58 +37,50 @@
           </v-card>
         </v-col>
       </v-row>
-    </v-conteiner>
+    </v-container>
   </div>
 </template>
 
 
 <script>
+import axios from 'axios'
 export default {
   props: {
     padding: {
       default: "70px"
     }
   },
+  mounted() {
+    this.fetchDataFromStrapi()
+  },
   data: () => ({
-    entries: [
-      {
-        title: 'Título do verbete 1',
-        category: 'categoria 1'
-      },
-      {
-        title: 'Título do verbete 2',
-        category: 'categoria 2'
-      },
-      {
-        title: 'Título do verbete 3',
-        category: 'categoria 3'
-      },
-      {
-        title: 'Título do verbete 4',
-        category: 'categoria 4'
-      },
-      {
-        title: 'Título do verbete 1',
-        category: 'categoria 1'
-      },
-      {
-        title: 'Título do verbete 2',
-        category: 'categoria 2'
-      },
-      {
-        title: 'Título do verbete 3',
-        category: 'categoria 3'
-      },
-      {
-        title: 'Título do verbete 4',
-        category: 'categoria 4'
-      }
-    ]
+    entries: null
   }),
   computed: {
     propStyle () {
       return {
         '--prop-padding': this.padding,
+      }
+    }
+  },
+  methods:{
+  fetchDataFromStrapi() {
+      const base_url = import.meta.env.VITE_STRAPI_BASE_URL
+
+      try {
+        axios.get(`${base_url}/api/person-articles/?pagination[limit]=8&populate=categories&sort=createdAt:desc`).then((response) => {
+          this.raw_response = response.data.data
+          this.entries = this.raw_response.map((entry) => {
+          return {
+            title: entry.attributes.title,
+            category: entry.attributes.categories.data.length
+              ? entry.attributes.categories.data[0].attributes.name
+              : 'Uncategorized'
+          }
+          })
+        })
+      } catch (error) {
+        this.error = error
       }
     }
   }
