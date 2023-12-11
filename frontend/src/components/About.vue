@@ -10,7 +10,7 @@
       </v-col>
 
       <v-col class="aboutColumn">
-        <p style="font-size: medium;">
+        <p>
           Trânsitos é uma enciclopédia digital e evolutiva sobre os trânsitos Brasil-França. 
           Os verbetes referem-se a <b>pessoas</b> que transitam entre os dois países, além de <b>obras</b>, 
           <b>instituições</b> e <b>eventos</b> que marcam de alguma forma as relações e as circulações entre 
