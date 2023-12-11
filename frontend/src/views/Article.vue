@@ -117,10 +117,10 @@ export default {
     return {
       article: null,
       sectionColors: [
-        '--transites-light-red',
-        '--transites-yellow',
-        '--transites-blue',
-        '--transites-gray-purple'
+        'var(--transites-light-red)',
+        'var(--transites-yellow)',
+        'var(--transites-blue)',
+        'var(--transites-gray-purple)'
       ],
       error: false
     }

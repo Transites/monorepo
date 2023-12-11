@@ -11,18 +11,10 @@
       <span>{{ author.name }}</span>
       <span v-if="index + 1 < authors.length">, </span>
 
-      <v-dialog
-        v-model="dialog[index]"
-        activator="parent"
-        width="auto"
-      >
-        <v-card
-          :title="author.name"
-          prepend-icon="mdi-account"
-          class="rounded-lg"
-        >
+      <v-dialog v-model="dialog[index]" activator="parent" width="auto">
+        <v-card :title="author.name" prepend-icon="mdi-account" class="rounded-lg">
           <template v-slot:subtitle v-if="author.institution">
-              Instituição: {{author.institution}}
+            Instituição: {{ author.institution }}
           </template>
           <v-card-text v-if="author.description">
             {{ author.description }}
@@ -38,14 +30,15 @@
 
 <script>
 export default {
-  data () {
+  data() {
     return {
-      dialog: [],
+      dialog: []
     }
   },
   props: {
     authors: {
-      type: Object
+      type: Array,
+      default: () => []
       // [ { name: String, institution: String, description: String }, ... ]
     }
   }

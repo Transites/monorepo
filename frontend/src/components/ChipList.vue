@@ -6,7 +6,7 @@
       size="large"
       variant="flat"
       @click="chip.callback"
-      :style="{ background: getChipColor(index, chips.length), color: 'white'}"
+      :style="{ background: getChipColor(index, chips.length), color: 'white' }"
     >
       {{ chip.name }}
     </v-chip>
@@ -17,18 +17,18 @@
 export default {
   props: {
     chips: {
-      type: Object,
-      default: []
+      type: Array,
+      default: () => []
       // [ { name: String, callback: Method }, ... ]
     },
     colors: {
-      type: Object,
-      default: [
-        '--transites-red',
-        '--transites-light-red',
-        '--transites-yellow',
-        '--transites-blue',
-        '--transites-gray-purple'
+      type: Array,
+      default: () => [
+        'var(--transites-red)',
+        'var(--transites-light-red)',
+        'var(--transites-yellow)',
+        'var(--transites-blue)',
+        'var(--transites-gray-purple)'
       ]
     },
     color: {
@@ -37,14 +37,14 @@ export default {
   },
   methods: {
     getChipColor(index, length) {
-      const colors = this.computedColors;
+      const colors = this.computedColors
       const colorIndex = Math.floor((colors.length * index) / length)
-      return `var(${colors[colorIndex]})`
+      return colors[colorIndex]
     }
   },
   computed: {
     computedColors() {
-      if (!!this.color) {
+      if (this.color) {
         return [this.color]
       } else {
         return this.colors
@@ -54,5 +54,4 @@ export default {
 }
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>
