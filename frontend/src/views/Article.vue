@@ -86,7 +86,9 @@ function createAuthorList(article) {
   return authors.map(author => {
     return {
       id: author.id,
-      name: author.attributes.name
+      name: author.attributes.name,
+      institution: author.attributes.institution,
+      description: author.attributes.description
     }
   });
 }
