@@ -7,12 +7,8 @@
         <div>
           <h1>{{ article.attributes.title }}</h1>
           <h2>{{ article.attributes.alternativeTitles }}</h2>
-          <h3 v-if="article.attributes.authors.data.length > 0">
-            Author:
-            <span v-for="(author, index) in article.attributes.authors.data" :key="author">
-              <span>{{ author.attributes.name }}</span>
-              <span v-if="index + 1 < article.attributes.authors.data.length">, </span>
-            </span>
+          <h3>
+            <AuthorList :authors="authors" />
           </h3>
           <p>
             Publicado em: {{ formatDateToLocale(article.attributes.publishedAt) }} | Atualizado em:
@@ -65,6 +61,7 @@
 import NotFound from '@/components/NotFound.vue'
 import SectionList from '@/components/SectionList.vue'
 import ChipList from '@/components/ChipList.vue'
+import AuthorList from '@/components/AuthorList.vue'
 
 import { useRoute } from 'vue-router'
 import axios from 'axios'
@@ -83,6 +80,17 @@ function createChipList(article) {
 
   return categories.concat(tags);
 }
+
+function createAuthorList(article) {
+  const authors = article.attributes.authors.data;
+  return authors.map(author => {
+    return {
+      id: author.id,
+      name: author.attributes.name
+    }
+  });
+}
+
 export default {
   setup() {
     return {
@@ -131,6 +139,7 @@ export default {
       axios.get(`${base_url}/api/${type}-articles/${id}?populate=*`).then((response) => {
         this.article = response.data.data;
         this.categoriesAndTags = createChipList(this.article);
+        this.authors = createAuthorList(this.article);
       }).catch(error => {
         console.log(error);
         this.error = true;
@@ -141,6 +150,7 @@ export default {
     NotFound: NotFound,
     SectionList: SectionList,
     ChipList: ChipList,
+    AuthorList: AuthorList
   }
 }
 </script>
