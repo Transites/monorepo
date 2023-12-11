@@ -18,7 +18,7 @@
 
         <v-divider thickness="5" class="border-opacity-100" style="margin: 10px 0 5px"></v-divider>
 
-        <ChipList :chips="categoriesAndTags" color="--transites-red" />
+        <ChipList :chips="categoriesAndTags" color="var(--transites-red)" />
 
         <v-divider thickness="5" class="border-opacity-100" style="margin: 5px 0 10px"></v-divider>
 
