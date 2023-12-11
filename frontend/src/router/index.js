@@ -22,6 +22,7 @@ const router = createRouter({
       name: 'Busca Avançada',
       component: SearchView
     },
+    {
       path: '/404',
       name: 'page-not-found',
       component: PageNotFound
