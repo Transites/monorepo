@@ -21,7 +21,7 @@
           <i>raison d’être</i> da enciclopédia.
         </p>
         <br>
-        <p style="font-size: medium;">
+        <p>
           <b>Encontrou dificuldades de acesso, detectou erros? Avise-nos!</b>
           Se você encontrou erros nos verbetes lidos, se notou a falta de informações significativas em algo 
           que leu, se não conseguiu acessar algum verbete ou teve qualquer tipo de dificuldade ao acessar Trânsitos, 
