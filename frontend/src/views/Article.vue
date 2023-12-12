@@ -22,48 +22,43 @@
         <v-divider thickness="5" class="border-opacity-100" style="margin: 5px 0 10px"></v-divider>
       </div>
 
-      <v-container class="px-0">
-        <v-row>
-          <v-col cols="12" md="4" lg="3" v-if="!!article.attributes.image.data">
-            <v-row>
-              <v-col cols="12" sm="5" md="12" class="pb-1">
-                <v-card
-                  max-width="400px"
-                  variant="flat"
-                >
-                  <v-img :src="articleImage" class="rounded-lg" cover></v-img>
-                  <v-card-subtitle class="py-2 px-1 text-subtitle-1">
-                    {{ article.attributes.image.data.attributes.caption }}
-                  </v-card-subtitle>
-                </v-card>
-              </v-col>
-              <v-col cols="12" sm md="12" class="pt-1">
-                <div class="side-info-container" v-if="!!article.attributes.alternativeTitles">
-                  <p class="side-info-title">Outras grafias de nome</p>
-                  <p>{{ article.attributes.alternativeTitles }}</p>
-                </div>
-                <div class="side-info-container" v-if="!!article.attributes.birth">
-                  <p class="side-info-title">Nascimento</p>
-                  <p> {{ article.attributes.birth.place }}, {{ article.attributes.birth.date }}</p>
-                </div>
-                <div class="side-info-container" v-if="!!article.attributes.death">
-                  <p class="side-info-title">Falecimento</p>
-                  <p> {{ article.attributes.death.place }}, {{ article.attributes.death.date }}</p>
-                </div>
-                <div class="side-info-container">
-                  <p class="side-info-title">Tags</p>
-                  <ChipList :chips="tags" />
-                </div>
-                <v-divider thickness="3" class="border-opacity-100" color="var(--transites-red)"></v-divider>
-              </v-col>
-            </v-row>
-          </v-col>
-          <v-col cols="12" md lg v-if="!!article.attributes.summary">
-            <div class="mb-6" v-html="useMarkdown(article.attributes.summary)"></div>
-            <SectionList :sections="article.attributes.sections" :colors="sectionColors" />
-          </v-col>
-        </v-row>
-      </v-container>
+      <ArticleBody>
+
+        <template #side-panel-header v-if="!!article.attributes.image.data">
+          <v-card
+            max-width="400px"
+            variant="flat"
+          >
+            <v-img :src="articleImage" class="rounded-lg" cover></v-img>
+            <v-card-subtitle class="py-2 px-1 text-subtitle-1">
+              {{ article.attributes.image.data.attributes.caption }}
+            </v-card-subtitle>
+          </v-card>
+        </template>
+
+        <template #side-panel-body>
+          <div class="side-info-container" v-if="!!article.attributes.alternativeTitles">
+            <p class="side-info-title">Outras grafias de nome</p>
+            <p>{{ article.attributes.alternativeTitles }}</p>
+          </div>
+          <div class="side-info-container" v-if="!!article.attributes.birth">
+            <p class="side-info-title">Nascimento</p>
+            <p> {{ article.attributes.birth.place }}, {{ article.attributes.birth.date }}</p>
+          </div>
+          <div class="side-info-container" v-if="!!article.attributes.death">
+            <p class="side-info-title">Falecimento</p>
+            <p> {{ article.attributes.death.place }}, {{ article.attributes.death.date }}</p>
+          </div>
+          <div class="side-info-container" v-if="tags.length > 0">
+            <p class="side-info-title">Tags</p>
+            <ChipList :chips="tags" />
+          </div>
+        </template>
+
+        <div v-if="article.attributes.summary" class="mb-6" v-html="useMarkdown(article.attributes.summary)"></div>
+        <SectionList :sections="article.attributes.sections" :colors="sectionColors" />
+
+      </ArticleBody>
     </div>
   </v-container>
 </template>
@@ -73,6 +68,7 @@ import NotFound from '@/components/NotFound.vue'
 import SectionList from '@/components/SectionList.vue'
 import ChipList from '@/components/ChipList.vue'
 import AuthorList from '@/components/AuthorList.vue'
+import ArticleBody from '@/components/ArticleBody.vue'
 
 import { useRoute } from 'vue-router'
 import axios from 'axios'
@@ -158,7 +154,8 @@ export default {
     NotFound: NotFound,
     SectionList: SectionList,
     ChipList: ChipList,
-    AuthorList: AuthorList
+    AuthorList: AuthorList,
+    ArticleBody: ArticleBody
   }
 }
 </script>
