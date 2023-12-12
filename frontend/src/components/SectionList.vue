@@ -11,7 +11,7 @@
         {{ section.title }}
       </v-expansion-panel-title>
       <v-expansion-panel-text>
-        <div :class="section.class" v-html="section.html"></div>
+        <div :class="section.class" style="color: var(--vt-c-black)" v-html="section.html"></div>
       </v-expansion-panel-text>
     </v-expansion-panel>
   </v-expansion-panels>
