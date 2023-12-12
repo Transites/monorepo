@@ -1,7 +1,7 @@
 <template>
-  <div style="height: 100%">
-    <v-progress-linear indeterminate v-if="!article && !error" color="var(--transites-red)"></v-progress-linear>
-    <NotFound v-if="error" />
+  <v-progress-linear indeterminate v-if="!article && !error" color="var(--transites-red)"></v-progress-linear>
+  <NotFound v-if="error" height="100%" />
+  <v-container>
     <div style="padding: 0 30px 0 30px" v-if="!!article">
       <div style="color: var(--transites-red)">
         <div>
@@ -32,29 +32,27 @@
         </div>
       </div>
 
-      <v-container style="color: var(--transites-red)" fluid>
+      <v-container class="px-0">
         <v-row>
-          <v-card
-            style="border-width: 4px; margin: 20px"
-            variant="outlined"
-            width="min(400px, 100%)"
-            class="rounded-lg"
-            v-if="!!article.attributes.image.data"
-          >
-            <v-img :src="articleImage" cover></v-img>
-            <v-card-title>
-              {{ article.attributes.image.data.attributes.caption }}
-            </v-card-title>
-          </v-card>
-          <v-col cols="12" md="6" style="padding: 20px" v-if="!!article.attributes.summary">
-            <div v-html="useMarkdown(article.attributes.summary)"></div>
+          <v-col cols="12" md="4" v-if="!!article.attributes.image.data">
+            <v-card
+              max-width="400px"
+              class="rounded-lg"
+            >
+              <v-img :src="articleImage" cover></v-img>
+              <v-card-title>
+                {{ article.attributes.image.data.attributes.caption }}
+              </v-card-title>
+            </v-card>
+          </v-col>
+          <v-col cols="12" md v-if="!!article.attributes.summary">
+            <div class="mb-6" v-html="useMarkdown(article.attributes.summary)"></div>
+            <SectionList :sections="article.attributes.sections" :colors="sectionColors" />
           </v-col>
         </v-row>
       </v-container>
-
-      <SectionList :sections="article.attributes.sections" :colors="sectionColors" />
     </div>
-  </div>
+  </v-container>
 </template>
 
 <script>
