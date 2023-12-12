@@ -37,12 +37,12 @@
           <v-col cols="12" md="4" v-if="!!article.attributes.image.data">
             <v-card
               max-width="400px"
-              class="rounded-lg"
+              variant="flat"
             >
-              <v-img :src="articleImage" cover></v-img>
-              <v-card-title>
+              <v-img :src="articleImage" class="rounded-lg" cover></v-img>
+              <v-card-subtitle class="py-2 px-1 text-subtitle-1">
                 {{ article.attributes.image.data.attributes.caption }}
-              </v-card-title>
+              </v-card-subtitle>
             </v-card>
           </v-col>
           <v-col cols="12" md v-if="!!article.attributes.summary">
