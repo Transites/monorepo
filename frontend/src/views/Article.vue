@@ -3,23 +3,20 @@
   <NotFound v-if="error" height="100%" />
   <v-container>
     <div style="padding: 0 30px 0 30px" v-if="!!article">
+      <h1>{{ article.attributes.title }}</h1>
+      <h3><AuthorList :authors="authors" /></h3>
+      <p>
+        Publicado em: {{ formatDateToLocale(article.attributes.publishedAt) }} | Atualizado em:
+        {{ formatDateToLocale(article.attributes.updatedAt) }}
+      </p>
+
       <div style="color: var(--transites-red)">
-        <div>
-          <h1>{{ article.attributes.title }}</h1>
-          <h3>
-            <AuthorList :authors="authors" />
-          </h3>
-          <p>
-            Publicado em: {{ formatDateToLocale(article.attributes.publishedAt) }} | Atualizado em:
-            {{ formatDateToLocale(article.attributes.updatedAt) }}
-          </p>
-        </div>
-
-        <v-divider thickness="5" class="border-opacity-100" style="margin: 10px 0 5px"></v-divider>
-
+        <v-divider thickness="3" class="border-opacity-100 mt-2" color="var(--transites-red)"></v-divider>
         <ChipList :chips="categories" />
-
-        <v-divider thickness="5" class="border-opacity-100" style="margin: 5px 0 10px"></v-divider>
+        <v-divider
+          v-if="categories.length > 0"
+          thickness="3" class="border-opacity-100" color="var(--transites-red)"
+        ></v-divider>
       </div>
 
       <ArticleBody>
