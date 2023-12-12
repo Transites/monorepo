@@ -6,7 +6,6 @@
       <div style="color: var(--transites-red)">
         <div>
           <h1>{{ article.attributes.title }}</h1>
-          <h2>{{ article.attributes.alternativeTitles }}</h2>
           <h3>
             <AuthorList :authors="authors" />
           </h3>
@@ -39,6 +38,10 @@
                 </v-card>
               </v-col>
               <v-col cols="12" sm md="12" class="pt-1">
+                <div class="side-info-container" v-if="!!article.attributes.alternativeTitles">
+                  <p class="side-info-title">Outras grafias de nome</p>
+                  <p>{{ article.attributes.alternativeTitles }}</p>
+                </div>
                 <div class="side-info-container" v-if="!!article.attributes.birth">
                   <p class="side-info-title">Nascimento</p>
                   <p> {{ article.attributes.birth.place }}, {{ article.attributes.birth.date }}</p>
