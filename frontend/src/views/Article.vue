@@ -21,29 +21,34 @@
         <ChipList :chips="categoriesAndTags" color="var(--transites-red)" />
 
         <v-divider thickness="5" class="border-opacity-100" style="margin: 5px 0 10px"></v-divider>
-
-        <div>
-          <h3 v-if="!!article.attributes.birth">
-            Nascimento: {{ article.attributes.birth.place }}, {{ article.attributes.birth.date }}
-          </h3>
-          <h3 v-if="!!article.attributes.death">
-            Falecimento: {{ article.attributes.death.place }}, {{ article.attributes.death.date }}
-          </h3>
-        </div>
       </div>
 
       <v-container class="px-0">
         <v-row>
           <v-col cols="12" md="4" v-if="!!article.attributes.image.data">
-            <v-card
-              max-width="400px"
-              variant="flat"
-            >
-              <v-img :src="articleImage" class="rounded-lg" cover></v-img>
-              <v-card-subtitle class="py-2 px-1 text-subtitle-1">
-                {{ article.attributes.image.data.attributes.caption }}
-              </v-card-subtitle>
-            </v-card>
+            <v-row>
+              <v-col cols="12" sm="5" md="12" class="pb-1">
+                <v-card
+                  max-width="400px"
+                  variant="flat"
+                >
+                  <v-img :src="articleImage" class="rounded-lg" cover></v-img>
+                  <v-card-subtitle class="py-2 px-1 text-subtitle-1">
+                    {{ article.attributes.image.data.attributes.caption }}
+                  </v-card-subtitle>
+                </v-card>
+              </v-col>
+              <v-col cols="12" sm md="12" class="pt-1">
+                <div class="side-info-container" v-if="!!article.attributes.birth">
+                  <p class="side-info-title">Nascimento</p>
+                  <p> {{ article.attributes.birth.place }}, {{ article.attributes.birth.date }}</p>
+                </div>
+                <div class="side-info-container" v-if="!!article.attributes.death">
+                  <p class="side-info-title">Falecimento</p>
+                  <p> {{ article.attributes.death.place }}, {{ article.attributes.death.date }}</p>
+                </div>
+              </v-col>
+            </v-row>
           </v-col>
           <v-col cols="12" md v-if="!!article.attributes.summary">
             <div class="mb-6" v-html="useMarkdown(article.attributes.summary)"></div>
@@ -156,4 +161,11 @@ export default {
 </script>
 
 <style scoped>
+.side-info-title {
+  font-weight: bold;
+}
+
+.side-info-container {
+  margin-bottom: 1.25em;
+}
 </style>
