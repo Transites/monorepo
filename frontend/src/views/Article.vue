@@ -17,14 +17,14 @@
 
         <v-divider thickness="5" class="border-opacity-100" style="margin: 10px 0 5px"></v-divider>
 
-        <ChipList :chips="categoriesAndTags" color="var(--transites-red)" />
+        <ChipList :chips="categories" />
 
         <v-divider thickness="5" class="border-opacity-100" style="margin: 5px 0 10px"></v-divider>
       </div>
 
       <v-container class="px-0">
         <v-row>
-          <v-col cols="12" md="4" v-if="!!article.attributes.image.data">
+          <v-col cols="12" md="4" lg="3" v-if="!!article.attributes.image.data">
             <v-row>
               <v-col cols="12" sm="5" md="12" class="pb-1">
                 <v-card
@@ -50,10 +50,15 @@
                   <p class="side-info-title">Falecimento</p>
                   <p> {{ article.attributes.death.place }}, {{ article.attributes.death.date }}</p>
                 </div>
+                <div class="side-info-container">
+                  <p class="side-info-title">Tags</p>
+                  <ChipList :chips="tags" />
+                </div>
+                <v-divider thickness="3" class="border-opacity-100" color="var(--transites-red)"></v-divider>
               </v-col>
             </v-row>
           </v-col>
-          <v-col cols="12" md v-if="!!article.attributes.summary">
+          <v-col cols="12" md lg v-if="!!article.attributes.summary">
             <div class="mb-6" v-html="useMarkdown(article.attributes.summary)"></div>
             <SectionList :sections="article.attributes.sections" :colors="sectionColors" />
           </v-col>
@@ -73,22 +78,16 @@ import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { useMarkdown } from '@/composables/markdown.js';
 
-function createChipList(article) {
-  const formatChip = (item) => {
+function createChipList(list) {
+  return list.map(item => {
     return {
       id: item.id,
       name: item.attributes.name
     }
-  }
-
-  const categories = article.attributes.categories.data.map(formatChip);
-  const tags = article.attributes.tags.data.map(formatChip);
-
-  return categories.concat(tags);
+  })
 }
 
-function createAuthorList(article) {
-  const authors = article.attributes.authors.data;
+function createAuthorList(authors) {
   return authors.map(author => {
     return {
       id: author.id,
@@ -146,8 +145,9 @@ export default {
 
       axios.get(`${base_url}/api/${type}-articles/${id}?populate=*`).then((response) => {
         this.article = response.data.data;
-        this.categoriesAndTags = createChipList(this.article);
-        this.authors = createAuthorList(this.article);
+        this.categories = createChipList(this.article.attributes.categories.data);
+        this.tags = createChipList(this.article.attributes.tags.data);
+        this.authors = createAuthorList(this.article.attributes.authors.data);
       }).catch(error => {
         console.log(error);
         this.error = true;
