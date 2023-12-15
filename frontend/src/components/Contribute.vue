@@ -1,40 +1,37 @@
 <template>
-  <v-container>
-    <v-row>
-      <v-col cols="4">
-        <div class="contribute-container">
-          <div class="d-flex flex-row">
-            <img
-              class="contribute-icon"
-              src="https://cdn-icons-png.flaticon.com/512/1105/1105791.png"
-            />
-            <h1 class="contribute-title">Contribua com <br />o Transites</h1>
-          </div>
-          <p style="color: var(--transites-gray-purple)">Envie sua sugestão, elogio ou crítica...
-          <br><br>
-          ...ou contribua com um verbete! (Clique <u>aqui</u> para conferir nossas normas de publicação)
-          </p>
-        </div>
-      </v-col>
-      <v-col cols="8">
-        <v-form ref="emailForm">
-          <v-text-field v-model="firstName" :rules="rules" label="Nome completo"></v-text-field>
-          <v-text-field v-model="subject" :rules="rules" label="Assunto"></v-text-field>
-          <v-textarea v-model="message" :rules="rules" label="Mensagem"></v-textarea>
-          <v-btn
-            class="text-white"
-            type="submit"
-            color="var(--transites-gray-purple)"
-            @click.prevent="sendEmail"
-            block
-          >Enviar</v-btn>
-        </v-form>
-      </v-col>
-    </v-row>
-  </v-container>
+  <HomeSection>
+    <template #icon>
+      <v-icon icon="mdi-form-select" size="120"></v-icon>
+    </template>
+    <template #title>
+      <h1>Contribua com o<br />Transitos | Circulation</h1>
+    </template>
+    <template #subtitle>
+      <p>Envie sua sugestão, elogio ou crítica...</p>
+      <p>...ou contribua com um verbete!</p>
+      <p>(Clique <u>aqui</u> para conferir nossas normas de publicação)</p>
+    </template>
+    <template #text>
+      <v-form ref="emailForm">
+        <v-text-field v-model="firstName" :rules="rules" label="Nome completo"></v-text-field>
+        <v-text-field v-model="subject" :rules="rules" label="Assunto"></v-text-field>
+        <v-textarea v-model="message" :rules="rules" label="Mensagem"></v-textarea>
+        <v-btn
+          class="text-white"
+          type="submit"
+          color="var(--transites-gray-purple)"
+          @click.prevent="sendEmail"
+          block
+          >Enviar</v-btn
+        >
+      </v-form>
+    </template>
+  </HomeSection>
 </template>
 
 <script>
+import HomeSection from '@/components/HomeSection.vue'
+
 export default {
   data: () => ({
     firstName: '',
@@ -59,24 +56,9 @@ export default {
         }
       })
     }
+  },
+  components: {
+    HomeSection: HomeSection
   }
 }
 </script>
-
-<style scoped>
-.contribute-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  height: 100%;
-}
-.contribute-icon {
-  width: 50%;
-}
-.contribute-title {
-  font-size: 2em;
-  color: var(--transites-gray-purple);
-}
-
-</style>
