@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-row align="center">
-      <v-col cols="12" md="6" style="color: var(--transites-gray-purple)" class="mb-10">
+      <v-col cols="12" md="6" class="mb-10">
         <v-row align="center">
           <v-col cols="12" sm="4" :align="$vuetify.display.smAndUp ? 'right' : 'center'">
             <slot name="icon"></slot>

@@ -1,15 +1,17 @@
 <template>
   <HomeSection>
     <template #icon>
-      <v-icon icon="mdi-form-select" size="120"></v-icon>
+      <v-icon class="colored" icon="mdi-form-select" size="120"></v-icon>
     </template>
     <template #title>
-      <h1>Contribua com o<br />Transitos | Circulation</h1>
+      <h1 class="colored">Contribua com o<br />Transitos | Circulation</h1>
     </template>
     <template #subtitle>
-      <p>Envie sua sugestão, elogio ou crítica...</p>
-      <p>...ou contribua com um verbete!</p>
-      <p>(Clique <u>aqui</u> para conferir nossas normas de publicação)</p>
+      <div class="colored">
+        <p>Envie sua sugestão, elogio ou crítica...</p>
+        <p>...ou contribua com um verbete!</p>
+        <p>(Clique <u>aqui</u> para conferir nossas normas de publicação)</p>
+      </div>
     </template>
     <template #text>
       <v-form ref="emailForm">
@@ -62,3 +64,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.colored {
+  color: var(--transites-gray-purple);
+}
+</style>
