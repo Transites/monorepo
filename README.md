@@ -10,7 +10,7 @@ Este repositório contém o frontend do projeto Transites desenvolvido na discip
 | VITE_STRAPI_BASE_URL  | URL do strapi | http://localhost:1337 |
 
 > [!NOTE]  
-> A variável 'VITE_STRAPI_BASE_URL' precisa estar presente para que o frontend
+> A variável `VITE_STRAPI_BASE_URL` precisa estar presente para que o frontend
 seja exibido corretamente.
 
 ## Como rodar o projeto
