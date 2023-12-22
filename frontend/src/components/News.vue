@@ -105,7 +105,7 @@ export default {
             }
           }
           return null;
-        })
+        }).catch(error => {this.error = true})
       } catch (error) {
         this.error = error
       }
