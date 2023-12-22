@@ -136,5 +136,6 @@ export default {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  color: black;
 }
 </style>
