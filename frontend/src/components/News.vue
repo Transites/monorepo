@@ -33,7 +33,7 @@
               cover
               align="start"
             >
-              <v-card-title style="color: var(--transites-blue)">Verbete</v-card-title>
+              <v-card-title style="color: var(--transites-blue)">{{title_news_image}}</v-card-title>
             </v-img>
           </v-card>
         </v-col>
@@ -57,7 +57,8 @@ export default {
   },
   data: () => ({
     entries: null,
-    url_news_image : ""
+    url_news_image : "",
+    title_news_image : ""
   }),
   computed: {
     propStyle () {
@@ -99,6 +100,7 @@ export default {
                 const formats = item.attributes.image.data.attributes.formats;
                 const key = Object.keys(formats)[0];
 
+                this.title_news_image = item.attributes.title
                 this.url_news_image = formats[key].url;
                 return null;
               }
