@@ -15,6 +15,7 @@
                 style="color: var(--transites-blue)"
                 :title="entry.title"
                 :subtitle="entry.category"
+                @click="$router.push(`article/person/${entry.id}`)"
               >
               </v-card>
             </v-col>
@@ -28,11 +29,11 @@
           >
             <v-img
               class="align-end text-white"
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bf/Mona_Lisa-restored.jpg/1200px-Mona_Lisa-restored.jpg"
+              :src="url_news_image"
               cover
               align="start"
             >
-              <v-card-title style="color: var(--transites-blue)">Verbete</v-card-title>
+              <v-card-title style="color: var(--transites-blue)">{{title_news_image}}</v-card-title>
             </v-img>
           </v-card>
         </v-col>
@@ -52,9 +53,12 @@ export default {
   },
   mounted() {
     this.fetchDataFromStrapi()
+    this.fetchImagesFromStrapi()
   },
   data: () => ({
-    entries: null
+    entries: null,
+    url_news_image : "",
+    title_news_image : ""
   }),
   computed: {
     propStyle () {
@@ -73,12 +77,37 @@ export default {
           this.entries = this.raw_response.map((entry) => {
           return {
             title: entry.attributes.title,
+            id: entry.id,
             category: entry.attributes.categories.data.length
               ? entry.attributes.categories.data[0].attributes.name
               : 'Uncategorized'
           }
           })
         })
+      } catch (error) {
+        this.error = error
+      }
+    },
+    fetchImagesFromStrapi() {
+      const base_url = import.meta.env.VITE_STRAPI_BASE_URL
+
+      try {
+        axios.get(`${base_url}/api/person-articles/?pagination[limit]=8&populate=image&sort=createdAt:desc`).then((response) => {
+          this.imageData = response.data.data
+          if (this.imageData && this.imageData.length > 0) {
+            for (const item of this.imageData) {
+              if (item.attributes.image.data) {
+                const formats = item.attributes.image.data.attributes.formats;
+                const key = Object.keys(formats)[0];
+
+                this.title_news_image = item.attributes.title
+                this.url_news_image = formats[key].url;
+                return null;
+              }
+            }
+          }
+          return null;
+        }).catch(error => {this.error = true})
       } catch (error) {
         this.error = error
       }
