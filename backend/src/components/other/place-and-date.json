@@ -1,0 +1,16 @@
+{
+  "collectionName": "components_other_place_and_dates",
+  "info": {
+    "displayName": "Place and Date",
+    "icon": "attachment"
+  },
+  "options": {},
+  "attributes": {
+    "place": {
+      "type": "string"
+    },
+    "date": {
+      "type": "date"
+    }
+  }
+}
