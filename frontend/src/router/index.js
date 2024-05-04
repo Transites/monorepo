@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Home from '../views/Home.vue'
 import Article from '../views/Article.vue'
+import SearchView from '../views/SearchView.vue'
 import PageNotFound from '../views/PageNotFound.vue'
 
 const router = createRouter({
@@ -11,10 +12,15 @@ const router = createRouter({
       name: 'Verbete',
       component: Article
     },
-    {
+    { 
       path: '/',
       name: 'Início',
       component: Home
+    },
+    {
+      path: '/search',
+      name: 'Busca Avançada',
+      component: SearchView
     },
     {
       path: '/404',
