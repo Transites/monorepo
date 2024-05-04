@@ -101,12 +101,13 @@ export default {
   },
   computed: {
     articleImage() {
-      if (!this.article.attributes.image.data) return "";
+      const data = this.article.attributes.image.data;
+      if (!data) return "";
 
-      const formats = this.article.attributes.image.data.attributes.formats;
-      const key = Object.keys(formats)[0];
+      const path = data.attributes.url
+      const base_url = import.meta.env.VITE_STRAPI_BASE_URL
 
-      return formats[key].url;
+      return `${base_url}${path}`;
     }
   },
   data() {

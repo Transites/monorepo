@@ -1,0 +1,25 @@
+{
+  "collectionName": "components_section_strict_text_sections",
+  "info": {
+    "displayName": "Default Text Section",
+    "icon": "layer",
+    "description": ""
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "enumeration",
+      "enum": [
+        "Publicações",
+        "Bibliografia",
+        "Artigo",
+        "Premiações"
+      ],
+      "required": true
+    },
+    "content": {
+      "type": "richtext",
+      "required": true
+    }
+  }
+}

@@ -11,3 +11,13 @@ services:
     - './frontend:/app'
     - '/app/node_modules'
     command: npm run dev
+  backend:
+    build:
+      context: ./backend
+      target: 'base'
+    ports:
+    - '1337:1337'
+    volumes:
+    - './backend:/app'
+    - '/app/node_modules'
+    command: npm run dev
