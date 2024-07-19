@@ -65,9 +65,9 @@ export default {
     items: [
       {
         src: 'https://cdn.vuetifyjs.com/images/carousel/squirrel.jpg',
-        title: 'Título 1',
+        title: 'Cahiers du Brésil Contemporain',
         subtitle: 'Subtítulo 1',
-        text: 'Algum tempo hesitei se devia abrir estas memórias pelo princípio ou pelo fim, isto é, se poria em primeiro lugar o meu nascimento ou a minha morte. Suposto o uso vulgar seja começar pelo nascimento, duas considerações me levaram a adotar diferente método: a primeira'
+        text: 'A revista era uma publicação da Fondation Maison des Sciences de l’Homme (FMSH) e publicava, em francês, artigos em todas as disciplinas das ciências humanas e sociais, tentando construir pontes entre a pesquisa realizada no Brasil e por brasilianistas, em particular franceses. Apesar de ter publicado alguns exemplares “Micellanea”, os números eram em geral temáticos, muitas vezes duplos, compondo volumes bastante significativos.'
       },
       {
         src: 'https://cdn.vuetifyjs.com/images/carousel/sky.jpg',

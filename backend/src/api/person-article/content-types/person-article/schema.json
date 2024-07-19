@@ -44,12 +44,6 @@
       "target": "api::tag.tag",
       "inversedBy": "person_articles"
     },
-    "categories": {
-      "type": "relation",
-      "relation": "manyToMany",
-      "target": "api::category.category",
-      "inversedBy": "person_articles"
-    },
     "alternativeTitles": {
       "type": "string",
       "pluginOptions": {
@@ -97,6 +91,37 @@
       "type": "component",
       "repeatable": false,
       "component": "other.place-and-date",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "Obras": {
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "type": "richtext"
+    },
+    "Bibliografia": {
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "type": "richtext"
+    },
+    "Video": {
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ],
+      "type": "media",
+      "multiple": true,
       "pluginOptions": {
         "i18n": {
           "localized": true

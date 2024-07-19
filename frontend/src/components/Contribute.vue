@@ -8,9 +8,9 @@
     </template>
     <template #subtitle>
       <div class="colored">
-        <p>Envie sua sugestão, elogio ou crítica...</p>
-        <p>...ou contribua com um verbete!</p>
-        <p>(Clique <u>aqui</u> para conferir nossas normas de publicação)</p>
+        <p>Envie sua sugestão, elogio, crítica</p>
+        <p>ou contribua com um verbete!</p>
+        <p>Clique <router-link to="/normas-de-publicacao">aqui</router-link> para conferir nossas normas de publicação</p>
       </div>
     </template>
     <template #text>

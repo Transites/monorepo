@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_publication_publications",
+  "info": {
+    "displayName": "Publication"
+  },
+  "options": {},
+  "attributes": {
+    "Date": {
+      "type": "date"
+    },
+    "Location": {
+      "type": "string"
+    }
+  }
+}

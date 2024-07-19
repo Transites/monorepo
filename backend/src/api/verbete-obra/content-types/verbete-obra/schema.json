@@ -1,0 +1,69 @@
+{
+  "kind": "collectionType",
+  "collectionName": "verbete_obras",
+  "info": {
+    "singularName": "verbete-obra",
+    "pluralName": "verbete-obras",
+    "displayName": "Verbete Obra",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "richtext"
+    },
+    "autor": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::author.author"
+    },
+    "tags": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::tag.tag"
+    },
+    "categoria": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::category.category"
+    },
+    "alternativeTitles": {
+      "type": "string"
+    },
+    "Sections": {
+      "type": "dynamiczone",
+      "components": [
+        "section.free-text-section",
+        "section.strict-text-section"
+      ]
+    },
+    "Image": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": [
+        "images",
+        "files",
+        "videos",
+        "audios"
+      ]
+    },
+    "Franca": {
+      "displayName": "Publication",
+      "type": "component",
+      "repeatable": false,
+      "component": "publication.publication"
+    },
+    "Brasil": {
+      "type": "component",
+      "repeatable": true,
+      "component": "publication.publication"
+    }
+  }
+}
