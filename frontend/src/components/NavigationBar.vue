@@ -45,7 +45,7 @@
       <v-select
         v-model="selectedCategory"
         :items="categories"
-        item-text="name"
+        item-text="title"
         item-value="id"
         label="Categoria"
         clearable
@@ -53,7 +53,7 @@
       <v-select
         v-model="selectedTags"
         :items="tags"
-        item-text="name"
+        item-text="title"
         item-value="id"
         label="Tags"
         multiple
@@ -84,7 +84,7 @@ export default {
         const response = await api.get('/categories');
         this.categories = response.data.data.map(category => ({
           id: category.id.toString(), // Convertendo id para string
-          name: category.attributes.name
+          title: category.attributes.name
         }));
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -95,7 +95,7 @@ export default {
         const response = await api.get('/tags');
         this.tags = response.data.data.map(tag => ({
           id: tag.id.toString(), // Convertendo id para string
-          name: tag.attributes.name
+          title: tag.attributes.name
         }));
       } catch (error) {
         console.error('Error fetching tags:', error);
