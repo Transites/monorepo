@@ -12,6 +12,17 @@ export interface OtherPlaceAndDate extends Schema.Component {
   };
 }
 
+export interface PublicationPublication extends Schema.Component {
+  collectionName: 'components_publication_publications';
+  info: {
+    displayName: 'Publication';
+  };
+  attributes: {
+    Date: Attribute.Date;
+    Location: Attribute.String;
+  };
+}
+
 export interface SectionFreeTextSection extends Schema.Component {
   collectionName: 'components_section_free_text_sections';
   info: {
@@ -50,6 +61,7 @@ declare module '@strapi/types' {
   export module Shared {
     export interface Components {
       'other.place-and-date': OtherPlaceAndDate;
+      'publication.publication': PublicationPublication;
       'section.free-text-section': SectionFreeTextSection;
       'section.strict-text-section': SectionStrictTextSection;
     }

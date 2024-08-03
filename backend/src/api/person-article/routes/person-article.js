@@ -1,9 +1,14 @@
-'use strict';
-
-/**
- * person-article router
- */
-
-const { createCoreRouter } = require('@strapi/strapi').factories;
-
-module.exports = createCoreRouter('api::person-article.person-article');
+module.exports = {
+  routes: [
+    {
+      method: 'GET',
+      path: '/person-articles',
+      handler: 'person-article.find',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
+    // Outras rotas...
+  ],
+};

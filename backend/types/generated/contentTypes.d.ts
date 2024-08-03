@@ -832,13 +832,34 @@ export interface ApiCategoryCategory extends Schema.CollectionType {
   options: {
     draftAndPublish: true;
   };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
   attributes: {
-    name: Attribute.String & Attribute.Required;
-    description: Attribute.RichText;
+    name: Attribute.String &
+      Attribute.Required &
+      Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    description: Attribute.RichText &
+      Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
     person_articles: Attribute.Relation<
       'api::category.category',
-      'manyToMany',
+      'oneToMany',
       'api::person-article.person-article'
+    >;
+    verbete_obras: Attribute.Relation<
+      'api::category.category',
+      'oneToMany',
+      'api::verbete-obra.verbete-obra'
     >;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
@@ -855,6 +876,12 @@ export interface ApiCategoryCategory extends Schema.CollectionType {
       'admin::user'
     > &
       Attribute.Private;
+    localizations: Attribute.Relation<
+      'api::category.category',
+      'oneToMany',
+      'api::category.category'
+    >;
+    locale: Attribute.String;
   };
 }
 
@@ -898,11 +925,6 @@ export interface ApiPersonArticlePersonArticle extends Schema.CollectionType {
       'manyToMany',
       'api::tag.tag'
     >;
-    categories: Attribute.Relation<
-      'api::person-article.person-article',
-      'manyToMany',
-      'api::category.category'
-    >;
     alternativeTitles: Attribute.String &
       Attribute.SetPluginOptions<{
         i18n: {
@@ -930,6 +952,24 @@ export interface ApiPersonArticlePersonArticle extends Schema.CollectionType {
         };
       }>;
     death: Attribute.Component<'other.place-and-date'> &
+      Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    Obras: Attribute.RichText &
+      Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    Bibliografia: Attribute.RichText &
+      Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    Video: Attribute.Media &
       Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
@@ -965,12 +1005,13 @@ export interface ApiTagTag extends Schema.CollectionType {
     singularName: 'tag';
     pluralName: 'tags';
     displayName: 'Tag';
+    description: '';
   };
   options: {
     draftAndPublish: true;
   };
   attributes: {
-    name: Attribute.String;
+    name: Attribute.String & Attribute.Unique;
     description: Attribute.RichText;
     person_articles: Attribute.Relation<
       'api::tag.tag',
@@ -983,6 +1024,60 @@ export interface ApiTagTag extends Schema.CollectionType {
     createdBy: Attribute.Relation<'api::tag.tag', 'oneToOne', 'admin::user'> &
       Attribute.Private;
     updatedBy: Attribute.Relation<'api::tag.tag', 'oneToOne', 'admin::user'> &
+      Attribute.Private;
+  };
+}
+
+export interface ApiVerbeteObraVerbeteObra extends Schema.CollectionType {
+  collectionName: 'verbete_obras';
+  info: {
+    singularName: 'verbete-obra';
+    pluralName: 'verbete-obras';
+    displayName: 'Verbete Obra';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    title: Attribute.String;
+    summary: Attribute.RichText;
+    autor: Attribute.Relation<
+      'api::verbete-obra.verbete-obra',
+      'oneToOne',
+      'api::author.author'
+    >;
+    tags: Attribute.Relation<
+      'api::verbete-obra.verbete-obra',
+      'oneToMany',
+      'api::tag.tag'
+    >;
+    categoria: Attribute.Relation<
+      'api::verbete-obra.verbete-obra',
+      'oneToOne',
+      'api::category.category'
+    >;
+    alternativeTitles: Attribute.String;
+    Sections: Attribute.DynamicZone<
+      ['section.free-text-section', 'section.strict-text-section']
+    >;
+    Image: Attribute.Media;
+    Franca: Attribute.Component<'publication.publication'>;
+    Brasil: Attribute.Component<'publication.publication', true>;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::verbete-obra.verbete-obra',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::verbete-obra.verbete-obra',
+      'oneToOne',
+      'admin::user'
+    > &
       Attribute.Private;
   };
 }
@@ -1009,6 +1104,7 @@ declare module '@strapi/types' {
       'api::category.category': ApiCategoryCategory;
       'api::person-article.person-article': ApiPersonArticlePersonArticle;
       'api::tag.tag': ApiTagTag;
+      'api::verbete-obra.verbete-obra': ApiVerbeteObraVerbeteObra;
     }
   }
 }
