@@ -3,7 +3,7 @@ import Home from '../views/Home.vue'
 import Article from '../views/Article.vue'
 import PageNotFound from '../views/PageNotFound.vue'
 import NormasDePublicacao from '@/components/NormasdePublicacao.vue'
-import SearchResults from '@/views/SearchResults.vue'  // Adicione a importação
+import SearchResults from '../views/SearchResults.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -19,10 +19,9 @@ const router = createRouter({
       component: Home
     },
     {
-      path: '/search-results',
-      name: 'SearchResults',
-      component: SearchResults,
-      props: route => ({ results: JSON.parse(route.params.results || '[]') })
+      path: '/results',
+      name: 'Results',
+      component: SearchResults
     },
     {
       path: '/404',

@@ -59,52 +59,74 @@
         multiple
         clearable
       ></v-select>
-      <v-btn @click="performAdvancedSearch">Busca Avançada</v-btn>
+      <v-row>
+        <v-col>
+          <v-text-field
+            v-model="startDate"
+            type="date"
+            label="De"
+          ></v-text-field>
+        </v-col>
+        <v-col>
+          <v-text-field
+            v-model="endDate"
+            type="date"
+            label="Até"
+          ></v-text-field>
+        </v-col>
+      </v-row>
+      <v-btn @click="performAdvancedSearch" color="var(--transites-red)" block>
+        Buscar
+      </v-btn>
     </v-navigation-drawer>
+
+    <!-- Resultados -->
+    <div class="results">
+      <v-card
+        v-for="entry in searchResult"
+        :key="entry.id"
+        class="mx-auto my-8"
+        max-width="344"
+        elevation="16"
+        @click="$router.push(`/article/person/${entry.id}`)"
+      >
+        <v-card-item>
+          <v-card-title>{{ entry.title }}</v-card-title>
+          <v-card-subtitle>{{ entry.subtitle }}</v-card-subtitle>
+          <v-chip v-for="tag in entry.tags" :key="tag.name" color="primary">
+            {{ tag.name }}
+          </v-chip>
+        </v-card-item>
+        <v-card-text>
+          {{ entry.text }}
+        </v-card-text>
+      </v-card>
+    </div>
   </div>
 </template>
 
 <script>
-import api from '@/services/api';
+import axios from 'axios';
 
 export default {
   data() {
     return {
       drawer: false,
       searchQuery: '',
+      selectedCategory: null,
+      selectedTags: [],
+      startDate: '',
+      endDate: '',
       categories: [],
       tags: [],
-      selectedCategory: null,
-      selectedTags: []
+      searchResult: []
     };
   },
   methods: {
-    async fetchCategories() {
-      try {
-        const response = await api.get('/categories');
-        this.categories = response.data.data.map(category => ({
-          id: category.id.toString(), // Convertendo id para string
-          title: category.attributes.name
-        }));
-      } catch (error) {
-        console.error('Error fetching categories:', error);
-      }
-    },
-    async fetchTags() {
-      try {
-        const response = await api.get('/tags');
-        this.tags = response.data.data.map(tag => ({
-          id: tag.id.toString(), // Convertendo id para string
-          title: tag.attributes.name
-        }));
-      } catch (error) {
-        console.error('Error fetching tags:', error);
-      }
-    },
     async performSearch() {
       if (!this.searchQuery) return;
       try {
-        const response = await api.get('/person-articles', {
+        const response = await axios.get('http://localhost:1337/api/person-articles', {
           params: {
             filters: {
               title: {
@@ -114,7 +136,8 @@ export default {
             populate: ['tags', 'categories']
           }
         });
-        this.navigateSearchResults(response.data.data);
+        const results = JSON.stringify(response.data.data);
+        this.$router.push({ name: 'Results', query: { results } });
       } catch (error) {
         console.error('Error performing search:', error);
       }
@@ -123,30 +146,52 @@ export default {
       const filters = {
         title_contains: this.searchQuery,
         ...(this.selectedCategory ? { 'categories.id': this.selectedCategory } : {}),
-        ...(this.selectedTags.length ? { 'tags.id_in': this.selectedTags } : {})
+        ...(this.selectedTags.length ? { 'tags.id_in': this.selectedTags } : {}),
+        ...(this.startDate ? { createdAt_gte: this.startDate } : {}),
+        ...(this.endDate ? { createdAt_lte: this.endDate } : {})
       };
 
       try {
-        const response = await api.get('/person-articles', {
+        const response = await axios.get('http://localhost:1337/api/person-articles', {
           params: {
             filters,
             populate: ['tags', 'categories']
           }
         });
-        this.navigateSearchResults(response.data.data);
+        const results = JSON.stringify(response.data.data);
+        this.$router.push({ name: 'Results', query: { results } });
       } catch (error) {
         console.error('Error performing advanced search:', error);
       }
     },
-    navigateSearchResults(results) {
-      this.$router.push({ name: 'SearchResults', params: { results: JSON.stringify(results) } });
-    }
+    async fetchCategories() {
+      try {
+        const response = await axios.get('http://localhost:1337/api/categories');
+        this.categories = response.data.data.map(category => ({
+          id: category.id.toString(),
+          title: category.attributes.name
+        }));
+      } catch (error) {
+        console.error('Erro ao buscar categorias:', error);
+      }
+    },
+    async fetchTags() {
+      try {
+        const response = await axios.get('http://localhost:1337/api/tags');
+        this.tags = response.data.data.map(tag => ({
+          id: tag.id.toString(),
+          title: tag.attributes.name
+        }));
+      } catch (error) {
+        console.error('Erro ao buscar tags:', error);
+      }
+    },
   },
-  mounted() {
+  created() {
     this.fetchCategories();
     this.fetchTags();
   }
-}
+};
 </script>
 
 <style>
@@ -157,6 +202,11 @@ export default {
 .titleIcon {
   display: flex;
   align-items: center;
+}
+
+.results {
+  display: flex;
+  flex-wrap: wrap;
 }
 
 .hidden-sm-and-down {

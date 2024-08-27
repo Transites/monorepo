@@ -1,33 +1,87 @@
 <template>
-    <div>
-      <v-container>
+  <div style="padding-top: 80px">
+    <v-container>
+      <h2>Resultados da Pesquisa</h2>
+      <div v-if="filteredResults.length">
         <v-row>
-          <v-col v-for="article in results" :key="article.id" cols="12" md="4" lg="3">
-            <v-card :to="`/article/person-article/${article.id}`">
-              <v-card-title>{{ article.attributes.title }}</v-card-title>
-              <v-card-subtitle>{{ article.attributes.summary.substring(0, 100) }}...</v-card-subtitle>
-              <v-card-actions>
-                <v-btn text>Ver mais</v-btn>
-              </v-card-actions>
+          <v-col v-for="entry in filteredResults" :key="entry.id" cols="12" md="6" lg="4">
+            <v-card
+              class="mx-auto my-8"
+              max-width="344"
+              elevation="16"
+              @click="$router.push(`/article/person/${entry.id}`)"
+            >
+              <v-card-item>
+                <v-card-title>{{ entry.title }}</v-card-title>
+                <v-card-subtitle>{{ entry.subtitle || 'Subtítulo indisponível' }}</v-card-subtitle>
+                <div v-if="entry.tags && entry.tags.length">
+                  <v-chip v-for="tag in entry.tags" :key="tag.name" color="primary" class="mr-1">
+                    {{ tag.name }}
+                  </v-chip>
+                </div>
+                <div v-else>
+                  <v-chip color="grey" class="mr-1">Sem tags</v-chip>
+                </div>
+              </v-card-item>
+
+              <v-card-text>
+                {{ entry.text }}
+              </v-card-text>
             </v-card>
           </v-col>
         </v-row>
-      </v-container>
-    </div>
-  </template>
-  
-  <script>
-  export default {
-    props: {
-      results: {
-        type: Array,
-        default: () => []
-      }
+      </div>
+      <div v-else>
+        <p>Nenhum resultado encontrado.</p>
+      </div>
+    </v-container>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      results: [],
+      searchTerm: '', // Armazenar o termo de busca
+    };
+  },
+  mounted() {
+    const results = this.$route.query.results;
+    this.searchTerm = this.$route.query.searchTerm || ''; // Obter o termo de pesquisa da query
+
+    if (results) {
+      this.results = JSON.parse(results).map(entry => ({
+        id: entry.id,
+        title: entry.attributes.title || 'Título indisponível',
+        subtitle: entry.attributes.subtitle || 'Subtítulo indisponível',
+        text: entry.attributes.summary || 'Resumo indisponível',
+        tags: entry.attributes.tags.data.map(tag => ({
+          name: tag.attributes.name
+        })) || []
+      }));
+    }
+  },
+  computed: {
+    filteredResults() {
+      // Filtrar os resultados com base no termo de busca
+      return this.results.filter(entry => 
+        entry.title && entry.title.toLowerCase().includes(this.searchTerm.toLowerCase())
+      );
     }
   }
-  </script>
-  
-  <style>
-  /* Adicione estilos personalizados aqui */
-  </style>
-  
+};
+</script>
+
+<style>
+.results {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.v-card-item {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+}
+</style>
