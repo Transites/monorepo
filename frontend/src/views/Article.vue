@@ -1,167 +1,146 @@
 <template>
-  <v-progress-linear indeterminate v-if="!article && !error" color="var(--transites-red)"></v-progress-linear>
-  <NotFound v-if="error" height="100%" />
-  <v-container v-if="!!article">
-    <h1>{{ article.attributes.title }}</h1>
-    <h3><AuthorList :authors="authors" /></h3>
-    <p>
-      Publicado em: {{ formatDateToLocale(article.attributes.publishedAt) }} | Atualizado em:
-      {{ formatDateToLocale(article.attributes.updatedAt) }}
-    </p>
-
-    <div style="color: var(--transites-red)">
-      <v-divider thickness="3" class="border-opacity-100 mt-2" color="var(--transites-red)"></v-divider>
-      <ChipList :chips="categories" />
-      <v-divider
-        v-if="categories.length > 0"
-        thickness="3" class="border-opacity-100" color="var(--transites-red)"
-      ></v-divider>
+  <div id="article-view" class="article-container">
+    <div v-if="error" class="error">
+      {{ error }}
     </div>
+    <div v-else-if="loading" class="loading">
+      Carregando...
+    </div>
+    <div v-else class="article-content">
+      <!-- Título do Artigo -->
+      <h1 class="article-title">{{ article.attributes.title }}</h1>
 
-    <ArticleBody>
+      <!-- Sumário -->
+      <p v-html="article.attributes.summary" class="article-summary"></p>
+      
+      <!-- Imagens -->
+      <div v-if="article.attributes.image" class="article-images">
+        <img 
+          :src="getFullImageUrl(article.attributes.image.url)" 
+          :alt="article.attributes.image.alternativeText || 'Imagem do artigo'" 
+          class="article-image" 
+        />
+      </div>
 
-      <template #side-panel-header v-if="!!article.attributes.image.data">
-        <v-card
-          max-width="400px"
-          variant="flat"
-        >
-          <v-img :src="articleImage" class="rounded-lg" cover></v-img>
-          <v-card-subtitle class="py-2 px-1 text-subtitle-1">
-            {{ article.attributes.image.data.attributes.caption }}
-          </v-card-subtitle>
-        </v-card>
-      </template>
-
-      <template #side-panel-body>
-        <div class="side-info-container" v-if="!!article.attributes.alternativeTitles">
-          <p class="side-info-title">Outras grafias de nome</p>
-          <p>{{ article.attributes.alternativeTitles }}</p>
-        </div>
-        <div class="side-info-container" v-if="!!article.attributes.birth">
-          <p class="side-info-title">Nascimento</p>
-          <p> {{ article.attributes.birth.place }}, {{ article.attributes.birth.date }}</p>
-        </div>
-        <div class="side-info-container" v-if="!!article.attributes.death">
-          <p class="side-info-title">Falecimento</p>
-          <p> {{ article.attributes.death.place }}, {{ article.attributes.death.date }}</p>
-        </div>
-        <div class="side-info-container" v-if="tags.length > 0">
-          <p class="side-info-title">Tags</p>
-          <ChipList :chips="tags" />
-        </div>
-      </template>
-
-      <div v-if="article.attributes.summary" class="mb-6" v-html="useMarkdown(article.attributes.summary)"></div>
-      <SectionList :sections="article.attributes.sections" :colors="sectionColors" />
-
-    </ArticleBody>
-  </v-container>
+      <!-- Seções Dinâmicas -->
+      <div v-if="article.attributes.Obras" class="section">
+        <h2>Obras</h2>
+        <p v-html="article.attributes.Obras"></p>
+      </div>
+      
+      <div v-if="article.attributes.Bibliografia" class="section">
+        <h2>Bibliografia</h2>
+        <p v-html="article.attributes.Bibliografia"></p>
+      </div>
+      
+      <!-- Data de Atualização -->
+      <p class="updated">Última atualização: {{ new Date(article.attributes.updatedAt).toLocaleDateString() }}</p>
+    </div>
+  </div>
 </template>
 
 <script>
-import NotFound from '@/components/NotFound.vue'
-import SectionList from '@/components/SectionList.vue'
-import ChipList from '@/components/ChipList.vue'
-import AuthorList from '@/components/AuthorList.vue'
-import ArticleBody from '@/components/ArticleBody.vue'
-
-import { useRoute } from 'vue-router'
 import axios from 'axios'
-import { useMarkdown } from '@/composables/markdown.js';
-
-function createChipList(list) {
-  return list.map(item => {
-    return {
-      id: item.id,
-      name: item.attributes.name
-    }
-  })
-}
-
-function createAuthorList(authors) {
-  return authors.map(author => {
-    return {
-      id: author.id,
-      name: author.attributes.name,
-      institution: author.attributes.institution,
-      description: author.attributes.description
-    }
-  });
-}
 
 export default {
-  setup() {
-    return {
-      route: useRoute(),
-      useMarkdown: useMarkdown
-    }
-  },
-  mounted() {
-    this.fetchDataFromStrapi()
-  },
-  computed: {
-    articleImage() {
-      const data = this.article.attributes.image.data;
-      if (!data) return "";
-
-      const path = data.attributes.url
-      const base_url = import.meta.env.VITE_STRAPI_BASE_URL
-
-      return `${base_url}${path}`;
-    }
-  },
+  name: 'Article',
   data() {
     return {
       article: null,
-      sectionColors: [
-        'var(--transites-light-red)',
-        'var(--transites-yellow)',
-        'var(--transites-blue)',
-        'var(--transites-gray-purple)'
-      ],
-      error: false
+      error: null,
+      loading: true
+    }
+  },
+  async mounted() {
+    const { id } = this.$route.params;
+    try {
+      const response = await axios.get(`http://localhost:1337/api/person-articles/${id}?populate=*`);
+      this.article = response.data.data;
+      this.loading = false;
+    } catch (error) {
+      this.error = 'Não foi possível carregar o verbete.';
+      this.loading = false;
     }
   },
   methods: {
-    formatDateToLocale(date_text) {
-      const date = new Date(date_text)
-      return date.toLocaleString([], {
-        hour12: false
-      })
-    },
-
-    fetchDataFromStrapi() {
-      const id = this.route.params.id
-      const type = this.route.params.type
-      const base_url = import.meta.env.VITE_STRAPI_BASE_URL
-
-      axios.get(`${base_url}/api/${type}-articles/${id}?populate=*`).then((response) => {
-        this.article = response.data.data;
-        this.categories = createChipList(this.article.attributes.categories.data);
-        this.tags = createChipList(this.article.attributes.tags.data);
-        this.authors = createAuthorList(this.article.attributes.authors.data);
-      }).catch(error => {
-        console.log(error);
-        this.error = true;
-      });
+    getFullImageUrl(imagePath) {
+      return `http://localhost:1337${imagePath}`;
     }
-  },
-  components: {
-    NotFound: NotFound,
-    SectionList: SectionList,
-    ChipList: ChipList,
-    AuthorList: AuthorList,
-    ArticleBody: ArticleBody
   }
 }
 </script>
 
 <style scoped>
-.side-info-title {
-  font-weight: bold;
+.article-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Arial', sans-serif;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.side-info-container {
-  margin-bottom: 1.25em;
+.article-title {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  color: #333;
+  text-align: center;
+}
+
+.article-summary {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  color: #555;
+}
+
+.article-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.article-image {
+  max-width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.section {
+  margin-top: 20px;
+}
+
+.section h2 {
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+  color: #444;
+}
+
+.section p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #666;
+}
+
+.updated {
+  font-size: 0.9rem;
+  color: #999;
+  margin-top: 20px;
+  text-align: right;
+}
+
+.error {
+  color: red;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+.loading {
+  font-size: 1.2rem;
+  text-align: center;
+  color: #333;
 }
 </style>

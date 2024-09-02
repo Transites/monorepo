@@ -1,4 +1,3 @@
-// config/middlewares.js
 
 module.exports = [
   'strapi::logger',

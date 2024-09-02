@@ -9,6 +9,15 @@ module.exports = {
         middlewares: [],
       },
     },
+    {
+      method: 'GET',
+      path: '/person-articles/:id',
+      handler: 'person-article.findOne',
+      config: {
+        policies: [],
+        middlewares: [],
+      },
+    },
     // Outras rotas...
   ],
 };

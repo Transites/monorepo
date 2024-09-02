@@ -1,7 +1,9 @@
 'use strict';
 
+/**
+ * verbete-obra controller
+ */
+
 const { createCoreController } = require('@strapi/strapi').factories;
 
-module.exports = createCoreController('api::verbete-obra.verbete-obra', ({ strapi }) => ({
-  // Métodos customizados, se necessário
-}));
+module.exports = createCoreController('api::verbete-obra.verbete-obra');

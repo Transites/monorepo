@@ -44,6 +44,12 @@
       "target": "api::tag.tag",
       "inversedBy": "person_articles"
     },
+    "categories": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::category.category",
+      "inversedBy": "person_articles"
+    },
     "alternativeTitles": {
       "type": "string",
       "pluginOptions": {

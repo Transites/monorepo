@@ -1,8 +1,8 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import Home from '../views/Home.vue'
-import Article from '../views/Article.vue'
-import PageNotFound from '../views/PageNotFound.vue'
-import NormasDePublicacao from '@/components/NormasdePublicacao.vue'
+import { createRouter, createWebHistory } from 'vue-router';
+import Home from '../views/Home.vue';
+import Article from '../views/Article.vue';
+import PageNotFound from '../views/PageNotFound.vue';
+import NormasDePublicacao from '@/components/NormasdePublicacao.vue';
 import SearchResults from '../views/SearchResults.vue';
 
 const router = createRouter({
@@ -36,8 +36,13 @@ const router = createRouter({
       path: '/normas-de-publicacao',
       name: 'NormasDePublicacao',
       component: NormasDePublicacao
+    },
+    // Rota genérica para capturar qualquer caminho de 'article' que não foi definido
+    {
+      path: '/article/:type(.*)',
+      redirect: '/404'
     }
   ]
-})
+});
 
-export default router
+export default router;

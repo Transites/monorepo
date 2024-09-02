@@ -7,8 +7,8 @@
       ></v-app-bar-nav-icon>
 
       <div style="cursor: pointer" @click="$router.push('/')" class="titleIcon">
-        <img src="../assets/transites-icon.svg" alt="Icon" height="50" width="50" style="margin: 0 10px 0 10px">
-        <v-toolbar-title><b class="title">Transites</b></v-toolbar-title>
+        <img src="../assets/transites-icon.svg" alt="Icon" height="50" width="50" style="margin: 0 10px 0 10px" />
+        <v-toolbar-title><b class="title">Circulations</b></v-toolbar-title>
       </div>
 
       <v-spacer></v-spacer>
@@ -34,6 +34,7 @@
         Busca avançada
       </v-btn>
     </v-app-bar>
+
     <v-navigation-drawer v-model="drawer" temporary>
       <v-text-field
         label="Pesquisa"
@@ -61,18 +62,10 @@
       ></v-select>
       <v-row>
         <v-col>
-          <v-text-field
-            v-model="startDate"
-            type="date"
-            label="De"
-          ></v-text-field>
+          <v-text-field v-model="startDate" type="date" label="De"></v-text-field>
         </v-col>
         <v-col>
-          <v-text-field
-            v-model="endDate"
-            type="date"
-            label="Até"
-          ></v-text-field>
+          <v-text-field v-model="endDate" type="date" label="Até"></v-text-field>
         </v-col>
       </v-row>
       <v-btn @click="performAdvancedSearch" color="var(--transites-red)" block>
@@ -136,15 +129,22 @@ export default {
             populate: ['tags', 'categories']
           }
         });
-        const results = JSON.stringify(response.data.data);
-        this.$router.push({ name: 'Results', query: { results } });
+
+        if (response && response.data && response.data.data.length > 0) {
+          const results = JSON.stringify(response.data.data);
+          this.$router.push({ name: 'Results', query: { results } });
+        } else {
+          console.warn('No results found for the search query.');
+          this.$router.push({ name: 'Results', query: { results: [] } });
+        }
       } catch (error) {
         console.error('Error performing search:', error);
       }
     },
+
     async performAdvancedSearch() {
       const filters = {
-        title_contains: this.searchQuery,
+        ...(this.searchQuery ? { title_contains: this.searchQuery } : {}),
         ...(this.selectedCategory ? { 'categories.id': this.selectedCategory } : {}),
         ...(this.selectedTags.length ? { 'tags.id_in': this.selectedTags } : {}),
         ...(this.startDate ? { createdAt_gte: this.startDate } : {}),
@@ -158,12 +158,19 @@ export default {
             populate: ['tags', 'categories']
           }
         });
-        const results = JSON.stringify(response.data.data);
-        this.$router.push({ name: 'Results', query: { results } });
+
+        if (response && response.data && response.data.data.length > 0) {
+          const results = JSON.stringify(response.data.data);
+          this.$router.push({ name: 'Results', query: { results } });
+        } else {
+          console.warn('No results found for the advanced search.');
+          this.$router.push({ name: 'Results', query: { results: [] } });
+        }
       } catch (error) {
         console.error('Error performing advanced search:', error);
       }
     },
+
     async fetchCategories() {
       try {
         const response = await axios.get('http://localhost:1337/api/categories');
@@ -175,6 +182,7 @@ export default {
         console.error('Erro ao buscar categorias:', error);
       }
     },
+
     async fetchTags() {
       try {
         const response = await axios.get('http://localhost:1337/api/tags');

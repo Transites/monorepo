@@ -9,11 +9,11 @@
               class="mx-auto my-8"
               max-width="344"
               elevation="16"
-              @click="$router.push(`/article/person/${entry.id}`)"
+              @click="$router.push(`/article/person-articles/${entry.id}`)"
             >
               <v-card-item>
                 <v-card-title>{{ entry.title }}</v-card-title>
-                <v-card-subtitle>{{ entry.subtitle || 'Subtítulo indisponível' }}</v-card-subtitle>
+                <v-card-subtitle>{{ entry.subtitle }}</v-card-subtitle>
                 <div v-if="entry.tags && entry.tags.length">
                   <v-chip v-for="tag in entry.tags" :key="tag.name" color="primary" class="mr-1">
                     {{ tag.name }}
@@ -53,10 +53,12 @@ export default {
     if (results) {
       this.results = JSON.parse(results).map(entry => ({
         id: entry.id,
+        // Definimos 'person' como o tipo padrão
+        type: 'person',
         title: entry.attributes.title || 'Título indisponível',
         subtitle: entry.attributes.subtitle || 'Subtítulo indisponível',
         text: entry.attributes.summary || 'Resumo indisponível',
-        tags: entry.attributes.tags.data.map(tag => ({
+        tags: entry.attributes.tags?.data.map(tag => ({
           name: tag.attributes.name
         })) || []
       }));
@@ -65,7 +67,10 @@ export default {
   computed: {
     filteredResults() {
       // Filtrar os resultados com base no termo de busca
-      return this.results.filter(entry => 
+      if (this.searchTerm.trim() === '') {
+        return this.results;
+      }
+      return this.results.filter(entry =>
         entry.title && entry.title.toLowerCase().includes(this.searchTerm.toLowerCase())
       );
     }
@@ -73,15 +78,3 @@ export default {
 };
 </script>
 
-<style>
-.results {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.v-card-item {
-  display: flex;
-  flex-direction: column;
-  align-items: start;
-}
-</style>

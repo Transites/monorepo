@@ -925,6 +925,11 @@ export interface ApiPersonArticlePersonArticle extends Schema.CollectionType {
       'manyToMany',
       'api::tag.tag'
     >;
+    categories: Attribute.Relation<
+      'api::person-article.person-article',
+      'manyToMany',
+      'api::category.category'
+    >;
     alternativeTitles: Attribute.String &
       Attribute.SetPluginOptions<{
         i18n: {
