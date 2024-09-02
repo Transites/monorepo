@@ -64,22 +64,22 @@ export default {
     counter: 2,
     items: [
       {
-        src: 'https://cdn.vuetifyjs.com/images/carousel/squirrel.jpg',
+        src: 'http://localhost:1337/uploads/capa_Cahiers_a741c06e2d.jpg',
         title: 'Cahiers du Brésil Contemporain',
-        subtitle: 'Subtítulo 1',
-        text: 'A revista era uma publicação da Fondation Maison des Sciences de l’Homme (FMSH) e publicava, em francês, artigos em todas as disciplinas das ciências humanas e sociais, tentando construir pontes entre a pesquisa realizada no Brasil e por brasilianistas, em particular franceses. Apesar de ter publicado alguns exemplares “Micellanea”, os números eram em geral temáticos, muitas vezes duplos, compondo volumes bastante significativos.'
+        subtitle: 'Revista',
+        text: 'Em 1987, dois anos após a fundação do Centre de recherches sur le Brésil contemporain (CRBC) na École des Hautes Études en Sciences Sociales (EHESS), em Paris, Ignacy Sachs (1927-2023) criou os Cahiers du Brésil contemporain. A revista circulou até 2010, quando foi substituída por Brésil(s). Sciences humaines et sociales. A revista era uma publicação da Fondation Maison des Sciences de l’Homme (FMSH) e publicava, em francês, artigos em todas as disciplinas das ciências humanas e sociais, tentando construir pontes entre a pesquisa realizada no Brasil e por brasilianistas, em particular franceses. Apesar de ter publicado alguns exemplares “Micellanea”, os números eram em geral temáticos, muitas vezes duplos, compondo volumes bastante significativos.'
       },
       {
-        src: 'https://cdn.vuetifyjs.com/images/carousel/sky.jpg',
-        title: 'Título 2',
-        subtitle: 'Subtítulo 2',
-        text: ' é que eu não sou propriamente um autor defunto, mas um defunto autor, para quem a campa foi outro berço'
+        src: 'http://localhost:1337/uploads/Lucia_T_Osi_58ddf59538.png',
+        title: 'Lucia Tosi',
+        subtitle: 'Cientista natural, química, intelectual e professora universitária',
+        text: 'Lucía Tosi foi uma cientista natural da cidade de Buenos Aires, na Argentina, que consolidou sua carreira no Brasil e na França, trazendo uma vasta contribuição às pesquisas sobre gênero e ciência e história das mulheres nas ciências. Lucía Tosi teve toda a sua formação em Química vinculada ao seu país natal, a Argentina. Todavia sua carreira científica se desenvolveu no entrelace de sua relação com a França e o Brasil.'
       },
       {
-        src: 'https://cdn.vuetifyjs.com/images/carousel/bird.jpg',
-        title: 'Título 3',
-        subtitle: 'Subtítulo 3',
-        text: '" Georges Dumas nasceu em 6 de março de 1866, em Lédignan, no sul da França. Entre 1878 e 1884 frequentou o Liceu de Nîmes, de onde seguiu para os estudos preparatórios no Liceu Louis-le Grand, em Paris. Ingressou, aos vinte anos, na École normale supérieure (ens, Paris) e, em 1889, recebeu o diploma de agrégation em Filosofia, habilitando-se como professor secundário – ou agrégé, termo que será muito frequente durante a implantação das missões francesas nas recém-fundadas universidades de São Paulo e do Rio de Janeiro. De 1894 a 1902 ministrou aulas de Filosofia no Colégio Chaptal. Em 1900 se tornou docteur es lettres com uma tese principal sobre La Tristesse et la Joie (Alcan, 1900), e uma tese complementar intitulada Auguste Comte (Alcan, 1900). Casou-se, em 1906, com Aimée, filha do então diretor da ens. À formação humanista, agregou o diploma em Medicina, tendo concluído o doutorado com a tese Les états intellectuels de la mélancolie (Alcan, 1894). Com esse duplo interesse, pela Filosofia e pela Medicina, direcionou-se para a área de Psicologia. Assumiu a chefia do Laboratório de Psicologia Patológica na clínica de doenças mentais da Faculdade de Medicina, em 1897, posto que conservou até a aposentadoria, em 1937. Em 1902 passou a ministrar a disciplina Psico-Filosofia na Sorbonne, uma área totalmente nova, iniciada pelo amigo Pierre Janet. Em 1912 foi nomeado professor titular de Psicologia Experimental na mesma instituição, cargo que acumulou, a partir de 1921, com o posto de professor de Psicologia Patológica no Instituto de Psicologia da Universidade de Paris. Situa-se no período que antecede à i Guerra a produção intelectual mais densa e constante de Dumas, tanto em livros como em artigos publicados por periódicos renomados, a exemplo da Revue de deux mondes, Revue de Paris e Annales médico-psychologiques. A edição do estudo Psychologie de deux messies positivistes: Auguste Comte et Saint-Simon (Alcan, 1905) muito provavelmente acendeu o interesse dos brasileiros sobre seu pensamento. Pelo menos, foi sobre este tema que discorreu nas conferências proferidas no Rio de Janeiro e em São Paulo, em 1908, embora não tenha agradado necessariamente boa parte do público, tal era a distância entre o pensador interessado no sistema filosófico de Comte e uma audiência que abraçava o positivismo como uma religião. Um último livro, anterior ao início de suas atividades diplomáticas, selou sua imagem como a do psicólogo dedicado ao estudo das emoções: Le sourire et l’expression des émotions (Alcan, 1906). Georges Dumas pertenceu a uma nova geração francesa, formada na III República, que conformou um círculo de artistas, intelectuais e políticos notáveis, o quais fizeram do nacionalismo, do liberalismo e da laicidade uma profissão de fé. Como escreverá Dumas, em 1918, ao defender a criação de quatro liceus no Brasil (Porto Alegre, Belo Horizonte, Rio de Janeiro e São Paulo):'
+        src: 'http://localhost:1337/uploads/Ignacy_Sachs_2_52e549750e.jpeg',
+        title: 'Ignacy Sachs',
+        subtitle: 'Economista, intelectual e professor universitário',
+        text: 'Ignacy Sachs nasceu em Varsóvia em 1927. Em 1940, a família deixou a Polônia de carro, em direção à França, onde seu pai combateu junto ao exército polonês no exílio. A ocupação alemã empurrou os Sachs para mais longe: passando por Portugal, embarcaram para o Brasil. Tendo voltado à Polônia em 1954, deixou definitivamente o país em 1968, instalando-se na França a convite de Fernand Braudel. Na École des hautes études en sciences sociales, ao criar o Centre de recherches sur le Brésil Contemporain (CRBC), deu início a longas e profundas trocas científicas entre a França e o Brasil. '
       }
     ]
   }),
@@ -125,11 +125,14 @@ export default {
   text-align: center;
   background-color: var(--transites-red);
   color: white;
+  font-size: 1.5rem; /* Aumenta o tamanho da fonte */
 }
 .bannerTextColumn {
   display: flex;
   align-items: center;
+  justify-content: center; /* Centraliza verticalmente o texto */
   border: var(--border-width) solid var(--prop-color);
+  padding: 10px; /* Ajuste de padding */
 }
 
 .bannerText {
@@ -137,5 +140,7 @@ export default {
   -webkit-box-orient: vertical;
   overflow: hidden;
   color: black;
+  font-size: 1.25rem; /* Aumenta o tamanho da fonte do texto */
+  text-align: center; /* Centraliza o texto */
 }
 </style>

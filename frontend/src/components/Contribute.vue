@@ -4,7 +4,7 @@
       <v-icon class="colored" icon="mdi-form-select" size="120"></v-icon>
     </template>
     <template #title>
-      <h1 class="colored">Contribua com o<br />Transitos | Circulations</h1>
+      <h1 class="colored">Contribua com o<br />Trânsitos | Circulations</h1>
     </template>
     <template #subtitle>
       <div class="colored">
@@ -68,5 +68,11 @@ export default {
 <style scoped>
 .colored {
   color: var(--transites-gray-purple);
+}
+
+/* Se precisar ajustar o padding/margin */
+.contribute-container {
+  padding: var(--prop-padding, 70px);
+  margin-top: 20px; /* Ajuste conforme necessário para espaçamento */
 }
 </style>

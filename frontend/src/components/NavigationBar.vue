@@ -8,7 +8,7 @@
 
       <div style="cursor: pointer" @click="$router.push('/')" class="titleIcon">
         <img src="../assets/transites-icon.svg" alt="Icon" height="50" width="50" style="margin: 0 10px 0 10px" />
-        <v-toolbar-title><b class="title">Circulations</b></v-toolbar-title>
+        <v-toolbar-title><b class="title">Trânsitos | Circulations</b></v-toolbar-title>
       </div>
 
       <v-spacer></v-spacer>

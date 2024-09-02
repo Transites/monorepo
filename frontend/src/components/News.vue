@@ -1,31 +1,33 @@
 <template>
   <div :style="propStyle" class="news-container">
     <h1 style="color: var(--transites-blue)">Novidades</h1>
-    <v-container>
-      <v-row align="center">
+    <v-container fluid>
+      <v-row align="center" no-gutters>
         <v-col cols="12" lg="9">
           <v-row>
             <v-col
               cols="12"
               sm="6"
               v-for="entry in entries"
-              :key="entry"
+              :key="entry.id"
             >
+              <!-- Alterado o background-color e a cor do texto para branco -->
               <v-card
-                style="color: var(--transites-blue)"
-                :title="entry.title"
-                :subtitle="entry.category"
+                style="background-color: var(--transites-blue); color: white; height: 100%;"
                 @click="$router.push(`article/person/${entry.id}`)"
               >
+                <v-card-title>{{ entry.title }}</v-card-title>
+                <v-card-subtitle>{{ entry.category }}</v-card-subtitle>
               </v-card>
             </v-col>
           </v-row>
         </v-col>
         <v-col cols="12" lg="3" align="center">
+          <!-- Alterado o background-color e a cor do texto para branco -->
           <v-card
             width="100%"
             max-height="450px"
-            style="aspect-ratio: auto 3/4"
+            style="aspect-ratio: auto 3/4; height: 100%; background-color: var(--transites-blue); color: white;"
           >
             <v-img
               class="align-end text-white"
@@ -33,7 +35,7 @@
               cover
               align="start"
             >
-              <v-card-title style="color: var(--transites-blue)">{{title_news_image}}</v-card-title>
+              <v-card-title>{{ title_news_image }}</v-card-title>
             </v-img>
           </v-card>
         </v-col>
@@ -41,7 +43,6 @@
     </v-container>
   </div>
 </template>
-
 
 <script>
 import axios from 'axios'
@@ -56,60 +57,56 @@ export default {
     this.fetchImagesFromStrapi()
   },
   data: () => ({
-    entries: null,
-    url_news_image : "",
-    title_news_image : ""
+    entries: [],
+    url_news_image: "",
+    title_news_image: "",
+    error: null,
   }),
   computed: {
-    propStyle () {
+    propStyle() {
       return {
         '--prop-padding': this.padding,
       }
     }
   },
-  methods:{
-  fetchDataFromStrapi() {
+  methods: {
+    async fetchDataFromStrapi() {
       const base_url = import.meta.env.VITE_STRAPI_BASE_URL
 
       try {
-        axios.get(`${base_url}/api/person-articles/?pagination[limit]=8&populate=categories&sort=createdAt:desc`).then((response) => {
-          this.raw_response = response.data.data
-          this.entries = this.raw_response.map((entry) => {
-          return {
-            title: entry.attributes.title,
-            id: entry.id,
-            category: entry.attributes.categories.data.length
-              ? entry.attributes.categories.data[0].attributes.name
-              : 'Uncategorized'
-          }
-          })
-        })
+        const response = await axios.get(`${base_url}/api/person-articles/?pagination[limit]=8&populate=categories&sort=createdAt:desc`);
+        this.entries = response.data.data.map(entry => ({
+          title: entry.attributes.title,
+          id: entry.id,
+          category: entry.attributes.categories.data.length
+            ? entry.attributes.categories.data[0].attributes.name
+            : 'Uncategorized'
+        }));
       } catch (error) {
-        this.error = error
+        this.error = error;
       }
     },
-    fetchImagesFromStrapi() {
+    async fetchImagesFromStrapi() {
       const base_url = import.meta.env.VITE_STRAPI_BASE_URL
 
       try {
-        axios.get(`${base_url}/api/person-articles/?pagination[limit]=8&populate=image&sort=createdAt:desc`).then((response) => {
-          this.imageData = response.data.data
-          if (this.imageData && this.imageData.length > 0) {
-            for (const item of this.imageData) {
-              if (item.attributes.image.data) {
-                const formats = item.attributes.image.data.attributes.formats;
-                const key = Object.keys(formats)[0];
+        const response = await axios.get(`${base_url}/api/person-articles/?pagination[limit]=8&populate=image&sort=createdAt:desc`);
+        this.imageData = response.data.data;
 
-                this.title_news_image = item.attributes.title
-                this.url_news_image = formats[key].url;
-                return null;
-              }
+        if (this.imageData && this.imageData.length > 0) {
+          for (const item of this.imageData) {
+            if (item.attributes.image.data) {
+              const formats = item.attributes.image.data.attributes.formats;
+              const key = Object.keys(formats)[0];
+
+              this.title_news_image = item.attributes.title;
+              this.url_news_image = formats[key].url;
+              return null;
             }
           }
-          return null;
-        }).catch(error => {this.error = true})
+        }
       } catch (error) {
-        this.error = error
+        this.error = error;
       }
     }
   }
@@ -118,6 +115,22 @@ export default {
 
 <style>
 .news-container {
-  padding: var(--prop-padding);
+  padding: var(--prop-padding, 30px); /* Manter o mesmo padding */
+}
+
+.news-container .v-card {
+  margin-bottom: 20px; /* Espaçamento entre os cards */
+}
+
+.news-container .v-row {
+  margin: 0; /* Remove o margin padrão da linha */
+}
+
+.news-container .v-col {
+  padding: 0; /* Remove o padding padrão das colunas */
+}
+
+.news-container {
+  overflow: hidden; /* Evita que o conteúdo exceda o container */
 }
 </style>

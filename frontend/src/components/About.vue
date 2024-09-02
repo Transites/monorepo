@@ -4,7 +4,7 @@
       <v-img :src="logo" max-width="180" ></v-img>
     </template>
     <template #title>
-      <h1 style="color: var(--transites-light-red)">Sobre Transitos | Circulations</h1>
+      <h1 style="color: var(--transites-light-red)">Sobre Trânsitos | Circulations</h1>
     </template>
     <template #subtitle>
       <p style="color: var(--transites-light-red)"><b>Enciclopédia das Relações entre a França e o Brasil no século XX (1880-1980)</b></p>
