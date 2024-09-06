@@ -4,9 +4,7 @@
       <div>
         <h2>Sobre nós</h2>
         <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum et odio vitae est
-          gravida ultrices. Sed mattis, dolor eget luctus ultricies, arcu lectus cursus tortor, vel
-          ultricies tortor augue eget ipsum. Fusce tempus dolor libero, vel pharetra odio finibus vel.
+          O projeto é coordenado por Marisa Midori Deaecto (ECA-USP), Mônica Raisa Schpun (EHESS, Paris) e Olival Freire Jr. (IF-UFBA), no âmbito do Grupo de Pesquisa Brasil-França (Grupebraf/IEA-USP).O desenvolvimento da enciclopédia digital é realizado pela discente Gyovanna Marques Kwasinei (IME-USP), sob a supervisão de Alfredo Goldman (IME-USP).
         </p>
       </div>
     </v-footer>

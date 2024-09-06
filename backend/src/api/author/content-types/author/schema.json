@@ -20,6 +20,9 @@
     },
     "institution": {
       "type": "string"
+    },
+    "title": {
+      "type": "string"
     }
   }
 }

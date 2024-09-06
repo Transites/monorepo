@@ -35,8 +35,9 @@
     },
     "person_articles": {
       "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::person-article.person-article"
+      "relation": "manyToMany",
+      "target": "api::person-article.person-article",
+      "mappedBy": "categories"
     },
     "verbete_obras": {
       "type": "relation",

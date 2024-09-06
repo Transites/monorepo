@@ -803,6 +803,7 @@ export interface ApiAuthorAuthor extends Schema.CollectionType {
     name: Attribute.String;
     description: Attribute.RichText;
     institution: Attribute.String;
+    title: Attribute.String;
     createdAt: Attribute.DateTime;
     updatedAt: Attribute.DateTime;
     publishedAt: Attribute.DateTime;
@@ -853,7 +854,7 @@ export interface ApiCategoryCategory extends Schema.CollectionType {
       }>;
     person_articles: Attribute.Relation<
       'api::category.category',
-      'oneToMany',
+      'manyToMany',
       'api::person-article.person-article'
     >;
     verbete_obras: Attribute.Relation<
@@ -944,10 +945,10 @@ export interface ApiPersonArticlePersonArticle extends Schema.CollectionType {
           localized: true;
         };
       }>;
-    image: Attribute.Media &
+    Image: Attribute.Media &
       Attribute.SetPluginOptions<{
         i18n: {
-          localized: true;
+          localized: false;
         };
       }>;
     birth: Attribute.Component<'other.place-and-date'> &
@@ -975,6 +976,55 @@ export interface ApiPersonArticlePersonArticle extends Schema.CollectionType {
         };
       }>;
     Video: Attribute.Media &
+      Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    Artigo: Attribute.RichText &
+      Attribute.Required &
+      Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    Franca: Attribute.Component<'publication.publication', true> &
+      Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    Brasil: Attribute.Component<'publication.publication', true> &
+      Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    Abertura: Attribute.Component<'other.place-and-date', true> &
+      Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    Fechamento: Attribute.Component<'other.place-and-date', true> &
+      Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    Eventos: Attribute.Component<'other.eventos', true> &
+      Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    inicio: Attribute.Component<'other.place-and-date'> &
+      Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    fim: Attribute.Component<'other.place-and-date', true> &
       Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
@@ -1029,6 +1079,41 @@ export interface ApiTagTag extends Schema.CollectionType {
     createdBy: Attribute.Relation<'api::tag.tag', 'oneToOne', 'admin::user'> &
       Attribute.Private;
     updatedBy: Attribute.Relation<'api::tag.tag', 'oneToOne', 'admin::user'> &
+      Attribute.Private;
+  };
+}
+
+export interface ApiVerbeteInstituicaoVerbeteInstituicao
+  extends Schema.CollectionType {
+  collectionName: 'verbete_instituicaos';
+  info: {
+    singularName: 'verbete-instituicao';
+    pluralName: 'verbete-instituicaos';
+    displayName: 'Verbete Institui\u00E7\u00E3o';
+    description: '';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    summary: Attribute.String;
+    Artigo: Attribute.Text;
+    Image: Attribute.Media;
+    title: Attribute.String;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::verbete-instituicao.verbete-instituicao',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::verbete-instituicao.verbete-instituicao',
+      'oneToOne',
+      'admin::user'
+    > &
       Attribute.Private;
   };
 }
@@ -1109,6 +1194,7 @@ declare module '@strapi/types' {
       'api::category.category': ApiCategoryCategory;
       'api::person-article.person-article': ApiPersonArticlePersonArticle;
       'api::tag.tag': ApiTagTag;
+      'api::verbete-instituicao.verbete-instituicao': ApiVerbeteInstituicaoVerbeteInstituicao;
       'api::verbete-obra.verbete-obra': ApiVerbeteObraVerbeteObra;
     }
   }

@@ -2,17 +2,18 @@
   <div :style="propStyle" class="news-container">
     <h1 style="color: var(--transites-blue)">Novidades</h1>
     <v-container fluid>
-      <v-row align="center" no-gutters>
+      <v-row align="center" justify="center" no-gutters>
         <v-col cols="12" lg="9">
-          <v-row>
+          <v-row justify="center">
             <v-col
               cols="12"
               sm="6"
+              md="4"
               v-for="entry in entries"
               :key="entry.id"
             >
-              <!-- Alterado o background-color e a cor do texto para branco -->
               <v-card
+                class="news-card"
                 style="background-color: var(--transites-blue); color: white; height: 100%;"
                 @click="$router.push(`article/person/${entry.id}`)"
               >
@@ -22,30 +23,13 @@
             </v-col>
           </v-row>
         </v-col>
-        <v-col cols="12" lg="3" align="center">
-          <!-- Alterado o background-color e a cor do texto para branco -->
-          <v-card
-            width="100%"
-            max-height="450px"
-            style="aspect-ratio: auto 3/4; height: 100%; background-color: var(--transites-blue); color: white;"
-          >
-            <v-img
-              class="align-end text-white"
-              :src="url_news_image"
-              cover
-              align="start"
-            >
-              <v-card-title>{{ title_news_image }}</v-card-title>
-            </v-img>
-          </v-card>
-        </v-col>
       </v-row>
     </v-container>
   </div>
 </template>
 
 <script>
-import axios from 'axios'
+import axios from 'axios';
 export default {
   props: {
     padding: {
@@ -53,8 +37,8 @@ export default {
     }
   },
   mounted() {
-    this.fetchDataFromStrapi()
-    this.fetchImagesFromStrapi()
+    this.fetchDataFromStrapi();
+    this.fetchImagesFromStrapi();
   },
   data: () => ({
     entries: [],
@@ -71,7 +55,7 @@ export default {
   },
   methods: {
     async fetchDataFromStrapi() {
-      const base_url = import.meta.env.VITE_STRAPI_BASE_URL
+      const base_url = import.meta.env.VITE_STRAPI_BASE_URL;
 
       try {
         const response = await axios.get(`${base_url}/api/person-articles/?pagination[limit]=8&populate=categories&sort=createdAt:desc`);
@@ -87,7 +71,7 @@ export default {
       }
     },
     async fetchImagesFromStrapi() {
-      const base_url = import.meta.env.VITE_STRAPI_BASE_URL
+      const base_url = import.meta.env.VITE_STRAPI_BASE_URL;
 
       try {
         const response = await axios.get(`${base_url}/api/person-articles/?pagination[limit]=8&populate=image&sort=createdAt:desc`);
@@ -120,6 +104,7 @@ export default {
 
 .news-container .v-card {
   margin-bottom: 20px; /* Espaçamento entre os cards */
+  transition: transform 0.3s ease; /* Animação suave */
 }
 
 .news-container .v-row {
@@ -128,6 +113,10 @@ export default {
 
 .news-container .v-col {
   padding: 0; /* Remove o padding padrão das colunas */
+}
+
+.news-card:hover {
+  transform: translateY(-5px); /* Efeito de elevação ao passar o mouse */
 }
 
 .news-container {

@@ -7,21 +7,114 @@
       Carregando...
     </div>
     <div v-else class="article-content">
-      <!-- Título do Artigo -->
       <h1 class="article-title">{{ article.attributes.title }}</h1>
 
-      <!-- Imagens do Artigo -->
-      <div v-if="article.attributes.image" class="article-images">
-        <img
-          v-for="(image, index) in article.attributes.image.data"
-          :key="index"
-          :src="buildImageUrl(image.attributes.url)"
-          :alt="image.attributes.alternativeText || 'Imagem do artigo'"
-          class="article-image"
-        />
+      <div class="image-and-info">
+        <!-- Imagem e legenda -->
+        <div v-if="article.attributes.Image.data" class="article-images">
+          <div v-for="(image, index) in article.attributes.Image.data" :key="index" class="image-container">
+            <img
+              v-if="image.attributes.formats && image.attributes.formats.small"
+              :src="buildImageUrl(image.attributes.formats.small.url)"
+              :alt="image.attributes.alternativeText || 'Imagem do artigo'"
+              class="article-image"
+            />
+            <p v-if="image.attributes.caption" class="image-caption">{{ image.attributes.caption }}</p>
+          </div>
+        </div>
+
+        <!-- Informações ao lado da imagem -->
+        <div class="article-info">
+          <!-- Nascimento e Falecimento -->
+          <p v-if="article.attributes.birth && article.attributes.birth.date">
+            <strong>Nascimento:</strong> {{ formatDate(article.attributes.birth.date) }}, {{ article.attributes.birth.place }}
+          </p>
+          
+          <p v-if="article.attributes.death && article.attributes.death.date">
+            <strong>Falecimento:</strong> {{ formatDate(article.attributes.death.date) }}, {{ article.attributes.death.place }}
+          </p>
+
+          <p v-if="article.attributes.summary"> 
+            {{ article.attributes.summary }}
+          </p>
+
+          <!-- França e Brasil -->
+          <div v-if="article.attributes.Franca && article.attributes.Franca.length">
+            <strong>França:</strong>
+            <ul>
+              <li v-for="publication in article.attributes.Franca" :key="publication.id">
+                {{ publication.title }}, {{ publication.date }}
+              </li>
+            </ul>
+          </div>
+
+          <div v-if="article.attributes.Brasil && article.attributes.Brasil.length">
+            <strong>Brasil:</strong>
+            <ul>
+              <li v-for="publication in article.attributes.Brasil" :key="publication.id">
+                {{ publication.title }}, {{ publication.date }}
+              </li>
+            </ul>
+          </div>
+
+          <!-- Abertura e Fechamento -->
+          <p v-if="article.attributes.Abertura && article.attributes.Abertura.length">
+            <strong>Abertura:</strong> 
+            <span v-for="(abertura, index) in article.attributes.Abertura" :key="index">
+              {{ formatDate(abertura.date) }}, {{ abertura.place }}
+            </span>
+          </p>
+
+          <p v-if="article.attributes.Fechamento && article.attributes.Fechamento.length">
+            <strong>Fechamento:</strong> 
+            <span v-for="(fechamento, index) in article.attributes.Fechamento" :key="index">
+              {{ formatDate(fechamento.date) }}, {{ fechamento.place }}
+            </span>
+          </p>
+
+          <!-- Início e Fim -->
+          <p v-if="article.attributes.inicio && article.attributes.inicio.date">
+            <strong>Início:</strong> {{ formatDate(article.attributes.inicio.date) }}, {{ article.attributes.inicio.place }}
+          </p>
+
+          <p v-if="article.attributes.fim && article.attributes.fim.length">
+            <strong>Fim:</strong> 
+            <span v-for="(fim, index) in article.attributes.fim" :key="index">
+              {{ formatDate(fim.date) }}, {{ fim.place }}
+            </span>
+          </p>
+
+          <!-- Eventos -->
+          <div v-if="article.attributes.Eventos && article.attributes.Eventos.length">
+            <strong>Eventos:</strong>
+            <ul>
+              <li v-for="evento in article.attributes.Eventos" :key="evento.id">
+                {{ formatDate(evento.date) }}: {{ evento.description }}
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
 
-      <!-- Autor do Artigo -->
+      <!-- Artigo -->
+      <div v-if="article.attributes.Artigo" class="article-section">
+        <h2 class="section-title">Artigo</h2>
+        <div v-html="article.attributes.Artigo" class="article-artigo"></div>
+      </div>
+
+      <!-- Obras -->
+      <div v-if="article.attributes.Obras" class="section">
+        <h2 class="section-title">Obras</h2>
+        <p v-html="article.attributes.Obras"></p>
+      </div>
+
+      <!-- Bibliografia -->
+      <div v-if="article.attributes.Bibliografia" class="section">
+        <h2 class="section-title">Bibliografia</h2>
+        <p v-html="article.attributes.Bibliografia"></p>
+      </div>
+
+      <!-- Autores -->
       <div v-if="article.attributes.authors" class="article-authors">
         <h2 class="section-title">Autor(es):</h2>
         <ul class="author-list">
@@ -31,24 +124,6 @@
         </ul>
       </div>
 
-      <!-- Conteúdo do Artigo -->
-      <div v-if="article.attributes.Artigo" class="article-section">
-        <h2 class="section-title">Artigo</h2>
-        <div v-html="article.attributes.Artigo" class="article-artigo"></div>
-      </div>
-
-      <!-- Seções Dinâmicas -->
-      <div v-if="article.attributes.Obras" class="section">
-        <h2 class="section-title">Obras</h2>
-        <p v-html="article.attributes.Obras"></p>
-      </div>
-
-      <div v-if="article.attributes.Bibliografia" class="section">
-        <h2 class="section-title">Bibliografia</h2>
-        <p v-html="article.attributes.Bibliografia"></p>
-      </div>
-
-      <!-- Data de Atualização -->
       <p class="updated">Última atualização: {{ formatDate(article.attributes.updatedAt) }}</p>
     </div>
   </div>
@@ -69,7 +144,7 @@ export default {
   async mounted() {
     const { id } = this.$route.params;
     try {
-      const response = await axios.get(`http://localhost:1337/api/person-articles/${id}?populate[authors]=*&populate[image]=*`);
+      const response = await axios.get(`http://localhost:1337/api/person-articles/${id}?populate=authors,Image`);
       this.article = response.data.data;
     } catch (error) {
       this.error = 'Não foi possível carregar o verbete.';
@@ -89,8 +164,9 @@ export default {
 </script>
 
 <style scoped>
+/* Estilo geral */
 html, body {
-  background-color: var(--color-background-soft); /* Mantendo o fundo da página suave */
+  background-color: var(--color-background-soft);
   margin: 0;
   height: 100%;
 }
@@ -106,12 +182,12 @@ body {
 
 .article-container {
   max-width: 900px;
-  margin: 20px auto; /* Adicionando espaço ao redor da moldura */
+  margin: 20px auto;
   padding: 20px;
   background-color: var(--color-background-soft);
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  border: 5px solid var(--transites-light-red); /* Adicionando a moldura */
+  border: 5px solid var(--transites-light-red);
 }
 
 .article-title {
@@ -122,30 +198,14 @@ body {
   font-weight: bold;
 }
 
-.article-authors {
-  font-size: 1.1rem;
-  margin-bottom: 10px;
-  color: var(--color-text);
-}
-
-.author-list {
-  list-style: none;
-  padding: 0;
-}
-
-.article-artigo {
-  font-size: 1.1rem;
-  line-height: 1.8;
-  margin-bottom: 20px;
-  color: var(--color-text);
-  text-align: justify;
+.image-and-info {
+  display: flex;
+  align-items: flex-start;
 }
 
 .article-images {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 15px;
-  margin-bottom: 20px;
+  flex: 1;
+  margin-right: 20px;
 }
 
 .article-image {
@@ -154,6 +214,28 @@ body {
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   object-fit: cover;
+}
+
+.image-caption {
+  font-size: 0.9rem;
+  color: var(--color-text);
+  margin-top: 5px;
+  text-align: center;
+}
+
+.article-info {
+  flex: 1;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-text);
+}
+
+.article-artigo {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  margin-bottom: 20px;
+  color: var(--color-text);
+  text-align: justify;
 }
 
 .section {
@@ -166,12 +248,6 @@ body {
   color: var(--color-heading);
   border-bottom: 2px solid var(--color-heading);
   padding-bottom: 5px;
-}
-
-.section p {
-  font-size: 1rem;
-  line-height: 1.6;
-  color: var(--color-text);
 }
 
 .updated {

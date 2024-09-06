@@ -1,5 +1,17 @@
 import type { Schema, Attribute } from '@strapi/strapi';
 
+export interface OtherEventos extends Schema.Component {
+  collectionName: 'components_other_eventos';
+  info: {
+    displayName: 'Eventos';
+    icon: 'bulletList';
+  };
+  attributes: {
+    evento: Attribute.Date;
+    local: Attribute.String;
+  };
+}
+
 export interface OtherPlaceAndDate extends Schema.Component {
   collectionName: 'components_other_place_and_dates';
   info: {
@@ -60,6 +72,7 @@ export interface SectionStrictTextSection extends Schema.Component {
 declare module '@strapi/types' {
   export module Shared {
     export interface Components {
+      'other.eventos': OtherEventos;
       'other.place-and-date': OtherPlaceAndDate;
       'publication.publication': PublicationPublication;
       'section.free-text-section': SectionFreeTextSection;

@@ -23,6 +23,7 @@
         @keydown.enter="performSearch"
         placeholder="Pesquisar..."
       ></v-text-field>
+      
       <v-btn
         class="hidden-sm-and-down text-white"
         rounded="lg"
@@ -72,34 +73,12 @@
         Buscar
       </v-btn>
     </v-navigation-drawer>
-
-    <!-- Resultados -->
-    <div class="results">
-      <v-card
-        v-for="entry in searchResult"
-        :key="entry.id"
-        class="mx-auto my-8"
-        max-width="344"
-        elevation="16"
-        @click="$router.push(`/article/person/${entry.id}`)"
-      >
-        <v-card-item>
-          <v-card-title>{{ entry.title }}</v-card-title>
-          <v-card-subtitle>{{ entry.subtitle }}</v-card-subtitle>
-          <v-chip v-for="tag in entry.tags" :key="tag.name" color="primary">
-            {{ tag.name }}
-          </v-chip>
-        </v-card-item>
-        <v-card-text>
-          {{ entry.text }}
-        </v-card-text>
-      </v-card>
-    </div>
   </div>
 </template>
 
 <script>
-import axios from 'axios';
+import _ from "lodash";
+import axios from "axios";
 
 export default {
   data() {
@@ -112,14 +91,41 @@ export default {
       endDate: '',
       categories: [],
       tags: [],
-      searchResult: []
+      searchResult: [],
+      games: [],
+      isLoading: true,
+      apiUrl: "http://localhost:1337/api/person-articles"
     };
   },
+  computed: {
+    filteredGames() {
+      if (!this.searchQuery) return this.games;
+      return this.games.filter(game => 
+        game.title.toLowerCase().includes(this.searchQuery.toLowerCase())
+      );
+    }
+  },
   methods: {
-    async performSearch() {
-      if (!this.searchQuery) return;
+    async getGames() {
+      this.isLoading = true;
       try {
-        const response = await axios.get('http://localhost:1337/api/person-articles', {
+        const response = await axios.get(this.apiUrl);
+        this.games = response.data.data.map(item => ({
+          id: item.id,
+          title: item.attributes.title
+        }));
+      } catch (e) {
+        console.error(e);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async performSearch() {
+      if (!this.searchQuery || !this.searchQuery.trim()) return;
+      if (!this.searchQuery.trim()) return;
+      try {
+        const response = await axios.get(this.apiUrl, {
           params: {
             filters: {
               title: {
@@ -130,42 +136,61 @@ export default {
           }
         });
 
-        if (response && response.data && response.data.data.length > 0) {
-          const results = JSON.stringify(response.data.data);
-          this.$router.push({ name: 'Results', query: { results } });
-        } else {
-          console.warn('No results found for the search query.');
-          this.$router.push({ name: 'Results', query: { results: [] } });
-        }
+        const results = response.data.data.map(item => ({
+          id: item.id,
+          type: 'person-articles',
+          title: item.attributes.title || 'Título indisponível',
+          subtitle: item.attributes.subtitle || 'Subtítulo indisponível',
+          text: item.attributes.summary || 'Resumo indisponível',
+          tags: item.attributes.tags?.data.map(tag => ({
+            name: tag.attributes.name
+          })) || []
+        }));
+
+        this.$router.push({
+          name: 'Results',
+          query: {
+            results: JSON.stringify(results),
+            searchTerm: this.searchQuery
+          }
+        });
       } catch (error) {
         console.error('Error performing search:', error);
       }
     },
-
+    
     async performAdvancedSearch() {
       const filters = {
-        ...(this.searchQuery ? { title_contains: this.searchQuery } : {}),
-        ...(this.selectedCategory ? { 'categories.id': this.selectedCategory } : {}),
-        ...(this.selectedTags.length ? { 'tags.id_in': this.selectedTags } : {}),
-        ...(this.startDate ? { createdAt_gte: this.startDate } : {}),
-        ...(this.endDate ? { createdAt_lte: this.endDate } : {})
+        ...(this.searchQuery ? { title: { $contains: this.searchQuery } } : {}),
+        ...(this.selectedCategory ? { categories: { id: this.selectedCategory } } : {}),
+        ...(this.selectedTags.length ? { tags: { id: { $in: this.selectedTags } } } : {}),
+        ...(this.startDate ? { createdAt: { $gte: this.startDate } } : {}),
+        ...(this.endDate ? { createdAt: { $lte: this.endDate } } : {})
       };
 
       try {
-        const response = await axios.get('http://localhost:1337/api/person-articles', {
+        const response = await axios.get(this.apiUrl, {
           params: {
             filters,
             populate: ['tags', 'categories']
           }
         });
 
-        if (response && response.data && response.data.data.length > 0) {
-          const results = JSON.stringify(response.data.data);
-          this.$router.push({ name: 'Results', query: { results } });
-        } else {
-          console.warn('No results found for the advanced search.');
-          this.$router.push({ name: 'Results', query: { results: [] } });
-        }
+        const results = response.data.data.map(item => ({
+          id: item.id,
+          title: item.attributes.title,
+          subtitle: item.attributes.subtitle,
+          text: item.attributes.summary,
+          tags: item.attributes.tags?.data.map(tag => tag.attributes.name) || [],
+          categories: item.attributes.categories?.data.map(category => category.attributes.name) || []
+        }));
+
+        this.$router.push({
+          name: 'Results',
+          query: {
+            results: JSON.stringify(results)
+          }
+        });
       } catch (error) {
         console.error('Error performing advanced search:', error);
       }
@@ -194,10 +219,22 @@ export default {
         console.error('Erro ao buscar tags:', error);
       }
     },
+
+    handleAutocompleteChange(selectedId) {
+      if (selectedId) {
+        this.$router.push(`/article/person-articles/${selectedId}`);
+      }
+    }
   },
   created() {
+    this.getGames();
     this.fetchCategories();
     this.fetchTags();
+  },
+  watch: {
+    searchQuery: _.debounce(function(query) {
+      this.performSearch();
+    }, 250)
   }
 };
 </script>

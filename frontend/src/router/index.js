@@ -4,6 +4,7 @@ import Article from '../views/Article.vue';
 import PageNotFound from '../views/PageNotFound.vue';
 import NormasDePublicacao from '@/components/NormasdePublicacao.vue';
 import SearchResults from '../views/SearchResults.vue';
+import Contribute from '@/components/Contribute.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -36,6 +37,11 @@ const router = createRouter({
       path: '/normas-de-publicacao',
       name: 'NormasDePublicacao',
       component: NormasDePublicacao
+    },
+    {
+      path: '/Contribute',
+      name: 'Contribute',
+      component: Contribute
     },
     // Rota genérica para capturar qualquer caminho de 'article' que não foi definido
     {

@@ -1,0 +1,16 @@
+{
+  "collectionName": "components_other_eventos",
+  "info": {
+    "displayName": "Eventos",
+    "icon": "bulletList"
+  },
+  "options": {},
+  "attributes": {
+    "evento": {
+      "type": "date"
+    },
+    "local": {
+      "type": "string"
+    }
+  }
+}

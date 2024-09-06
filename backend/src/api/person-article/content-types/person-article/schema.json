@@ -70,16 +70,17 @@
         }
       }
     },
-    "image": {
+    "Image": {
       "type": "media",
-      "multiple": false,
+      "multiple": true,
       "required": false,
       "allowedTypes": [
-        "images"
+        "images",
+        "files"
       ],
       "pluginOptions": {
         "i18n": {
-          "localized": true
+          "localized": false
         }
       }
     },
@@ -120,19 +121,100 @@
       "type": "richtext"
     },
     "Video": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
       "allowedTypes": [
         "images",
         "files",
         "videos",
         "audios"
       ],
-      "type": "media",
-      "multiple": true,
       "pluginOptions": {
         "i18n": {
           "localized": true
         }
       }
+    },
+    "Artigo": {
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "type": "richtext",
+      "required": true
+    },
+    "Franca": {
+      "type": "component",
+      "repeatable": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "component": "publication.publication"
+    },
+    "Brasil": {
+      "type": "component",
+      "repeatable": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "component": "publication.publication"
+    },
+    "Abertura": {
+      "type": "component",
+      "repeatable": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "component": "other.place-and-date"
+    },
+    "Fechamento": {
+      "type": "component",
+      "repeatable": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "component": "other.place-and-date"
+    },
+    "Eventos": {
+      "displayName": "Eventos",
+      "type": "component",
+      "repeatable": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "component": "other.eventos"
+    },
+    "inicio": {
+      "type": "component",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "component": "other.place-and-date"
+    },
+    "fim": {
+      "type": "component",
+      "repeatable": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "component": "other.place-and-date"
     }
   }
 }

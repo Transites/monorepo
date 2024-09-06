@@ -20,7 +20,7 @@ module.exports = factories.createCoreController('api::person-article.person-arti
     try {
       const entities = await strapi.entityService.findMany('api::person-article.person-article', {
         filters,
-        populate: ['tags', 'categories'],
+        populate: ['tags', 'categories', 'authors', 'Image', 'birth', 'death', 'Franca', 'Brasil', 'Abertura', 'Fechamento', 'Eventos', 'inicio', 'fim'],  // Populando todos os campos necessários
       });
 
       const sanitizedEntities = await this.sanitizeOutput(entities, ctx);
@@ -35,7 +35,7 @@ module.exports = factories.createCoreController('api::person-article.person-arti
 
     try {
       const entity = await strapi.entityService.findOne('api::person-article.person-article', id, {
-        populate: ['tags', 'categories'],
+        populate: ['tags', 'categories', 'authors', 'Image', 'birth', 'death', 'Franca', 'Brasil', 'Abertura', 'Fechamento', 'Eventos', 'inicio', 'fim'],  // Populando todos os campos necessários
       });
 
       if (!entity) {
