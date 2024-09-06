@@ -14,8 +14,7 @@
         <div v-if="article.attributes.Image.data" class="article-images">
           <div v-for="(image, index) in article.attributes.Image.data" :key="index" class="image-container">
             <img
-              v-if="image.attributes.formats && image.attributes.formats.small"
-              :src="buildImageUrl(image.attributes.formats.small.url)"
+              :src="buildImageUrl(image.attributes.formats?.small?.url || image.attributes.url)"
               :alt="image.attributes.alternativeText || 'Imagem do artigo'"
               class="article-image"
             />
@@ -38,26 +37,29 @@
             {{ article.attributes.summary }}
           </p>
 
-          <!-- França e Brasil -->
+          <!-- França -->
           <div v-if="article.attributes.Franca && article.attributes.Franca.length">
             <strong>França:</strong>
             <ul>
               <li v-for="publication in article.attributes.Franca" :key="publication.id">
-                {{ publication.title }}, {{ publication.date }}
+                {{ publication.title }}
+                <span v-if="publication.date">, {{ formatDate(publication.date) }}</span>
               </li>
             </ul>
           </div>
 
+          <!-- Brasil -->
           <div v-if="article.attributes.Brasil && article.attributes.Brasil.length">
             <strong>Brasil:</strong>
             <ul>
               <li v-for="publication in article.attributes.Brasil" :key="publication.id">
-                {{ publication.title }}, {{ publication.date }}
+                {{ publication.title }}
+                <span v-if="publication.date">, {{ formatDate(publication.date) }}</span>
               </li>
             </ul>
           </div>
 
-          <!-- Abertura e Fechamento -->
+          <!-- Abertura -->
           <p v-if="article.attributes.Abertura && article.attributes.Abertura.length">
             <strong>Abertura:</strong> 
             <span v-for="(abertura, index) in article.attributes.Abertura" :key="index">
@@ -65,6 +67,7 @@
             </span>
           </p>
 
+          <!-- Fechamento -->
           <p v-if="article.attributes.Fechamento && article.attributes.Fechamento.length">
             <strong>Fechamento:</strong> 
             <span v-for="(fechamento, index) in article.attributes.Fechamento" :key="index">
@@ -72,11 +75,12 @@
             </span>
           </p>
 
-          <!-- Início e Fim -->
+          <!-- Início -->
           <p v-if="article.attributes.inicio && article.attributes.inicio.date">
             <strong>Início:</strong> {{ formatDate(article.attributes.inicio.date) }}, {{ article.attributes.inicio.place }}
           </p>
 
+          <!-- Fim -->
           <p v-if="article.attributes.fim && article.attributes.fim.length">
             <strong>Fim:</strong> 
             <span v-for="(fim, index) in article.attributes.fim" :key="index">
