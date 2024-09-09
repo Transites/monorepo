@@ -84,26 +84,6 @@
         }
       }
     },
-    "birth": {
-      "type": "component",
-      "repeatable": false,
-      "component": "other.place-and-date",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      }
-    },
-    "death": {
-      "type": "component",
-      "repeatable": false,
-      "component": "other.place-and-date",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      }
-    },
     "Obras": {
       "pluginOptions": {
         "i18n": {
@@ -177,10 +157,10 @@
     },
     "Fechamento": {
       "type": "component",
-      "repeatable": true,
+      "repeatable": false,
       "pluginOptions": {
         "i18n": {
-          "localized": true
+          "localized": false
         }
       },
       "component": "other.place-and-date"
@@ -208,13 +188,35 @@
     },
     "fim": {
       "type": "component",
-      "repeatable": true,
+      "repeatable": false,
       "pluginOptions": {
         "i18n": {
           "localized": true
         }
       },
       "component": "other.place-and-date"
+    },
+    "birth": {
+      "displayName": "birth",
+      "type": "component",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "component": "data-local.birth"
+    },
+    "death": {
+      "displayName": "death",
+      "type": "component",
+      "repeatable": false,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      },
+      "component": "data-local.death"
     }
   }
 }

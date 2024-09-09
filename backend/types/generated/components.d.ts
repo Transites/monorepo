@@ -1,13 +1,35 @@
 import type { Schema, Attribute } from '@strapi/strapi';
 
+export interface DataLocalBirth extends Schema.Component {
+  collectionName: 'components_data_local_births';
+  info: {
+    displayName: 'birth';
+  };
+  attributes: {
+    data: Attribute.Date;
+    local: Attribute.String;
+  };
+}
+
+export interface DataLocalDeath extends Schema.Component {
+  collectionName: 'components_data_local_deaths';
+  info: {
+    displayName: 'death';
+  };
+  attributes: {
+    data: Attribute.Date;
+    local: Attribute.String;
+  };
+}
+
 export interface OtherEventos extends Schema.Component {
   collectionName: 'components_other_eventos';
   info: {
     displayName: 'Eventos';
     icon: 'bulletList';
+    description: '';
   };
   attributes: {
-    evento: Attribute.Date;
     local: Attribute.String;
   };
 }
@@ -17,10 +39,10 @@ export interface OtherPlaceAndDate extends Schema.Component {
   info: {
     displayName: 'Place and Date';
     icon: 'attachment';
+    description: '';
   };
   attributes: {
     place: Attribute.String;
-    date: Attribute.Date;
   };
 }
 
@@ -28,9 +50,9 @@ export interface PublicationPublication extends Schema.Component {
   collectionName: 'components_publication_publications';
   info: {
     displayName: 'Publication';
+    description: '';
   };
   attributes: {
-    Date: Attribute.Date;
     Location: Attribute.String;
   };
 }
@@ -72,6 +94,8 @@ export interface SectionStrictTextSection extends Schema.Component {
 declare module '@strapi/types' {
   export module Shared {
     export interface Components {
+      'data-local.birth': DataLocalBirth;
+      'data-local.death': DataLocalDeath;
       'other.eventos': OtherEventos;
       'other.place-and-date': OtherPlaceAndDate;
       'publication.publication': PublicationPublication;

@@ -38,11 +38,6 @@
       "relation": "manyToMany",
       "target": "api::person-article.person-article",
       "mappedBy": "categories"
-    },
-    "verbete_obras": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::verbete-obra.verbete-obra"
     }
   }
 }

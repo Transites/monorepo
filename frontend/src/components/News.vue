@@ -5,16 +5,17 @@
       <v-row align="center" justify="center" no-gutters>
         <v-col cols="12" lg="9">
           <v-row justify="center">
+            <!-- Aqui garantimos que só serão mostrados 9 artigos -->
             <v-col
               cols="12"
               sm="6"
               md="4"
-              v-for="entry in entries"
+              v-for="(entry, index) in entries.slice(0, 9)"  
               :key="entry.id"
             >
               <v-card
                 class="news-card"
-                style="background-color: var(--transites-blue); color: white; height: 100%;"
+                :style="getCardStyle(entry.category)"
                 @click="$router.push(`article/person/${entry.id}`)"
               >
                 <v-card-title>{{ entry.title }}</v-card-title>
@@ -30,6 +31,7 @@
 
 <script>
 import axios from 'axios';
+
 export default {
   props: {
     padding: {
@@ -38,12 +40,9 @@ export default {
   },
   mounted() {
     this.fetchDataFromStrapi();
-    this.fetchImagesFromStrapi();
   },
   data: () => ({
     entries: [],
-    url_news_image: "",
-    title_news_image: "",
     error: null,
   }),
   computed: {
@@ -54,41 +53,40 @@ export default {
     }
   },
   methods: {
+    // Método para definir as cores dos cards com base na categoria
+    getCardStyle(category) {
+      switch (category.toLowerCase()) {
+        case 'pessoa':
+          return 'background-color: var(--transites-blue); color: white;';
+        case 'instituição':
+          return 'background-color: var(--transites-red); color: white;';
+        case 'obra':
+          return 'background-color: var(--transites-yellow); color: white;';
+        case 'evento':
+          return 'background-color: var(--transites-light-purple); color: white;';
+        case 'grupo':
+          return 'background-color: var(--transites-light-red); color: white;';
+        default:
+          return 'background-color: var(--transites-gray-purple); color: white;';
+      }
+    },
+
     async fetchDataFromStrapi() {
       const base_url = import.meta.env.VITE_STRAPI_BASE_URL;
 
       try {
-        const response = await axios.get(`${base_url}/api/person-articles/?pagination[limit]=8&populate=categories&sort=createdAt:desc`);
-        this.entries = response.data.data.map(entry => ({
+        // Fazendo a requisição e ordenando pelo ID em ordem decrescente (mais recentes primeiro)
+        const response = await axios.get(`${base_url}/api/person-articles?pagination[limit]=8&populate=categories&sort=id:desc`);
+        
+        // Filtrando manualmente os 9 artigos mais recentes
+        this.entries = response.data.data.slice(0, 9).map(entry => ({
           title: entry.attributes.title,
           id: entry.id,
           category: entry.attributes.categories.data.length
             ? entry.attributes.categories.data[0].attributes.name
             : 'Uncategorized'
         }));
-      } catch (error) {
-        this.error = error;
-      }
-    },
-    async fetchImagesFromStrapi() {
-      const base_url = import.meta.env.VITE_STRAPI_BASE_URL;
-
-      try {
-        const response = await axios.get(`${base_url}/api/person-articles/?pagination[limit]=8&populate=image&sort=createdAt:desc`);
-        this.imageData = response.data.data;
-
-        if (this.imageData && this.imageData.length > 0) {
-          for (const item of this.imageData) {
-            if (item.attributes.image.data) {
-              const formats = item.attributes.image.data.attributes.formats;
-              const key = Object.keys(formats)[0];
-
-              this.title_news_image = item.attributes.title;
-              this.url_news_image = formats[key].url;
-              return null;
-            }
-          }
-        }
+        
       } catch (error) {
         this.error = error;
       }
@@ -123,3 +121,4 @@ export default {
   overflow: hidden; /* Evita que o conteúdo exceda o container */
 }
 </style>
+

@@ -11,7 +11,7 @@
 
       <div class="image-and-info">
         <!-- Imagem e legenda -->
-        <div v-if="article.attributes.Image.data" class="article-images">
+        <div v-if="article.attributes.Image?.data" class="article-images">
           <div v-for="(image, index) in article.attributes.Image.data" :key="index" class="image-container">
             <img
               :src="buildImageUrl(image.attributes.formats?.small?.url || image.attributes.url)"
@@ -25,15 +25,15 @@
         <!-- Informações ao lado da imagem -->
         <div class="article-info">
           <!-- Nascimento e Falecimento -->
-          <p v-if="article.attributes.birth && article.attributes.birth.date">
-            <strong>Nascimento:</strong> {{ formatDate(article.attributes.birth.date) }}, {{ article.attributes.birth.place }}
-          </p>
-          
-          <p v-if="article.attributes.death && article.attributes.death.date">
-            <strong>Falecimento:</strong> {{ formatDate(article.attributes.death.date) }}, {{ article.attributes.death.place }}
+          <p v-if="article.attributes.birth && article.attributes.birth.data">
+            <strong>Nascimento:</strong> {{ formatDate(article.attributes.birth.data) }}, {{ article.attributes.birth.local }}
           </p>
 
-          <p v-if="article.attributes.summary"> 
+          <p v-if="article.attributes.death && article.attributes.death.data">
+            <strong>Falecimento:</strong> {{ formatDate(article.attributes.death.data) }}, {{ article.attributes.death.local || 'Desconhecido' }}
+          </p>
+
+          <p v-if="article.attributes.summary">
             {{ article.attributes.summary }}
           </p>
 
@@ -43,7 +43,6 @@
             <ul>
               <li v-for="publication in article.attributes.Franca" :key="publication.id">
                 {{ publication.title }}
-                <span v-if="publication.date">, {{ formatDate(publication.date) }}</span>
               </li>
             </ul>
           </div>
@@ -54,46 +53,48 @@
             <ul>
               <li v-for="publication in article.attributes.Brasil" :key="publication.id">
                 {{ publication.title }}
-                <span v-if="publication.date">, {{ formatDate(publication.date) }}</span>
               </li>
             </ul>
           </div>
 
           <!-- Abertura -->
-          <p v-if="article.attributes.Abertura && article.attributes.Abertura.length">
-            <strong>Abertura:</strong> 
-            <span v-for="(abertura, index) in article.attributes.Abertura" :key="index">
-              {{ formatDate(abertura.date) }}, {{ abertura.place }}
-            </span>
-          </p>
+          <div v-if="article.attributes.Abertura && article.attributes.Abertura.length">
+            <strong>Abertura:</strong>
+            <ul>
+              <li v-for="(abertura, index) in article.attributes.Abertura" :key="index">
+                 {{ abertura.place }}
+              </li>
+            </ul>
+          </div>
 
           <!-- Fechamento -->
-          <p v-if="article.attributes.Fechamento && article.attributes.Fechamento.length">
-            <strong>Fechamento:</strong> 
-            <span v-for="(fechamento, index) in article.attributes.Fechamento" :key="index">
-              {{ formatDate(fechamento.date) }}, {{ fechamento.place }}
-            </span>
-          </p>
+          <div v-if="article.attributes.Fechamento && article.attributes.Fechamento.length">
+            <strong>Fechamento:</strong>
+            <ul>
+              <li v-for="(fechamento, index) in article.attributes.Fechamento" :key="index">
+                 {{ fechamento.place }}
+              </li>
+            </ul>
+          </div>
 
           <!-- Início -->
-          <p v-if="article.attributes.inicio && article.attributes.inicio.date">
-            <strong>Início:</strong> {{ formatDate(article.attributes.inicio.date) }}, {{ article.attributes.inicio.place }}
-          </p>
+          <div v-if="article.attributes.inicio && article.attributes.inicio.place">
+            <strong>Início:</strong>
+            <p>{{ article.attributes.inicio.place }}</p>
+          </div>
 
           <!-- Fim -->
-          <p v-if="article.attributes.fim && article.attributes.fim.length">
-            <strong>Fim:</strong> 
-            <span v-for="(fim, index) in article.attributes.fim" :key="index">
-              {{ formatDate(fim.date) }}, {{ fim.place }}
-            </span>
-          </p>
+          <div v-if="article.attributes.fim && article.attributes.fim.place">
+            <strong>Fim:</strong>
+            <p>{{ article.attributes.fim.place }}</p>
+          </div>
 
           <!-- Eventos -->
           <div v-if="article.attributes.Eventos && article.attributes.Eventos.length">
             <strong>Eventos:</strong>
             <ul>
               <li v-for="evento in article.attributes.Eventos" :key="evento.id">
-                {{ formatDate(evento.date) }}: {{ evento.description }}
+                {{ evento.local }}
               </li>
             </ul>
           </div>
@@ -123,7 +124,8 @@
         <h2 class="section-title">Autor(es):</h2>
         <ul class="author-list">
           <li v-for="author in article.attributes.authors.data" :key="author.id">
-            {{ author.attributes.name }}
+            {{ author.attributes.name }} 
+            <span v-if="author.attributes.institution"> - {{ author.attributes.institution }}</span>
           </li>
         </ul>
       </div>
@@ -221,7 +223,7 @@ body {
 }
 
 .image-caption {
-  font-size: 0.9rem;
+  font-size: 0.7rem;
   color: var(--color-text);
   margin-top: 5px;
   text-align: center;

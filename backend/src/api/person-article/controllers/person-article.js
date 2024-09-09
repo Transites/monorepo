@@ -7,14 +7,20 @@ module.exports = factories.createCoreController('api::person-article.person-arti
     const { query } = ctx;
     const filters = {};
 
+    // Filtro para o título, se fornecido
     if (query.title_contains) {
       filters.title = { $contains: Array.isArray(query.title_contains) ? query.title_contains[0] : query.title_contains };
     }
+
+    // Filtro para categorias, se fornecido
     if (typeof query['categories.id'] === 'string') {
       filters.categories = { id: query['categories.id'] };
     }
+
+    // Filtro para tags com múltiplos IDs, se fornecido
     if (typeof query['tags.id_in'] === 'string') {
-      filters.tags = { id: { $in: query['tags.id_in'].split(',') } };
+      const tagIds = query['tags.id_in'].split(',');  // Converte os IDs de tags em um array
+      filters.tags = { id: { $in: tagIds } };  // Aplica o filtro $in para múltiplos IDs de tags
     }
 
     try {
@@ -49,3 +55,4 @@ module.exports = factories.createCoreController('api::person-article.person-arti
     }
   }
 }));
+

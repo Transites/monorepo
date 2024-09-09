@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_data_local_deaths",
+  "info": {
+    "displayName": "death"
+  },
+  "options": {},
+  "attributes": {
+    "data": {
+      "type": "date"
+    },
+    "local": {
+      "type": "string"
+    }
+  }
+}

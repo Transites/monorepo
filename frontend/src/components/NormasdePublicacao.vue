@@ -2,7 +2,7 @@
     <div class="normasContainer" :style="{ padding: propPadding }">
       <v-card class="normasCard">
         <div class="normasContent">
-          <h1 class="normasTitle">Transitos | Circulations</h1>
+          <h1 class="normasTitle"><b>Trânsitos</b> | <i>Circulations</i></h1>
           <p class="normasSubtitle"><b>Normas de Publicação</b></p>
   
           <!-- Texto principal -->
@@ -82,7 +82,7 @@
               <b> - Bibliografia utilizada:</b>Mencionar no máximo 5 obras de referência que permitam aprofundamento, ao final do verbete (vide padrão abaixo). 
               <br />
                - <b> IMPORTANTE:</b><br />
-              Todo verbete deve ser acompanhado de ao menos uma fotografia com legenda e crédito (no formato “Foto: nome do autor.”). A imagem deve ser enviada à parte, em arquivo imagem (jpeg), alta definição e ser livre de direitos (ou ter os direitos concedidos em documento anexo ao envio).
+               - Todo verbete deve ser acompanhado de até três fotografias com legendas e créditos (no formato “Foto: nome do autor.”). As imagens devem ser enviadas à parte, em arquivos imagem (jpeg), alta definição e serem livres de direitos (ou terem os direitos concedidos em documento anexo ao envio). Além das fotografias, os verbetes também podem ser acompanhados de vídeos, caso existam.
               <br />
                - Incluir nome(s) do(s) autor(es) do verbete ao final (à direita), com uma indicação institucional direta como no modelo abaixo:
               <br />
@@ -132,7 +132,12 @@
   
   <style scoped>
   .normasContainer {
-    --border-width: 4px;
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: var(--color-background-soft);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     padding: var(--prop-padding);
   }
   

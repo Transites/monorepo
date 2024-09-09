@@ -1,6 +1,6 @@
 <template>
   <HomeSection>
-    <template #icon>
+    <template #icon> 
       <v-img :src="logo" max-width="180" ></v-img>
     </template>
     <template #title>
@@ -11,7 +11,9 @@
     </template>
     <template #text>
       <p>
-        Trânsitos | <i>Circulations </i> é uma enciclopédia digital e evolutiva sobre os trânsitos Brasil-França. 
+        <span style="color: var(--transites-red);">
+          <b> Trânsitos  </b>| <i>Circulations</i>
+        </span>  é uma enciclopédia digital e evolutiva sobre os trânsitos Brasil-França. 
         Os verbetes referem-se a <b>pessoas</b> que transitam entre os dois países, além de <b>obras</b>, 
         <b>instituições</b> e <b>eventos</b> que marcam de alguma forma as relações e as circulações entre 
         estas duas margens do Atlântico. Em sua primeira fase, Trânsitos tratará do período 1880-1980. 
