@@ -1,0 +1,14 @@
+version: 1
+services:
+  - type: web
+    name: my-strapi-app
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm run start
+    envVars:
+      DATABASE_HOST: dpg-crfn24a3esus73f3gi2g-a.oregon-postgres.render.com
+      DATABASE_PORT: 5432
+      DATABASE_NAME: transites
+      DATABASE_USERNAME: gygy
+      DATABASE_PASSWORD: OnClYMjOuGa8NhYxf5v9ouxHJe0UEYqz
