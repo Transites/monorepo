@@ -23,6 +23,10 @@ services:
         value: OnClYMjOuGa8NhYxf5v9ouxHJe0UEYqz
       - key: DATABASE_SSL
         value: "true"
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: "1337"  # Adicionar porta como variável de ambiente, mas Strapi já usa a do Render
 
 databases:
   - name: strapi

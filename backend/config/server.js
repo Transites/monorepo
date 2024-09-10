@@ -1,6 +1,6 @@
 module.exports = ({ env }) => ({
   host: env('HOST', '0.0.0.0'),
-  port: env.int('PORT', process.env.PORT || 1337), // Garante que usará a variável PORT do Render
+  port: env.int('PORT', process.env.PORT || 1337), // Use a porta definida pelo Render
   app: {
     keys: env.array('APP_KEYS'),
   },
