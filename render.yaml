@@ -1,14 +1,24 @@
-version: 1
+version: "1"
 services:
   - type: web
     name: my-strapi-app
-    env: node
     plan: free
     buildCommand: npm install
     startCommand: npm run start
+    runtime: node
+    repo: https://github.com/Transites/monorepo
+    branch: master
     envVars:
-      DATABASE_HOST: dpg-crfn24a3esus73f3gi2g-a.oregon-postgres.render.com
-      DATABASE_PORT: 5432
-      DATABASE_NAME: transites
-      DATABASE_USERNAME: gygy
-      DATABASE_PASSWORD: OnClYMjOuGa8NhYxf5v9ouxHJe0UEYqz
+      - key: DATABASE_HOST
+        value: dpg-crfn24a3esus73f3gi2g-a.oregon-postgres.render.com
+      - key: DATABASE_PORT
+        value: "5432"
+      - key: DATABASE_NAME
+        value: transites
+      - key: DATABASE_USERNAME
+        value: gygy
+      - key: DATABASE_PASSWORD
+        value: OnClYMjOuGa8NhYxf5v9ouxHJe0UEYqz
+    autoDeploy: true
+
+
