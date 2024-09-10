@@ -1,13 +1,15 @@
-version: "1"
 services:
   - type: web
-    name: my-strapi-app
-    plan: free
-    buildCommand: npm install
-    startCommand: npm run start
+    name: strapi
+    plan: starter
     runtime: node
-    repo: https://github.com/Transites/monorepo
-    branch: master
+    buildCommand: yarn install && yarn build
+    startCommand: yarn start
+    healthCheckPath: /_health
+    disk:
+      name: strapi-uploads
+      mountPath: /opt/render/project/src/public/uploads
+      sizeGB: 1
     envVars:
       - key: DATABASE_HOST
         value: dpg-crfn24a3esus73f3gi2g-a.oregon-postgres.render.com
@@ -19,6 +21,9 @@ services:
         value: gygy
       - key: DATABASE_PASSWORD
         value: OnClYMjOuGa8NhYxf5v9ouxHJe0UEYqz
-    autoDeploy: true
+      - key: DATABASE_SSL
+        value: "true"
 
-
+databases:
+  - name: strapi
+    plan: starter
