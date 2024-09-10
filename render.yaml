@@ -1,10 +1,10 @@
 services:
   - type: web
-    name: strapi
+    name: backend-strapi
     plan: starter
     runtime: node
-    buildCommand: npm cache clean --force && npm install && npm run build
-    startCommand: npm run start
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm run start
     healthCheckPath: /_health
     disk:
       name: strapi-uploads
@@ -26,8 +26,5 @@ services:
       - key: HOST
         value: 0.0.0.0
       - key: PORT
-        value: "1337"  # Adicionar porta como variável de ambiente, mas Strapi já usa a do Render
+        value: "1337"
 
-databases:
-  - name: strapi
-    plan: starter
