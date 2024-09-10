@@ -940,7 +940,7 @@ export interface ApiPersonArticlePersonArticle extends Schema.CollectionType {
           localized: true;
         };
       }>;
-    Image: Attribute.Media &
+    Image: Attribute.Media<'images' | 'files', true> &
       Attribute.SetPluginOptions<{
         i18n: {
           localized: false;
@@ -958,7 +958,7 @@ export interface ApiPersonArticlePersonArticle extends Schema.CollectionType {
           localized: true;
         };
       }>;
-    Video: Attribute.Media &
+    Video: Attribute.Media<'images' | 'files' | 'videos' | 'audios', true> &
       Attribute.SetPluginOptions<{
         i18n: {
           localized: true;
