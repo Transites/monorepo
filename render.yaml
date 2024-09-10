@@ -11,6 +11,8 @@ services:
       mountPath: /opt/render/project/src/public/uploads
       sizeGB: 1
     envVars:
+      - key: NODE_ENV
+        value: production
       - key: DATABASE_HOST
         value: dpg-crfn24a3esus73f3gi2g-a.oregon-postgres.render.com
       - key: DATABASE_PORT
