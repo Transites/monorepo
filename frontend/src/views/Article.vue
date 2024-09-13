@@ -150,7 +150,7 @@ export default {
   async mounted() {
     const { id } = this.$route.params;
     try {
-      const response = await axios.get(`http://localhost:1337/api/person-articles/${id}?populate=authors,Image`);
+      const response = await axios.get(`${import.meta.env.VITE_STRAPI_BASE_URL}/api/person-articles/${id}?populate=authors,Image`);
       this.article = response.data.data;
     } catch (error) {
       this.error = 'Não foi possível carregar o verbete.';
@@ -160,8 +160,8 @@ export default {
   },
   methods: {
     buildImageUrl(path) {
-      return `http://localhost:1337${path}`;
-    },
+     return `${import.meta.env.VITE_STRAPI_BASE_URL}${path}`;
+  },
     formatDate(date) {
       return new Date(date).toLocaleDateString();
     },

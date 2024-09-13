@@ -64,19 +64,19 @@ export default {
     counter: 2,
     items: [
       {
-        src: 'http://localhost:1337/uploads/capa_Cahiers_a741c06e2d.jpg',
+        src: `${import.meta.env.VITE_STRAPI_BASE_URL}/uploads/capa_Cahiers_a741c06e2d.jpg`,
         title: 'Cahiers du Brésil Contemporain',
         subtitle: 'Revista',
         text: 'Em 1987, dois anos após a fundação do Centre de recherches sur le Brésil contemporain (CRBC) na École des Hautes Études en Sciences Sociales (EHESS), em Paris, Ignacy Sachs (1927-2023) criou os Cahiers du Brésil contemporain. A revista circulou até 2010, quando foi substituída por Brésil(s). Sciences humaines et sociales. A revista era uma publicação da Fondation Maison des Sciences de l’Homme (FMSH) e publicava, em francês, artigos em todas as disciplinas das ciências humanas e sociais, tentando construir pontes entre a pesquisa realizada no Brasil e por brasilianistas, em particular franceses. Apesar de ter publicado alguns exemplares “Micellanea”, os números eram em geral temáticos, muitas vezes duplos, compondo volumes bastante significativos.'
       },
       {
-        src: 'http://localhost:1337/uploads/Lucia_T_Osi_58ddf59538.png',
+        src: `${import.meta.env.VITE_STRAPI_BASE_URL}/uploads/Lucia_T_Osi_58ddf59538.png`,
         title: 'Lucia Tosi',
         subtitle: 'Cientista natural, química, intelectual e professora universitária',
         text: 'Lucía Tosi foi uma cientista natural da cidade de Buenos Aires, na Argentina, que consolidou sua carreira no Brasil e na França, trazendo uma vasta contribuição às pesquisas sobre gênero e ciência e história das mulheres nas ciências. Lucía Tosi teve toda a sua formação em Química vinculada ao seu país natal, a Argentina. Todavia sua carreira científica se desenvolveu no entrelace de sua relação com a França e o Brasil.'
       },
       {
-        src: 'http://localhost:1337/uploads/Ignacy_Sachs_2_52e549750e.jpeg',
+        src: `${import.meta.env.VITE_STRAPI_BASE_URL}/uploads/Ignacy_Sachs_2_52e549750e.jpeg`,
         title: 'Ignacy Sachs',
         subtitle: 'Economista, intelectual e professor universitário',
         text: 'Ignacy Sachs nasceu em Varsóvia em 1927. Em 1940, a família deixou a Polônia de carro, em direção à França, onde seu pai combateu junto ao exército polonês no exílio. A ocupação alemã empurrou os Sachs para mais longe: passando por Portugal, embarcaram para o Brasil. Tendo voltado à Polônia em 1954, deixou definitivamente o país em 1968, instalando-se na França a convite de Fernand Braudel. Na École des hautes études en sciences sociales, ao criar o Centre de recherches sur le Brésil Contemporain (CRBC), deu início a longas e profundas trocas científicas entre a França e o Brasil. '

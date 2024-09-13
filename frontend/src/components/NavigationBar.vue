@@ -37,7 +37,8 @@ export default {
       searchQuery: '',
       games: [],
       isLoading: true,
-      apiUrl: "http://localhost:1337/api/person-articles"
+      apiUrl: import.meta.env.VITE_STRAPI_BASE_URL + "/api/person-articles"
+
     };
   },
   computed: {

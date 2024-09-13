@@ -18,8 +18,8 @@
                 :style="getCardStyle(entry.category)"
                 @click="$router.push(`article/person/${entry.id}`)"
               >
-                <v-card-title>{{ entry.title }}</v-card-title>
-                <v-card-subtitle>{{ entry.category }}</v-card-subtitle>
+                <v-card-subtitle class="text-center">{{ entry.category }}</v-card-subtitle>
+                <v-card-title class="text-center">{{ entry.title }}</v-card-title>
               </v-card>
             </v-col>
           </v-row>
@@ -28,6 +28,7 @@
     </v-container>
   </div>
 </template>
+
 
 <script>
 import axios from 'axios';
@@ -108,6 +109,23 @@ export default {
 .news-container .v-row {
   margin: 0; /* Remove o margin padrão da linha */
 }
+.news-container .v-card-title,
+.news-container .v-card-subtitle {
+  margin-bottom: 0; /* Remove espaçamento extra */
+  margin-top: 1px; /* Remove margem superior */
+  text-align: center; /* Centraliza o texto */
+}
+
+.news-container .v-card-subtitle {
+  margin-bottom: 8px; /* Um pequeno espaço entre a categoria e o título */
+  font-size: 0.875rem; /* Um pouco menor para a categoria */
+}
+
+.news-container .v-card-title {
+  margin-top: 8px; /* Aproxima o título da categoria */
+  font-size: 1rem; /* Mantém um bom tamanho de título */
+}
+
 
 .news-container .v-col {
   padding: 0; /* Remove o padding padrão das colunas */

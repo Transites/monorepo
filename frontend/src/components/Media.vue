@@ -23,7 +23,7 @@
 <script>
 export default {
   data: () => ({
-    videoIds: ['70P5mHigQVY']
+    videoIds: ['70P5mHigQVY', 'DO8Nk6ZQQ94'] // Adiciona o novo vídeo aqui
   })
 }
 </script>

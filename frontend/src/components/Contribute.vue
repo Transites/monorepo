@@ -24,8 +24,7 @@
           color="var(--transites-gray-purple)"
           @click.prevent="sendEmail"
           block
-          >Enviar</v-btn
-        >
+        >Enviar</v-btn>
       </v-form>
     </template>
   </HomeSection>
@@ -48,19 +47,22 @@ export default {
   }),
   methods: {
     sendEmail() {
-      const email = import.meta.env.VITE_CONTRIBUTE_EMAIL
-      const body = this.message.replace(/\n/g, '%0D')
+      // Recupera a lista de e-mails do .env e junta em uma string separada por vírgula
+      const emails = import.meta.env.VITE_CONTRIBUTE_EMAIL;
+      const body = this.message.replace(/\n/g, '%0D'); // Formata a mensagem
+
       this.$refs.emailForm.validate().then((result) => {
-        if (result.valid) {
+        if (result) {
+          // Envia o e-mail para todos os destinatários em uma única chamada
           window.open(
-            `mailto:${email}?subject=${this.subject}&body=${body}%0D%0DDe: ${this.firstName}`
-          )
+            `mailto:${emails}?subject=${encodeURIComponent(this.subject)}&body=${encodeURIComponent(body)}%0D%0DDe: ${encodeURIComponent(this.firstName)}`
+          );
         }
-      })
+      });
     }
   },
   components: {
-    HomeSection: HomeSection
+    HomeSection
   }
 }
 </script>
