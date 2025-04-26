@@ -30,6 +30,7 @@
 <script>
 import _ from "lodash";
 import axios from "axios";
+import api from "@/services/api";
 
 export default {
   data() {
@@ -37,7 +38,7 @@ export default {
       searchQuery: '',
       games: [],
       isLoading: true,
-      apiUrl: "http://localhost:1337/api/person-articles"
+      apiUrl: `${api.getUri()}/person-articles`
     };
   },
   computed: {
@@ -65,40 +66,19 @@ export default {
     },
 
     async performSearch() {
-      if (!this.searchQuery || !this.searchQuery.trim()) return;
-      try {
-        const response = await axios.get(this.apiUrl, {
-          params: {
-            filters: {
-              title: {
-                $contains: this.searchQuery
-              }
-            },
-            populate: ['tags', 'categories']
-          }
-        });
+      // Store the search query in Vuex (even if empty)
+      this.$store.dispatch('search/setSearchQuery', this.searchQuery);
 
-        const results = response.data.data.map(item => ({
-          id: item.id,
-          type: 'person-articles',
-          title: item.attributes.title || 'Título indisponível',
-          subtitle: item.attributes.subtitle || 'Subtítulo indisponível',
-          text: item.attributes.summary || 'Resumo indisponível',
-          tags: item.attributes.tags?.data.map(tag => ({
-            name: tag.attributes.name
-          })) || []
-        }));
+      // Perform the search using Vuex action (handles empty queries internally)
+      await this.$store.dispatch('search/performSearch');
 
-        this.$router.push({
-          name: 'Results',
-          query: {
-            results: JSON.stringify(results),
-            searchTerm: this.searchQuery
-          }
-        });
-      } catch (error) {
-        console.error('Error performing search:', error);
-      }
+      // Navigate to results page without passing results in URL
+      this.$router.push({
+        name: 'Results',
+        query: {
+          q: this.searchQuery // Only pass the search query in URL for bookmarking/sharing
+        }
+      });
     }
   },
   created() {
@@ -106,7 +86,9 @@ export default {
   },
   watch: {
     searchQuery: _.debounce(function(query) {
-      this.performSearch();
+      // Only update the query in the store, don't navigate
+      // This allows for real-time filtering without page navigation
+      this.$store.dispatch('search/setSearchQuery', query);
     }, 250)
   }
 };
