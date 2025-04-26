@@ -1,9 +1,20 @@
 const path = require('path');
 
 module.exports = ({ env }) => {
-  const client = env('DATABASE_CLIENT', 'postgres');
+  const client = env('DATABASE_CLIENT', 'sqlite');
 
   const connections = {
+    sqlite: {
+      connection: {
+        filename: path.join(
+          __dirname,
+          '..',
+          '..',
+          env('DATABASE_FILENAME', '.tmp/data.db')
+        ),
+      },
+      useNullAsDefault: true,
+    },
     postgres: {
       connection: {
         host: env('DATABASE_HOST', 'dpg-crfn24a3esus73f3gi2g-a.oregon-postgres.render.com'),
@@ -12,7 +23,7 @@ module.exports = ({ env }) => {
         user: env('DATABASE_USERNAME', 'gygy'),
         password: env('DATABASE_PASSWORD', 'OnClYMjOuGa8NhYxf5v9ouxHJe0UEYqz'),
         ssl: {
-          rejectUnauthorized: false, // Dependendo do seu ambiente, você pode precisar ajustar essa configuração
+          rejectUnauthorized: env.bool('DATABASE_SSL_REJECT_UNAUTHORIZED', false),
         },
         schema: env('DATABASE_SCHEMA', 'public'),
       },
