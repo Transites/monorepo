@@ -6,7 +6,7 @@
       :key="author"
       variant="text"
       rounded="lg"
-      style="text-transform: none; padding: 0px 5px 3px 5px"
+      style="text-transform: none; padding: 0 5px 3px 5px"
     >
       <span>{{ author.name }}</span>
       <span v-if="index + 1 < authors.length">, </span>
@@ -32,7 +32,7 @@
 export default {
   data() {
     return {
-      dialog: []
+      dialog: Array(this.authors.length).fill(false)
     }
   },
   props: {

@@ -8,13 +8,13 @@
     >
       <v-card-item>
         <v-card-title class="d-flex align-center mb-5" :class="$vuetify.display.xs ? 'text-h4' : 'text-h2'">
-          <v-icon size="x-small" class="mr-2">{{ this.icon }}</v-icon>
-          <span class="font-weight-bold">{{ this.code }}</span>
+          <v-icon size="x-small" class="mr-2">{{ icon }}</v-icon>
+          <span class="font-weight-bold">{{ code }}</span>
         </v-card-title>
       </v-card-item>
 
       <v-card-text :class="$vuetify.display.xs ? 'text-h6' : 'text-h4'">
-        {{ this.text }}
+        {{ text }}
       </v-card-text>
 
       <v-card-actions>
@@ -46,7 +46,7 @@ export default {
     },
     buttonCallback: {
       type: Function,
-      default: function() { this.$router.push('/') }
+      default: function() { return this.$router.push('/') }
     },
       center: {
       default: true
