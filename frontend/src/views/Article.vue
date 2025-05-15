@@ -7,14 +7,14 @@
       Carregando...
     </div>
     <div v-else class="article-content">
-      <h1 class="article-title">{{ article.attributes.title }}</h1>
+      <h1 class="article-title">{{ displayArticle.attributes.title }}</h1>
 
       <div class="image-and-info">
         <!-- Imagem e legenda -->
-        <div v-if="article.attributes.Image?.data" class="article-images">
-          <div v-for="(image, index) in article.attributes.Image.data" :key="index" class="image-container">
+        <div v-if="displayArticle.attributes.Image?.data" class="article-images">
+          <div v-for="(image, index) in displayArticle.attributes.Image.data" :key="index" class="image-container">
             <img
-              :src="buildImageUrl(image.attributes.formats?.small?.url || image.attributes.url)"
+              :src="previewMode ? image.attributes.url : buildImageUrl(image.attributes.formats?.small?.url || image.attributes.url)"
               :alt="image.attributes.alternativeText || 'Imagem do artigo'"
               class="article-image"
             />
@@ -25,75 +25,75 @@
         <!-- Informações ao lado da imagem -->
         <div class="article-info">
           <!-- Nascimento e Falecimento -->
-          <p v-if="article.attributes.birth && article.attributes.birth.data">
-            <strong>Nascimento:</strong> {{ formatDate(article.attributes.birth.data) }}, {{ article.attributes.birth.local }}
+          <p v-if="displayArticle.attributes.birth && displayArticle.attributes.birth.data">
+            <strong>Nascimento:</strong> {{ formatDate(displayArticle.attributes.birth.data) }}, {{ displayArticle.attributes.birth.local }}
           </p>
 
-          <p v-if="article.attributes.death && article.attributes.death.data">
-            <strong>Falecimento:</strong> {{ formatDate(article.attributes.death.data) }}, {{ article.attributes.death.local || 'Desconhecido' }}
+          <p v-if="displayArticle.attributes.death && displayArticle.attributes.death.data">
+            <strong>Falecimento:</strong> {{ formatDate(displayArticle.attributes.death.data) }}, {{ displayArticle.attributes.death.local || 'Desconhecido' }}
           </p>
 
-          <p v-if="article.attributes.summary">
-            {{ article.attributes.summary }}
+          <p v-if="displayArticle.attributes.summary">
+            {{ displayArticle.attributes.summary }}
           </p>
 
           <!-- França -->
-          <div v-if="article.attributes.Franca && article.attributes.Franca.length">
+          <div v-if="displayArticle.attributes.Franca && displayArticle.attributes.Franca.length">
             <strong>França:</strong>
             <ul>
-              <li v-for="publication in article.attributes.Franca" :key="publication.id">
+              <li v-for="publication in displayArticle.attributes.Franca" :key="publication.id">
                 {{ publication.title }}
               </li>
             </ul>
           </div>
 
           <!-- Brasil -->
-          <div v-if="article.attributes.Brasil && article.attributes.Brasil.length">
+          <div v-if="displayArticle.attributes.Brasil && displayArticle.attributes.Brasil.length">
             <strong>Brasil:</strong>
             <ul>
-              <li v-for="publication in article.attributes.Brasil" :key="publication.id">
+              <li v-for="publication in displayArticle.attributes.Brasil" :key="publication.id">
                 {{ publication.title }}
               </li>
             </ul>
           </div>
 
           <!-- Abertura -->
-          <div v-if="article.attributes.Abertura && article.attributes.Abertura.length">
+          <div v-if="displayArticle.attributes.Abertura && displayArticle.attributes.Abertura.length">
             <strong>Abertura:</strong>
             <ul>
-              <li v-for="(abertura, index) in article.attributes.Abertura" :key="index">
+              <li v-for="(abertura, index) in displayArticle.attributes.Abertura" :key="index">
                  {{ abertura.place }}
               </li>
             </ul>
           </div>
 
           <!-- Fechamento -->
-          <div v-if="article.attributes.Fechamento && article.attributes.Fechamento.length">
+          <div v-if="displayArticle.attributes.Fechamento && displayArticle.attributes.Fechamento.length">
             <strong>Fechamento:</strong>
             <ul>
-              <li v-for="(fechamento, index) in article.attributes.Fechamento" :key="index">
+              <li v-for="(fechamento, index) in displayArticle.attributes.Fechamento" :key="index">
                  {{ fechamento.place }}
               </li>
             </ul>
           </div>
 
           <!-- Início -->
-          <div v-if="article.attributes.inicio && article.attributes.inicio.place">
+          <div v-if="displayArticle.attributes.inicio && displayArticle.attributes.inicio.place">
             <strong>Início:</strong>
-            <p>{{ article.attributes.inicio.place }}</p>
+            <p>{{ displayArticle.attributes.inicio.place }}</p>
           </div>
 
           <!-- Fim -->
-          <div v-if="article.attributes.fim && article.attributes.fim.place">
+          <div v-if="displayArticle.attributes.fim && displayArticle.attributes.fim.place">
             <strong>Fim:</strong>
-            <p>{{ article.attributes.fim.place }}</p>
+            <p>{{ displayArticle.attributes.fim.place }}</p>
           </div>
 
           <!-- Eventos -->
-          <div v-if="article.attributes.Eventos && article.attributes.Eventos.length">
+          <div v-if="displayArticle.attributes.Eventos && displayArticle.attributes.Eventos.length">
             <strong>Eventos:</strong>
             <ul>
-              <li v-for="evento in article.attributes.Eventos" :key="evento.id">
+              <li v-for="evento in displayArticle.attributes.Eventos" :key="evento.id">
                 {{ evento.local }}
               </li>
             </ul>
@@ -102,35 +102,35 @@
       </div>
 
       <!-- Artigo -->
-      <div v-if="article.attributes.Artigo" class="article-section">
+      <div v-if="displayArticle.attributes.Artigo" class="article-section">
         <h2 class="section-title">Artigo</h2>
-        <div v-html="article.attributes.Artigo" class="article-artigo"></div>
+        <div v-html="displayArticle.attributes.Artigo" class="article-artigo"></div>
       </div>
 
       <!-- Obras -->
-      <div v-if="article.attributes.Obras" class="section">
+      <div v-if="displayArticle.attributes.Obras" class="section">
         <h2 class="section-title">Obras</h2>
-        <p v-html="article.attributes.Obras"></p>
+        <p v-html="displayArticle.attributes.Obras"></p>
       </div>
 
       <!-- Bibliografia -->
-      <div v-if="article.attributes.Bibliografia" class="section">
+      <div v-if="displayArticle.attributes.Bibliografia" class="section">
         <h2 class="section-title">Bibliografia</h2>
-        <p v-html="article.attributes.Bibliografia"></p>
+        <p v-html="displayArticle.attributes.Bibliografia"></p>
       </div>
 
       <!-- Autores -->
-      <div v-if="article.attributes.authors" class="article-authors">
+      <div v-if="displayArticle.attributes.authors" class="article-authors">
         <h2 class="section-title">Autor(es):</h2>
         <ul class="author-list">
-          <li v-for="author in article.attributes.authors.data" :key="author.id">
+          <li v-for="author in displayArticle.attributes.authors.data" :key="author.id">
             {{ author.attributes.name }} 
             <span v-if="author.attributes.institution"> - {{ author.attributes.institution }}</span>
           </li>
         </ul>
       </div>
 
-      <p class="updated">Última atualização: {{ formatDate(article.attributes.updatedAt) }}</p>
+      <p class="updated">Última atualização: {{ formatDate(displayArticle.attributes.updatedAt) }}</p>
     </div>
   </div>
 </template>
@@ -140,18 +140,39 @@ import axios from 'axios';
 
 export default {
   name: 'Article',
+  props: {
+    article: {
+      type: Object,
+      default: null
+    },
+    previewMode: {
+      type: Boolean,
+      default: false
+    }
+  },
   data() {
     return {
-      article: null,
+      loadedArticle: null,
       error: null,
-      loading: true,
+      loading: !this.previewMode && !this.article,
     };
   },
+  computed: {
+    displayArticle() {
+      return this.article || this.loadedArticle;
+    }
+  },
   async mounted() {
+    if (this.previewMode || this.article) {
+      // If in preview mode or article is provided via props, use that
+      this.loading = false;
+      return;
+    }
+
     const { id } = this.$route.params;
     try {
       const response = await axios.get(`http://localhost:1337/api/person-articles/${id}?populate=authors,Image`);
-      this.article = response.data.data;
+      this.loadedArticle = response.data.data;
     } catch (error) {
       this.error = 'Não foi possível carregar o verbete.';
     } finally {

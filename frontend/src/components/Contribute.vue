@@ -9,7 +9,7 @@
     <template #subtitle>
       <div class="colored">
         <p>Envie sua sugestão, elogio, crítica</p>
-        <p>ou contribua com um verbete!</p>
+        <p>ou <router-link to="/submit" class="font-weight-bold">contribua com um verbete!</router-link></p>
         <p>Clique <router-link to="/normas-de-publicacao">aqui</router-link> para conferir nossas normas de publicação</p>
       </div>
     </template>

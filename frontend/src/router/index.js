@@ -5,6 +5,7 @@ import PageNotFound from '../views/PageNotFound.vue';
 import NormasDePublicacao from '@/components/NormasdePublicacao.vue';
 import SearchResults from '../views/SearchResults.vue';
 import Contribute from '@/components/Contribute.vue';
+import SubmissionPage from '../views/SubmissionPage.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -42,6 +43,11 @@ const router = createRouter({
       path: '/Contribute',
       name: 'Contribute',
       component: Contribute
+    },
+    {
+      path: '/submit',
+      name: 'SubmitArticle',
+      component: SubmissionPage
     },
     // Rota genérica para capturar qualquer caminho de 'article' que não foi definido
     {

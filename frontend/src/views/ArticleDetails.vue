@@ -88,6 +88,7 @@
       const { id } = route.params;
   
       try {
+        // TODO: refactor to use env variable
         const response = await axios.get(`http://localhost:1337/api/person-articles/${id}?populate=*`);
         this.article = response.data.data;
         this.authors = this.article.attributes.authors.data.map(author => author.attributes.name);
