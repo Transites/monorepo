@@ -2,8 +2,8 @@
   <div>
     <v-app-bar flat fixed style="background-color: white">
       <v-app-bar-nav-icon
-        class="hidden-md-and-up"
-        @click.stop="drawer = !drawer"
+          class="hidden-md-and-up"
+          @click.stop="drawer = !drawer"
       ></v-app-bar-nav-icon>
 
       <div style="cursor: pointer" @click="$router.push('/')" class="titleIcon">
@@ -13,16 +13,18 @@
 
       <v-spacer></v-spacer>
       <v-text-field
-        class="hidden-sm-and-down"
-        clearable
-        rounded
-        variant="solo"
-        hide-details
-        prepend-inner-icon="mdi-magnify"
-        v-model="searchQuery"
-        @keydown.enter="performSearch"
-        placeholder="Pesquisar..."
+          class="hidden-sm-and-down"
+          clearable
+          rounded
+          variant="solo"
+          hide-details
+          prepend-inner-icon="mdi-magnify"
+          v-model="searchQuery"
+          @keydown.enter="performSearch"
+          :placeholder="$t('navbar.search.placeholder')"
       ></v-text-field>
+
+      <language-switcher class="ml-4 hidden-sm-and-down" />
     </v-app-bar>
   </div>
 </template>
@@ -31,8 +33,10 @@
 import _ from "lodash";
 import axios from "axios";
 import api from "@/services/api";
+import LanguageSwitcher from "@/components/LanguageSwitcher.vue";
 
 export default {
+  components: {LanguageSwitcher},
   data() {
     return {
       searchQuery: '',
@@ -44,8 +48,8 @@ export default {
   computed: {
     filteredGames() {
       if (!this.searchQuery) return this.games;
-      return this.games.filter(game => 
-        game.title.toLowerCase().includes(this.searchQuery.toLowerCase())
+      return this.games.filter(game =>
+          game.title.toLowerCase().includes(this.searchQuery.toLowerCase())
       );
     }
   },
@@ -85,7 +89,7 @@ export default {
     this.getGames();
   },
   watch: {
-    searchQuery: _.debounce(function(query) {
+    searchQuery: _.debounce(function (query) {
       // Only update the query in the store, don't navigate
       // This allows for real-time filtering without page navigation
       this.$store.dispatch('search/setSearchQuery', query);

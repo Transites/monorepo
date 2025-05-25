@@ -4,27 +4,27 @@
       <v-icon class="colored" icon="mdi-form-select" size="120"></v-icon>
     </template>
     <template #title>
-      <h1 class="colored">Contribua com o<br /><b>Trânsitos</b> | <i>Circulations </i></h1>
+      <h1 class="colored">{{ $t('contribute.title') }}<br /><b>Trânsitos</b> | <i>Circulations </i></h1>
     </template>
     <template #subtitle>
       <div class="colored">
-        <p>Envie sua sugestão, elogio, crítica</p>
-        <p>ou <router-link to="/submit" class="font-weight-bold">contribua com um verbete!</router-link></p>
-        <p>Clique <router-link to="/normas-de-publicacao">aqui</router-link> para conferir nossas normas de publicação</p>
+        <p>{{ $t('contribute.subtitle1') }}</p>
+        <p><router-link to="/submit" class="font-weight-bold">{{ $t('contribute.subtitle2') }}</router-link></p>
+        <p>{{ $t('contribute.subtitle3').split('aqui')[0] }}<router-link to="/normas-de-publicacao">{{ $t('common.here') }}</router-link>{{ $t('contribute.subtitle3').split('aqui')[1] }}</p>
       </div>
     </template>
     <template #text>
       <v-form ref="emailForm">
-        <v-text-field v-model="firstName" :rules="rules" label="Nome completo"></v-text-field>
-        <v-text-field v-model="subject" :rules="rules" label="Assunto"></v-text-field>
-        <v-textarea v-model="message" :rules="rules" label="Mensagem"></v-textarea>
+        <v-text-field v-model="firstName" :rules="rules" :label="$t('contribute.form.fullName')"></v-text-field>
+        <v-text-field v-model="subject" :rules="rules" :label="$t('contribute.form.subject')"></v-text-field>
+        <v-textarea v-model="message" :rules="rules" :label="$t('contribute.form.message')"></v-textarea>
         <v-btn
           class="text-white"
           type="submit"
           color="var(--transites-gray-purple)"
           @click.prevent="sendEmail"
           block
-          >Enviar</v-btn
+          >{{ $t('contribute.form.send') }}</v-btn
         >
       </v-form>
     </template>
@@ -42,7 +42,7 @@ export default {
     rules: [
       (value) => {
         if (value) return true
-        return 'Campo obrigatório.'
+        return this.$t('contribute.form.required')
       }
     ]
   }),

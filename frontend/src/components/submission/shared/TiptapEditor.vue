@@ -42,11 +42,11 @@
     </div>
 
     <editor-content v-if="editor" :editor="editor" class="editor-content" />
-    <div v-else class="editor-content loading">Carregando editor...</div>
+    <div v-else class="editor-content loading">{{ $t('common.loading') }}</div>
 
     <div class="editor-footer">
       <div class="character-count" :class="{ 'warning': characterCount > characterWarningThreshold }">
-        {{ characterCount }} caracteres
+        {{ $t('submission.editor.characterCount', { count: characterCount }) }}
       </div>
       <div v-if="validationErrors.length > 0" class="validation-errors">
         <div v-for="(error, index) in validationErrors" :key="index" class="error-message">
@@ -59,25 +59,25 @@
     <!-- Link Dialog -->
     <v-dialog v-model="linkDialog" max-width="500px">
       <v-card>
-        <v-card-title>Inserir Link</v-card-title>
+        <v-card-title>{{ $t('submission.editor.link') }}</v-card-title>
         <v-card-text>
           <v-text-field
             v-model="linkUrl"
-            label="URL"
-            placeholder="https://exemplo.com"
-            hint="Insira a URL completa incluindo http:// ou https://"
+            :label="$t('submission.editor.link')"
+            :placeholder="$t('submission.editor.linkUrlPlaceholder')"
+            :hint="$t('submission.editor.linkHint')"
             persistent-hint
           ></v-text-field>
           <v-text-field
             v-model="linkText"
-            label="Texto do Link"
-            placeholder="Texto que será exibido"
+            :label="$t('submission.editor.linkText')"
+            :placeholder="$t('submission.editor.linkTextPlaceholder')"
           ></v-text-field>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="grey" text @click="linkDialog = false">Cancelar</v-btn>
-          <v-btn color="var(--transites-gray-purple)" @click="insertLink">Inserir</v-btn>
+          <v-btn color="grey" text @click="linkDialog = false">{{ $t('common.cancel') }}</v-btn>
+          <v-btn color="var(--transites-gray-purple)" @click="insertLink">{{ $t('common.insert') }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -134,7 +134,7 @@ export default {
   mounted() {
     // Set initial content from props
     this.content = this.modelValue || this.value || ''
-    
+
     // Initialize the editor
     this.initEditor()
   },
@@ -179,7 +179,7 @@ export default {
             types: ['heading', 'paragraph'],
           }),
           Placeholder.configure({
-            placeholder: this.placeholder,
+            placeholder: this.placeholder || this.$t('submission.editor.placeholder'),
           }),
         ],
         content: this.content,
@@ -214,15 +214,16 @@ export default {
       this.characterCount = textContent.length
 
       // Validate character count
+      const characterLimitError = this.$t('submission.editor.characterLimit', { limit: this.maxCharacters });
       if (this.characterCount > this.maxCharacters) {
-        this.addValidationError(`Excedeu o limite de ${this.maxCharacters} caracteres.`)
+        this.addValidationError(characterLimitError)
       } else {
-        this.removeValidationError(`Excedeu o limite de ${this.maxCharacters} caracteres.`)
+        this.removeValidationError(characterLimitError)
       }
     },
     showLinkDialog() {
       if (!this.editor) return
-      
+
       this.linkText = this.selectedText
       this.linkUrl = ''
       this.linkDialog = true
@@ -271,12 +272,12 @@ export default {
         .some(node => node.type.name === 'paragraph' && node.textContent.length > 800)
 
       if (longParagraphFound) {
-        this.addValidationError('Alguns parágrafos são muito longos. Considere dividi-los para melhor legibilidade.')
+        this.addValidationError(this.$t('submission.editor.longParagraphError'))
       }
 
       // Check character count
       this.updateCharacterCount()
-      
+
       // Emit updated validation errors
       this.$emit('validation', this.validationErrors)
     },

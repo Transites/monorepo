@@ -1,0 +1,143 @@
+{
+  "navbar": {
+    "home": "Início",
+    "about": "Sobre",
+    "contribute": "Contribuir",
+    "search": {
+      "placeholder": "Buscar...",
+      "button": "Buscar",
+      "noResults": "Nenhum resultado encontrado",
+      "results": "Resultados"
+    }
+  },
+  "common": {
+    "loading": "Carregando...",
+    "error": "Erro",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "insert": "Inserir",
+    "submit": "Enviar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "required": "Obrigatório",
+    "optional": "Opcional",
+    "yes": "Sim",
+    "no": "Não",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "success": "Sucesso",
+    "failure": "Falha",
+    "here": "aqui"
+  },
+  "submission": {
+    "title": "Submissão",
+    "steps": {
+      "basicInfo": "Informações Básicas",
+      "content": "Conteúdo",
+      "media": "Mídia",
+      "bibliography": "Bibliografia",
+      "preview": "Pré-visualização"
+    },
+    "form": {
+      "title": "Título",
+      "abstract": "Resumo",
+      "keywords": "Palavras-chave",
+      "addKeyword": "Adicionar palavra-chave",
+      "content": "Conteúdo",
+      "images": "Imagens",
+      "mainImage": "Imagem principal",
+      "additionalImages": "Imagens adicionais",
+      "bibliography": "Bibliografia",
+      "preview": "Pré-visualização",
+      "submit": "Enviar",
+      "save": "Salvar",
+      "cancel": "Cancelar"
+    },
+    "validation": {
+      "required": "Este campo é obrigatório",
+      "minLength": "Este campo deve ter pelo menos {min} caracteres",
+      "maxLength": "Este campo deve ter no máximo {max} caracteres",
+      "invalidFormat": "Formato inválido"
+    },
+    "editor": {
+      "placeholder": "Digite seu texto aqui...",
+      "bold": "Negrito",
+      "italic": "Itálico",
+      "underline": "Sublinhado",
+      "strike": "Tachado",
+      "heading": "Título",
+      "bulletList": "Lista com marcadores",
+      "orderedList": "Lista numerada",
+      "link": "Link",
+      "linkText": "Texto do Link",
+      "linkTextPlaceholder": "Texto que será exibido",
+      "linkUrlPlaceholder": "https://exemplo.com",
+      "linkHint": "Insira a URL completa incluindo http:// ou https://",
+      "image": "Imagem",
+      "undo": "Desfazer",
+      "redo": "Refazer",
+      "characterCount": "{count} caracteres",
+      "characterLimit": "Excedeu o limite de {limit} caracteres",
+      "longParagraphError": "Alguns parágrafos são muito longos. Considere dividi-los para melhor legibilidade."
+    },
+    "imageUploader": {
+      "dropzone": "Arraste e solte uma imagem aqui ou clique para selecionar",
+      "formats": "Formatos aceitos: JPG, PNG, GIF (máx. 5MB por arquivo)",
+      "browse": "Procurar",
+      "uploading": "Enviando...",
+      "success": "Imagem enviada com sucesso",
+      "error": "Erro ao enviar imagem",
+      "remove": "Remover",
+      "selectedImages": "Imagens Selecionadas",
+      "title": "Título",
+      "titleRequired": "Título é obrigatório",
+      "caption": "Legenda",
+      "captionRequired": "Legenda é obrigatória",
+      "credits": "Créditos",
+      "creditsRequired": "Créditos são obrigatórios",
+      "maxFilesError": "Você pode enviar no máximo {max} imagens",
+      "invalidFileError": "O arquivo \"{name}\" não é uma imagem válida",
+      "fileSizeError": "O arquivo \"{name}\" excede o tamanho máximo de {size}",
+      "incompleteMetadataError": "{count} imagem(ns) com metadados incompletos"
+    }
+  },
+  "article": {
+    "publishedOn": "Publicado em",
+    "author": "Autor",
+    "readMore": "Leia mais",
+    "relatedArticles": "Artigos relacionados",
+    "share": "Compartilhar"
+  },
+  "errors": {
+    "notFound": "Página não encontrada",
+    "serverError": "Erro no servidor",
+    "networkError": "Erro de rede",
+    "unauthorized": "Não autorizado",
+    "forbidden": "Acesso negado"
+  },
+  "contribute": {
+    "title": "Contribua com o",
+    "subtitle1": "Envie sua sugestão, elogio, crítica",
+    "subtitle2": "ou contribua com um verbete!",
+    "subtitle3": "Clique aqui para conferir nossas normas de publicação",
+    "form": {
+      "fullName": "Nome completo",
+      "subject": "Assunto",
+      "message": "Mensagem",
+      "send": "Enviar",
+      "required": "Campo obrigatório."
+    }
+  },
+  "about": {
+    "title": "Sobre o projeto",
+    "subtitle": "Conheça o Transites: um projeto colaborativo de divulgação científica.",
+    "projectName": "Transites",
+    "description": "é uma plataforma aberta para publicação e compartilhamento de conteúdos científicos e culturais.",
+    "feedbackTitle": "Envie seu feedback!",
+    "feedbackText": "Se você tiver sugestões, críticas ou quiser contribuir, clique",
+    "feedbackThanks": "Agradecemos sua participação!"
+  }
+}

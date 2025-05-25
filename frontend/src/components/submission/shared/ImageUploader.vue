@@ -15,17 +15,17 @@
         multiple
         class="file-input"
       >
-      
+
       <div class="upload-content">
         <v-icon size="48" color="grey">mdi-cloud-upload</v-icon>
-        <h3 class="text-h6 mt-2">Arraste imagens ou clique para selecionar</h3>
-        <p class="text-body-2 text-grey">Formatos aceitos: JPG, PNG, GIF (máx. 5MB por arquivo)</p>
+        <h3 class="text-h6 mt-2">{{ $t('submission.imageUploader.dropzone') }}</h3>
+        <p class="text-body-2 text-grey">{{ $t('submission.imageUploader.formats') }}</p>
         <v-btn 
           color="var(--transites-gray-purple)" 
           class="mt-4 text-white"
           @click="$refs.fileInput.click()"
         >
-          Selecionar Arquivos
+          {{ $t('submission.imageUploader.browse') }}
         </v-btn>
       </div>
     </div>
@@ -46,8 +46,8 @@
 
     <!-- Preview of uploaded images -->
     <div v-if="images.length > 0" class="image-preview-container mt-4">
-      <h3 class="text-subtitle-1 mb-2">Imagens Selecionadas ({{ images.length }})</h3>
-      
+      <h3 class="text-subtitle-1 mb-2">{{ $t('submission.imageUploader.selectedImages') }} ({{ images.length }})</h3>
+
       <v-row>
         <v-col 
           v-for="(image, index) in images" 
@@ -60,31 +60,31 @@
             <div class="image-preview-wrapper">
               <img :src="image.preview" :alt="image.name" class="image-preview">
             </div>
-            
+
             <v-card-text>
               <v-text-field
                 v-model="image.title"
-                label="Título"
+                :label="$t('submission.imageUploader.title')"
                 density="compact"
-                :rules="[v => !!v || 'Título é obrigatório']"
+                :rules="[v => !!v || $t('submission.imageUploader.titleRequired')]"
               ></v-text-field>
-              
+
               <v-textarea
                 v-model="image.caption"
-                label="Legenda"
+                :label="$t('submission.imageUploader.caption')"
                 density="compact"
                 rows="2"
-                :rules="[v => !!v || 'Legenda é obrigatória']"
+                :rules="[v => !!v || $t('submission.imageUploader.captionRequired')]"
               ></v-textarea>
-              
+
               <v-text-field
                 v-model="image.credits"
-                label="Créditos"
+                :label="$t('submission.imageUploader.credits')"
                 density="compact"
-                :rules="[v => !!v || 'Créditos são obrigatórios']"
+                :rules="[v => !!v || $t('submission.imageUploader.creditsRequired')]"
               ></v-text-field>
             </v-card-text>
-            
+
             <v-card-actions>
               <v-btn 
                 icon 
@@ -94,9 +94,9 @@
               >
                 <v-icon>mdi-delete</v-icon>
               </v-btn>
-              
+
               <v-spacer></v-spacer>
-              
+
               <v-btn
                 v-if="index > 0"
                 icon
@@ -104,7 +104,7 @@
               >
                 <v-icon>mdi-arrow-up</v-icon>
               </v-btn>
-              
+
               <v-btn
                 v-if="index < images.length - 1"
                 icon
@@ -190,24 +190,24 @@ export default {
     processFiles(files) {
       // Check if adding these files would exceed the maximum
       if (this.images.length + files.length > this.maxFiles) {
-        this.errors.push(`Você pode enviar no máximo ${this.maxFiles} imagens.`)
+        this.errors.push(this.$t('submission.imageUploader.maxFilesError', { max: this.maxFiles }))
         return
       }
-      
+
       // Process each file
       Array.from(files).forEach(file => {
         // Validate file type
         if (!file.type.match('image.*')) {
-          this.errors.push(`O arquivo "${file.name}" não é uma imagem válida.`)
+          this.errors.push(this.$t('submission.imageUploader.invalidFileError', { name: file.name }))
           return
         }
-        
+
         // Validate file size
         if (file.size > this.maxFileSize) {
-          this.errors.push(`O arquivo "${file.name}" excede o tamanho máximo de 5MB.`)
+          this.errors.push(this.$t('submission.imageUploader.fileSizeError', { name: file.name, size: '5MB' }))
           return
         }
-        
+
         // Create a preview
         const reader = new FileReader()
         reader.onload = (e) => {
@@ -234,41 +234,41 @@ export default {
     },
     validateImages() {
       this.errors = []
-      
+
       // Check if there are any images
       if (this.images.length === 0) {
         return
       }
-      
+
       // Check if all images have required metadata
       const incompleteImages = this.images.filter(
         img => !img.title || !img.caption || !img.credits
       )
-      
+
       if (incompleteImages.length > 0) {
-        this.errors.push(`${incompleteImages.length} imagem(ns) com metadados incompletos.`)
+        this.errors.push(this.$t('submission.imageUploader.incompleteMetadataError', { count: incompleteImages.length }))
       }
-      
+
       // Emit validation status
       this.$emit('validation', this.errors.length === 0, this.errors)
     },
     async uploadImages() {
       // This method would handle the actual upload to the server
       // It would be called by the parent component when ready to submit
-      
+
       // Return a promise that resolves with the uploaded image data
       return Promise.all(
         this.images.map(async (image) => {
           try {
             // Here you would implement the actual upload logic
             // For now, we'll just simulate a successful upload
-            
+
             // In a real implementation, you would:
             // 1. Create a FormData object
             // 2. Append the file and metadata
             // 3. Send a POST request to your API
             // 4. Return the response data
-            
+
             // Simulate API response
             return {
               id: Math.random().toString(36).substring(2),
