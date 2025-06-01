@@ -33,3 +33,23 @@ npm run build
 ```sh
 npm run lint
 ```
+
+## Environment Variables
+
+The application uses environment variables for configuration. Create a `.env` file in the frontend directory with the following variables:
+
+```
+VITE_CONTRIBUTE_EMAIL=your-email@example.com
+VITE_STRAPI_BASE_URL=http://your-strapi-url:1337/api
+```
+
+You can also copy the `.env.sample` file and update the values:
+
+```sh
+cp .env.sample .env
+```
+
+### Available Environment Variables
+
+- `VITE_STRAPI_BASE_URL`: The base URL for the Strapi API (default: http://enciclopedia.iea.usp.br:1337/api)
+- `VITE_CONTRIBUTE_EMAIL`: Email address for contribution inquiries

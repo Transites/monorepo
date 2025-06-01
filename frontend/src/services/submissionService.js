@@ -1,154 +1,162 @@
 import api from './api'
 
 /**
- * Service for handling article submissions
+ * Service para handling de submissões de artigos
  */
 const submissionService = {
   /**
-   * Save a draft submission to the API
-   * @param {Object} data - The submission data
-   * @returns {Promise} - Promise that resolves with the API response
+   * Buscar tipos de verbete do backend
    */
-  async saveDraft(data) {
+  async getVerbeteTypes() {
     try {
-      const submissionData = prepareSubmissionData(data)
-      submissionData.status = 'draft'
-      
-      const response = await api.post('/submissions', {
-        data: submissionData
-      })
-      
-      return response.data
+      const response = await api.get('/submissions/verbete-types')
+      return response.data.data
     } catch (error) {
-      console.error('Error saving draft to API:', error)
+      console.error('Erro ao buscar tipos de verbete:', error)
       throw error
     }
   },
-  
-  /**
-   * Submit an article for review
-   * @param {Object} data - The submission data
-   * @returns {Promise} - Promise that resolves with the API response
-   */
-  async submitArticle(data) {
-    try {
-      const submissionData = prepareSubmissionData(data)
-      submissionData.status = 'submitted'
-      
-      const response = await api.post('/submissions', {
-        data: submissionData
-      })
-      
-      return response.data
-    } catch (error) {
-      console.error('Error submitting article:', error)
-      throw error
-    }
-  },
-  
-  /**
-   * Get a draft submission by ID
-   * @param {string} id - The submission ID
-   * @returns {Promise} - Promise that resolves with the API response
-   */
-  async getDraft(id) {
-    try {
-      const response = await api.get(`/submissions/${id}`)
-      return response.data
-    } catch (error) {
-      console.error('Error getting draft:', error)
-      throw error
-    }
-  },
-  
-  /**
-   * Get all drafts for the current user
-   * @returns {Promise} - Promise that resolves with the API response
-   */
-  async getUserDrafts() {
-    try {
-      const response = await api.get('/submissions', {
-        params: {
-          filters: {
-            status: 'draft',
-            // The actual filter for the current user would depend on the API
-            // and authentication implementation
-          }
-        }
-      })
-      
-      return response.data
-    } catch (error) {
-      console.error('Error getting user drafts:', error)
-      throw error
-    }
-  },
-  
-  /**
-   * Upload an image file
-   * @param {File} file - The image file to upload
-   * @param {Object} metadata - Metadata for the image (title, caption, credits)
-   * @returns {Promise} - Promise that resolves with the API response
-   */
-  async uploadImage(file, metadata = {}) {
-    try {
-      // Create form data for the file upload
-      const formData = new FormData()
-      formData.append('files', file)
-      
-      // Upload the file
-      const uploadResponse = await api.post('/upload', formData)
-      
-      // Get the file ID from the response
-      const fileId = uploadResponse.data[0].id
-      
-      // If metadata is provided, create a media entry with the metadata
-      if (Object.keys(metadata).length > 0) {
-        const mediaResponse = await api.post('/media', {
-          data: {
-            ...metadata,
-            file: fileId
-          }
-        })
-        
-        return mediaResponse.data
-      }
-      
-      return uploadResponse.data[0]
-    } catch (error) {
-      console.error('Error uploading image:', error)
-      throw error
-    }
-  }
-}
 
-/**
- * Helper function to prepare submission data for the API
- * @param {Object} data - The submission data
- * @returns {Object} - The prepared data
- */
-function prepareSubmissionData(data) {
-  // Create a deep copy to avoid modifying the original
-  const preparedData = JSON.parse(JSON.stringify(data))
-  
-  // Handle image uploads
-  // In a real implementation, you would upload the images first
-  // and then replace the file objects with the IDs returned by the API
-  
-  // For now, we'll just remove the file objects
-  if (preparedData.mainImage && preparedData.mainImage.file) {
-    delete preparedData.mainImage.file
-  }
-  
-  if (preparedData.additionalImages && preparedData.additionalImages.length > 0) {
-    preparedData.additionalImages.forEach(image => {
-      if (image.file) {
-        delete image.file
+  /**
+   * Buscar categorias do backend
+   */
+  async getCategories() {
+    try {
+      const response = await api.get('/categories')
+      return response.data.data.map(item => ({
+        title: item.attributes.name,
+        value: item.id
+      }))
+    } catch (error) {
+      console.error('Erro ao buscar categorias:', error)
+      throw error
+    }
+  },
+
+  /**
+   * Buscar tags do backend
+   */
+  async getTags() {
+    try {
+      const response = await api.get('/tags')
+      return response.data.data.map(item => item.attributes.name)
+    } catch (error) {
+      console.error('Erro ao buscar tags:', error)
+      throw error
+    }
+  },
+  /**
+   * Submeter um artigo para review
+   */
+  async submitArticle(formData) {
+    try {
+      console.log('=== SUBMISSION SERVICE ===')
+      console.log('1. Form data recebido:', formData)
+
+      // Preparar dados para a API
+      const submissionData = this.prepareSubmissionData(formData)
+      console.log('2. Dados preparados:', submissionData)
+
+      const payload = { data: submissionData }
+      console.log('3. Payload final:', payload)
+      console.log('4. Headers padrão:', api.defaults.headers)
+
+      // Fazer requisição
+      const response = await api.post('/submissions', payload)
+      console.log('5. Resposta da API:', response.data)
+      console.log('6. URL completa:', api.defaults.baseURL + '/submissions')
+
+      return response.data
+    } catch (error) {
+      console.error('=== ERRO NO SERVICE ===')
+      console.error('Error:', error)
+
+      if (error.response) {
+        console.error('Status:', error.response.status)
+        console.error('Data:', error.response.data)
       }
-    })
+
+      throw error
+    }
+  },
+
+  /**
+   * Salvar rascunho (futuramente)
+   */
+  async saveDraft(formData) {
+    // Por enquanto, só localStorage
+    try {
+      localStorage.setItem('submissionDraft', JSON.stringify(formData))
+      return { success: true }
+    } catch (error) {
+      throw new Error('Erro ao salvar rascunho')
+    }
+  },
+
+  /**
+   * Carregar rascunho
+   */
+  loadDraft() {
+    try {
+      const draft = localStorage.getItem('submissionDraft')
+      return draft ? JSON.parse(draft) : null
+    } catch (error) {
+      console.error('Erro ao carregar rascunho:', error)
+      return null
+    }
+  },
+
+  /**
+   * Preparar dados para a API
+   */
+  prepareSubmissionData(formData) {
+    console.log('prepareSubmissionData input:', formData)
+
+    // Dados obrigatórios
+    const data = {
+      title: formData.title || '',
+      type: formData.type || '',
+      summary: formData.summary || '',
+      content: formData.content || '',
+      status: 'submitted'
+    }
+
+    // Dados opcionais
+    if (formData.birth) data.birth = formData.birth
+    if (formData.death) data.death = formData.death
+    if (formData.categories) data.categories = formData.categories
+    // Temporarily removing tags to simplify integration
+    // if (formData.tags) data.tags = formData.tags
+    if (formData.bibliography) data.bibliography = JSON.stringify(formData.bibliography)
+
+    // Dados de mídia (sem upload por enquanto)
+    const mediaFiles = {}
+
+    if (formData.mainImage && formData.mainImage.title) {
+      mediaFiles.mainImage = {
+        title: formData.mainImage.title,
+        caption: formData.mainImage.caption,
+        credits: formData.mainImage.credits,
+        name: formData.mainImage.name
+      }
+    }
+
+    if (formData.additionalImages && formData.additionalImages.length > 0) {
+      mediaFiles.additionalImages = formData.additionalImages.map(img => ({
+        title: img.title,
+        caption: img.caption,
+        credits: img.credits,
+        name: img.name
+      }))
+    }
+
+    if (Object.keys(mediaFiles).length > 0) {
+      data.mediaFiles = mediaFiles
+    }
+
+    console.log('prepareSubmissionData output:', data)
+    return data
   }
-  
-  return preparedData
 }
 
 export default submissionService

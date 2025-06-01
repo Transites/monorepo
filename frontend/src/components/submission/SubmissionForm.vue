@@ -100,7 +100,6 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex'
 import FormProgress from './shared/FormProgress.vue'
 import BasicInfoStep from './BasicInfoStep.vue'
 import ContentStep from './ContentStep.vue'
@@ -156,10 +155,6 @@ export default {
     }
   },
   methods: {
-    ...mapActions('submission', [
-      'saveSubmissionDraft',
-      'submitSubmission'
-    ]),
     updateFormData(newData) {
       this.formData = {...this.formData, ...newData}
     },
@@ -193,7 +188,7 @@ export default {
     },
     async saveDraft() {
       try {
-        await this.saveSubmissionDraft(this.formData)
+        await this.$store.dispatch('personArticle/saveArticleDraft', this.formData)
         this.$toast.success('Rascunho salvo com sucesso!')
       } catch (error) {
         this.$toast.error('Erro ao salvar rascunho. Tente novamente.')
@@ -219,7 +214,7 @@ export default {
 
       if (allValid) {
         try {
-          await this.submitSubmission(this.formData)
+          await this.$store.dispatch('personArticle/submitArticle', this.formData)
           this.$toast.success('Verbete submetido com sucesso!')
           this.$router.push('/')
         } catch (error) {
@@ -231,13 +226,28 @@ export default {
       }
     }
   },
-  created() {
+  async created() {
     // Check if there's a draft in the store
-    const draft = this.$store.state.submission?.draft
+    // const draft = this.$store.state.personArticle?.draft
+    // if (draft) {
+    //   this.formData = {...this.formData, ...draft}
+    // }
+    const draft = await this.$store.dispatch('personArticle/loadArticleDraft')
     if (draft) {
       this.formData = {...this.formData, ...draft}
     }
-  }
+  },
+  computed: {
+    isLoading() {
+      return this.$store.getters['personArticle/isLoading']
+    },
+    submissionError() {
+      return this.$store.getters['personArticle/getSubmissionError']
+    },
+    submissionStatus() {
+      return this.$store.getters['personArticle/getSubmissionStatus']
+    }
+  },
 }
 </script>
 

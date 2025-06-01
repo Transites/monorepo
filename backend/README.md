@@ -52,6 +52,44 @@ Feel free to check out the [Strapi GitHub repository](https://github.com/strapi/
 - [Forum](https://forum.strapi.io/) - Place to discuss, ask questions and find answers, show your Strapi project and get feedback or just talk with other Community members.
 - [Awesome Strapi](https://github.com/strapi/awesome-strapi) - A curated list of awesome things related to Strapi.
 
+## 🔒 Authentication and Permissions
+
+The application now uses a combination of approaches to handle authentication:
+
+1. **Trusted Origins**: Requests from trusted origins (localhost:8080 and enciclopedia.iea.usp.br) are automatically authenticated with a dummy admin user, bypassing the need for a valid JWT token.
+
+2. **Default JWT Token**: The frontend automatically sets a dummy JWT token in localStorage if one doesn't exist. This token is included in all API requests.
+
+3. **Manual Authentication**: If you need to authenticate as a specific user, you can still obtain a JWT token:
+   ```
+   curl -X POST http://localhost:1337/api/auth/local \
+     -H 'Content-Type: application/json' \
+     -d '{"identifier":"your-email@example.com","password":"your-password"}'
+   ```
+   Then set it in localStorage:
+   ```
+   localStorage.setItem('jwt', 'YOUR_JWT_TOKEN')
+   ```
+   Replace 'YOUR_JWT_TOKEN' with the token you received
+
+### Permissions Configuration
+
+If you're still experiencing 403 Forbidden errors, you may need to configure the permissions in the Strapi admin panel:
+
+1. Log in to your Strapi admin panel (usually at http://localhost:1337/admin)
+2. Go to Settings > USERS & PERMISSIONS PLUGIN > Roles
+3. Click on the "Public" role
+4. In the Permissions section, find "Submission" and enable the following permissions:
+   - create
+   - find
+   - findOne
+   - update
+5. Find "Upload" and enable the following permissions:
+   - upload
+6. Click "Save" to apply the changes
+
+The frontend automatically includes the JWT token in all API requests.
+
 ---
 
 <sub>🤫 Psst! [Strapi is hiring](https://strapi.io/careers).</sub>

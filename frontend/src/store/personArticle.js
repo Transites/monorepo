@@ -1,4 +1,4 @@
-import submissionService from '@/services/submissionService'
+import personArticleService from '@/services/personArticleService'
 
 const state = {
   draft: null,
@@ -40,15 +40,14 @@ const mutations = {
 
 const actions = {
   /**
-   * Salvar rascunho - usa o service
+   * Save draft - uses the service
    */
-  // TODO: arrumar draft. nao ta sendo chamado atualmente.
-  async saveSubmissionDraft({ commit }, formData) {
+  async saveArticleDraft({ commit }, formData) {
     commit('SET_LOADING', true)
     commit('SET_SUBMISSION_ERROR', null)
 
     try {
-      await submissionService.saveDraft(formData)
+      await personArticleService.saveDraft(formData)
       commit('SET_DRAFT', formData)
       return Promise.resolve()
     } catch (error) {
@@ -60,11 +59,11 @@ const actions = {
   },
 
   /**
-   * Carregar rascunho - usa o service
+   * Load draft - uses the service
    */
-  loadSubmissionDraft({ commit }) {
+  loadArticleDraft({ commit }) {
     try {
-      const draft = submissionService.loadDraft()
+      const draft = personArticleService.loadDraft()
       if (draft) {
         commit('SET_DRAFT', draft)
       }
@@ -76,15 +75,47 @@ const actions = {
   },
 
   /**
-   * Limpar rascunho
+   * Clear draft
    */
-  clearSubmissionDraft({ commit }) {
+  clearArticleDraft({ commit }) {
     try {
-      localStorage.removeItem('submissionDraft')
+      localStorage.removeItem('personArticleDraft')
       commit('CLEAR_DRAFT')
       return Promise.resolve()
     } catch (error) {
       return Promise.reject(error)
+    }
+  },
+
+  /**
+   * Submit article - uses the service
+   */
+  async submitArticle({ commit, dispatch }, formData) {
+    commit('SET_LOADING', true)
+    commit('SET_SUBMISSION_ERROR', null)
+    commit('SET_SUBMISSION_STATUS', 'submitting')
+
+    try {
+      console.log('=== VUEX SUBMIT ACTION ===')
+
+      // Call the service (which makes the request)
+      const result = await personArticleService.submitArticle(formData)
+
+      // Update state
+      commit('SET_SUBMISSION_STATUS', 'success')
+      commit('SET_LAST_SUBMISSION', result)
+
+      // Clear draft after success
+      // TODO: Uncomment when not testing the request.
+      // await dispatch('clearArticleDraft')
+
+      return Promise.resolve(result)
+    } catch (error) {
+      commit('SET_SUBMISSION_STATUS', 'error')
+      commit('SET_SUBMISSION_ERROR', error.message || 'Error submitting article')
+      return Promise.reject(error)
+    } finally {
+      commit('SET_LOADING', false)
     }
   }
 }

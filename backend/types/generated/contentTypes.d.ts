@@ -1049,6 +1049,81 @@ export interface ApiPersonArticlePersonArticle extends Schema.CollectionType {
   };
 }
 
+export interface ApiSubmissionSubmission extends Schema.CollectionType {
+  collectionName: 'submissions';
+  info: {
+    singularName: 'submission';
+    pluralName: 'submissions';
+    displayName: 'Submiss\u00E3o de Verbete';
+    description: 'Submiss\u00F5es de novos verbetes';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    title: Attribute.String & Attribute.Required;
+    type: Attribute.Enumeration<['person', 'institution', 'work', 'event']> &
+      Attribute.Required;
+    content: Attribute.RichText & Attribute.Required;
+    birth: Attribute.Component<'data-local.birth'>;
+    death: Attribute.Component<'data-local.death'>;
+    bibliography: Attribute.String;
+    summary: Attribute.Text &
+      Attribute.SetMinMaxLength<{
+        maxLength: 600;
+      }>;
+    status: Attribute.Enumeration<
+      [
+        'draft',
+        'submitted',
+        'under_review',
+        'revision_requested',
+        'approved',
+        'published',
+        'rejected'
+      ]
+    > &
+      Attribute.DefaultTo<'draft'>;
+    feedback: Attribute.RichText;
+    author: Attribute.Relation<
+      'api::submission.submission',
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    reviewer: Attribute.Relation<
+      'api::submission.submission',
+      'manyToOne',
+      'admin::user'
+    >;
+    media: Attribute.Media;
+    categories: Attribute.Relation<
+      'api::submission.submission',
+      'manyToMany',
+      'api::category.category'
+    >;
+    tags: Attribute.Relation<
+      'api::submission.submission',
+      'manyToMany',
+      'api::tag.tag'
+    >;
+    createdAt: Attribute.DateTime;
+    updatedAt: Attribute.DateTime;
+    publishedAt: Attribute.DateTime;
+    createdBy: Attribute.Relation<
+      'api::submission.submission',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+    updatedBy: Attribute.Relation<
+      'api::submission.submission',
+      'oneToOne',
+      'admin::user'
+    > &
+      Attribute.Private;
+  };
+}
+
 export interface ApiTagTag extends Schema.CollectionType {
   collectionName: 'tags';
   info: {
@@ -1099,6 +1174,7 @@ declare module '@strapi/types' {
       'api::author.author': ApiAuthorAuthor;
       'api::category.category': ApiCategoryCategory;
       'api::person-article.person-article': ApiPersonArticlePersonArticle;
+      'api::submission.submission': ApiSubmissionSubmission;
       'api::tag.tag': ApiTagTag;
     }
   }

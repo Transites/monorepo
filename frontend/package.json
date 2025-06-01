@@ -16,6 +16,7 @@
     "check-translations": "node scripts/check-translations.js"
   },
   "dependencies": {
+    "@mdi/js": "^7.4.47",
     "@types/node": "^22.15.18",
     "axios": "^1.6.2",
     "marked": "^11.0.1",

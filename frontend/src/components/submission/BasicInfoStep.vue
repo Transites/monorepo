@@ -27,6 +27,10 @@
               :rules="[v => !!v || 'Tipo de verbete é obrigatório']"
               hint="Selecione o tipo de verbete que melhor se adequa ao seu conteúdo"
               persistent-hint
+              :loading="isLoading.verbeteTypes"
+              :disabled="isLoading.verbeteTypes"
+              :error="!!loadingError.verbeteTypes"
+              :error-messages="loadingError.verbeteTypes"
               @update:model-value="updateData"
           ></v-select>
         </v-col>
@@ -237,6 +241,10 @@
               chips
               closable-chips
               :rules="[v => v.length > 0 || 'Selecione pelo menos uma categoria']"
+              :loading="isLoading.categories"
+              :disabled="isLoading.categories"
+              :error="!!loadingError.categories"
+              :error-messages="loadingError.categories"
               @update:model-value="updateData"
           ></v-autocomplete>
         </v-col>
@@ -252,6 +260,10 @@
               :rules="[v => v.length > 0 || 'Adicione pelo menos uma tag']"
               hint="Digite tags e pressione Enter para adicionar. Mínimo de 3 tags."
               persistent-hint
+              :loading="isLoading.tags"
+              :disabled="isLoading.tags"
+              :error="!!loadingError.tags"
+              :error-messages="loadingError.tags"
               @update:model-value="updateData"
           ></v-combobox>
         </v-col>
@@ -261,6 +273,8 @@
 </template>
 
 <script>
+import personArticleService from '@/services/personArticleService'
+
 export default {
   name: 'BasicInfoStep',
   props: {
@@ -310,13 +324,17 @@ export default {
         categories: [],
         tags: []
       },
-      verbeteTypes: [
+      verbeteTypes: [],
+      availableCategories: [],
+      availableTags: [],
+      // Fallback values in case API fails
+      fallbackVerbeteTypes: [
         {title: 'Pessoa', value: 'person'},
         {title: 'Instituição', value: 'institution'},
         {title: 'Obra', value: 'work'},
         {title: 'Evento', value: 'event'}
       ],
-      availableCategories: [
+      fallbackCategories: [
         {title: 'Arte', value: 'art'},
         {title: 'Ciência', value: 'science'},
         {title: 'Cultura', value: 'culture'},
@@ -325,17 +343,32 @@ export default {
         {title: 'Literatura', value: 'literature'},
         {title: 'Política', value: 'politics'}
       ],
-      availableTags: [
+      fallbackTags: [
         'Brasil', 'Portugal', 'França', 'Século XIX', 'Século XX',
         'Modernismo', 'Colonialismo', 'Independência', 'Migração',
         'Intelectuais', 'Universidade', 'Livro', 'Revista', 'Jornal',
         'Pintura', 'Escultura', 'Música', 'Teatro', 'Cinema'
-      ]
+      ],
+      isLoading: {
+        verbeteTypes: false,
+        categories: false,
+        tags: false
+      },
+      loadingError: {
+        verbeteTypes: null,
+        categories: null,
+        tags: null
+      }
     }
   },
   created() {
     // Initialize local data with form data
     this.initializeLocalData()
+
+    // Fetch data from backend
+    this.fetchVerbeteTypes()
+    this.fetchCategories()
+    this.fetchTags()
   },
   watch: {
     formData: {
@@ -346,6 +379,60 @@ export default {
     }
   },
   methods: {
+    // Fetch verbete types from backend
+    async fetchVerbeteTypes() {
+      this.isLoading.verbeteTypes = true
+      this.loadingError.verbeteTypes = null
+
+      try {
+        this.verbeteTypes = await personArticleService.getVerbeteTypes()
+        console.log('Verbete types loaded:', this.verbeteTypes)
+      } catch (error) {
+        console.error('Error fetching verbete types:', error)
+        this.loadingError.verbeteTypes = 'Erro ao carregar tipos de verbete'
+        // Use fallback values
+        this.verbeteTypes = [...this.fallbackVerbeteTypes]
+      } finally {
+        this.isLoading.verbeteTypes = false
+      }
+    },
+
+    // Fetch categories from backend
+    async fetchCategories() {
+      this.isLoading.categories = true
+      this.loadingError.categories = null
+
+      try {
+        this.availableCategories = await personArticleService.getCategories()
+        console.log('Categories loaded:', this.availableCategories)
+      } catch (error) {
+        console.error('Error fetching categories:', error)
+        this.loadingError.categories = 'Erro ao carregar categorias'
+        // Use fallback values
+        this.availableCategories = [...this.fallbackCategories]
+      } finally {
+        this.isLoading.categories = false
+      }
+    },
+
+    // Fetch tags from backend
+    async fetchTags() {
+      this.isLoading.tags = true
+      this.loadingError.tags = null
+
+      try {
+        this.availableTags = await personArticleService.getTags()
+        console.log('Tags loaded:', this.availableTags)
+      } catch (error) {
+        console.error('Error fetching tags:', error)
+        this.loadingError.tags = 'Erro ao carregar tags'
+        // Use fallback values
+        this.availableTags = [...this.fallbackTags]
+      } finally {
+        this.isLoading.tags = false
+      }
+    },
+
     initializeLocalData() {
       // Copy form data to local data, ensuring all required properties exist
       this.localData = {

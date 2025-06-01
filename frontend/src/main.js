@@ -6,6 +6,13 @@ import router from './router'
 import store from './store'
 import i18n from './i18n'
 
+// Set up a default JWT token in localStorage if one doesn't exist
+// This is a temporary solution for development purposes
+if (!localStorage.getItem('jwt')) {
+  // This is a dummy token that will be accepted by the backend for requests from trusted origins
+  localStorage.setItem('jwt', 'dummy-jwt-token');
+}
+
 import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'

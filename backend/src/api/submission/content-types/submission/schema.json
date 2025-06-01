@@ -1,0 +1,78 @@
+{
+  "kind": "collectionType",
+  "collectionName": "submissions",
+  "info": {
+    "singularName": "submission",
+    "pluralName": "submissions",
+    "displayName": "Submissão de Verbete",
+    "description": "Submissões de novos verbetes"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": ["person", "institution", "work", "event"],
+      "required": true
+    },
+    "content": {
+      "type": "richtext",
+      "required": true
+    },
+    "birth": {
+      "type": "component",
+      "component": "data-local.birth",
+      "repeatable": false
+    },
+    "death": {
+      "type": "component",
+      "component": "data-local.death",
+      "repeatable": false
+    },
+    "bibliography": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "text",
+      "maxLength": 600
+    },
+    "status": {
+      "type": "enumeration",
+      "enum": ["draft", "submitted", "under_review", "revision_requested", "approved", "published", "rejected"],
+      "default": "draft"
+    },
+    "feedback": {
+      "type": "richtext"
+    },
+    "author": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "reviewer": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "admin::user"
+    },
+    "media": {
+      "type": "media",
+      "multiple": true,
+      "allowedTypes": ["images", "videos"]
+    },
+    "categories": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::category.category"
+    },
+    "tags": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::tag.tag"
+    }
+  }
+}
