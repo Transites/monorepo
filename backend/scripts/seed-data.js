@@ -12,7 +12,7 @@ const axios = require('axios');
 
 // Configuration
 const API_URL = 'http://localhost:1337/api'; // Change this if your Strapi is running on a different URL
-const AUTH_TOKEN = ''; // Add your admin token here if your API requires authentication
+const AUTH_TOKEN = process.env.STRAPI_ADMIN_TOKEN || '';
 
 // Data to seed
 const categories = [
