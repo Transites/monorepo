@@ -136,7 +136,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import api from '@/services/api';
 
 export default {
   name: 'Article',
@@ -171,7 +171,7 @@ export default {
 
     const { id } = this.$route.params;
     try {
-      const response = await axios.get(`http://localhost:1337/api/person-articles/${id}?populate=authors,Image`);
+      const response = await api.get(`/person-articles/${id}?populate=authors,Image`);
       this.loadedArticle = response.data.data;
     } catch (error) {
       this.error = 'Não foi possível carregar o verbete.';
@@ -181,7 +181,7 @@ export default {
   },
   methods: {
     buildImageUrl(path) {
-      return `http://localhost:1337${path}`;
+      return `${import.meta.env.VITE_STRAPI_BASE_URL}${path}`;
     },
     formatDate(date) {
       return new Date(date).toLocaleDateString();

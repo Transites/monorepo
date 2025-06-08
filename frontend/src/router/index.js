@@ -9,6 +9,18 @@ import SubmissionPage from '../views/SubmissionPage.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior(to, from, savedPosition) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        if (savedPosition) {
+          resolve(savedPosition);
+        } else {
+          // For regular navigation (clicking links), scroll to top
+          resolve({ top: 0 });
+        }
+      }, 100); // Small delay to allow content to render
+    });
+  },
   routes: [
     {
       path: '/article/:type/:id',
