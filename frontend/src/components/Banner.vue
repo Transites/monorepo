@@ -3,7 +3,7 @@
     <v-card class="carouselCard" color="var(--prop-color)" variant="outlined">
       <v-row no-gutters>
         <v-col cols="12" md="6" style="border: var(--border-width) solid var(--prop-color)">
-          <v-carousel v-if="!loading && items.length > 0" hide-delimiters cycle interval="2000" v-model="counter">
+          <v-carousel v-if="!loading && items.length > 0" hide-delimiters cycle interval="3500" v-model="counter">
             <template v-slot:prev>
               <v-btn icon color="var(--transites-red)" @click="prevSlide">
                 <v-icon style="color: white">mdi-chevron-left</v-icon>
@@ -15,13 +15,23 @@
               </v-btn>
             </template>
             <v-carousel-item
-              class="cardItem"
-              v-for="(item, i) in items"
-              :key="i"
-              :src="item.src"
-              cover
+                class="cardItem"
+                v-for="(item, i) in items"
+                :key="i"
+                :src="item.src"
+                cover
+                @click="handleLeftClick(item)"
+                style="position: relative;"
             >
-              <div class="TitleSubtitleContainer">
+              <!-- Link invisível para middle click funcionar -->
+              <a
+                  :href="`/article/person/${item.id}`"
+                  @click.prevent="handleLinkClick($event, item)"
+                  style="position: absolute; inset: 0; z-index: 1;"
+                  aria-label="Ir para artigo"
+              ></a>
+
+              <div class="TitleSubtitleContainer" style="position: relative; z-index: 2; pointer-events: none;">
                 <v-card-title class="cardTitleSubtitle">{{ item.title }}</v-card-title>
                 <v-card-subtitle class="cardTitleSubtitle">{{ item.subtitle }}</v-card-subtitle>
               </div>
@@ -104,6 +114,19 @@ export default {
     },
     nextSlide() {
       this.counter = (this.counter + 1) % this.items.length
+    },
+    handleLeftClick(item) {
+      // Apenas para garantir que cliques no conteúdo funcionem
+      this.$router.push(`/article/person/${item.id}`);
+    },
+
+    handleLinkClick(event, item) {
+      // Apenas previne o comportamento padrão para clique esquerdo
+      if (event.button === 0 && !event.ctrlKey && !event.metaKey) {
+        event.preventDefault();
+        this.$router.push(`/article/person/${item.id}`);
+      }
+      // Middle click e Ctrl+click funcionam nativamente
     }
   },
   computed: {
@@ -135,6 +158,7 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  cursor: pointer;
 }
 .cardTitleSubtitle {
   text-align: center;

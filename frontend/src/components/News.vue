@@ -10,17 +10,27 @@
               cols="12"
               sm="6"
               md="4"
-              v-for="(entry, index) in entries.slice(0, 9)"  
+              v-for="(entry, ) in entries.slice(0, 9)"
               :key="entry.id"
             >
-              <v-card
-                class="news-card"
-                :style="getCardStyle(entry.category)"
-                @click="$router.push(`article/person/${entry.id}`)"
-              >
-                <v-card-title>{{ entry.title }}</v-card-title>
-                <v-card-subtitle>{{ entry.category }}</v-card-subtitle>
-              </v-card>
+              <div style="position: relative;">
+                <v-card
+                    class="news-card"
+                    :style="getCardStyle(entry.category)"
+                >
+                  <a
+                      :href="`/article/person/${entry.id}`"
+                      @click.prevent="handleCardLinkClick($event, entry.id)"
+                      style="position: absolute; inset: 0; z-index: 1;"
+                      :aria-label="`Ler artigo: ${entry.title}`"
+                  ></a>
+
+                  <div style="position: relative; z-index: 2; pointer-events: none;">
+                    <v-card-title>{{ entry.title }}</v-card-title>
+                    <v-card-subtitle>{{ entry.category }}</v-card-subtitle>
+                  </div>
+                </v-card>
+              </div>
             </v-col>
           </v-row>
         </v-col>
@@ -71,13 +81,21 @@ export default {
       }
     },
 
+    handleCardLinkClick(event, entryId) {
+      // Apenas previne o comportamento padrão para clique esquerdo normal
+      if (event.button === 0 && !event.ctrlKey && !event.metaKey) {
+        event.preventDefault();
+        this.$router.push(`article/person/${entryId}`);
+      }
+    },
+
     async fetchDataFromStrapi() {
       const base_url = import.meta.env.VITE_STRAPI_BASE_URL;
 
       try {
         // Fazendo a requisição e ordenando pelo ID em ordem decrescente (mais recentes primeiro)
         const response = await axios.get(`${base_url}/api/person-articles?pagination[limit]=8&populate=categories&sort=id:desc`);
-        
+
         // Filtrando manualmente os 9 artigos mais recentes
         this.entries = response.data.data.slice(0, 9).map(entry => ({
           title: entry.attributes.title,
@@ -86,7 +104,7 @@ export default {
             ? entry.attributes.categories.data[0].attributes.name
             : 'Uncategorized'
         }));
-        
+
       } catch (error) {
         this.error = error;
       }
@@ -121,4 +139,3 @@ export default {
   overflow: hidden; /* Evita que o conteúdo exceda o container */
 }
 </style>
-

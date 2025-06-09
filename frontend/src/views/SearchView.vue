@@ -56,22 +56,33 @@
           class="mx-auto my-8"
           max-width="344"
           elevation="16"
-          @click="$router.push(`/article/person/${entry.id}`)"
+          style="position: relative;"
         >
-          <v-card-item>
-            <v-card-title> {{ entry.title }} </v-card-title>
-            <v-card-subtitle> {{ entry.subtitle }} </v-card-subtitle>
-            <v-chip v-for="tag in entry.tags" :key="tag" color="primary"> {{ tag.name }}</v-chip>
-          </v-card-item>
-  
-          <v-card-text>
-            {{ entry.text }}
-          </v-card-text>
+          <!-- Link invisível dentro do card -->
+          <a
+            :href="`/article/person/${entry.id}`"
+            @click.prevent="(event) => handleLinkClick(event, entry)"
+            style="position: absolute; inset: 0; z-index: 1; cursor: pointer;"
+            :aria-label="entry.title"
+          ></a>
+
+          <!-- Conteúdo do card -->
+          <div style="position: relative; z-index: 0; pointer-events: none;">
+            <v-card-item>
+              <v-card-title> {{ entry.title }} </v-card-title>
+              <v-card-subtitle> {{ entry.subtitle }} </v-card-subtitle>
+              <v-chip v-for="tag in entry.tags" :key="tag" color="primary"> {{ tag.name }}</v-chip>
+            </v-card-item>
+
+            <v-card-text>
+              {{ entry.text }}
+            </v-card-text>
+          </div>
         </v-card>
       </div>
     </div>
   </template>
-  
+
   <script>
   import axios from 'axios'
   export default {
@@ -85,6 +96,14 @@
       searchResult: []
     }),
     methods: {
+      handleLinkClick(event, entry) {
+        const path = `/article/person/${entry.id}`;
+
+        if (event.button === 0 && !event.ctrlKey && !event.metaKey) {
+          event.preventDefault();
+          this.$router.push(path);
+        }
+      },
       applySearch() {
         const base_url = import.meta.env.VITE_STRAPI_BASE_URL
         axios
@@ -111,7 +130,7 @@
     }
   }
   </script>
-  
+
   <style>
   .results {
     display: flex;

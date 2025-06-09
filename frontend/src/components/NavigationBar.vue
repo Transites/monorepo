@@ -6,9 +6,20 @@
           @click.stop="drawer = !drawer"
       ></v-app-bar-nav-icon>
 
-      <div style="cursor: pointer" @click="$router.push('/')" class="titleIcon">
-        <img src="../assets/transites-icon.svg" alt="Icon" height="50" width="50" style="margin: 0 10px 0 10px" />
-        <v-toolbar-title><b class="title">Trânsitos | <i>Circulations</i></b></v-toolbar-title>
+      <div style="cursor: pointer; position: relative;" class="titleIcon">
+        <!-- Link invisível para middle click -->
+        <a
+            href="/"
+            @click.prevent="handleLinkClick"
+            style="position: absolute; inset: 0; z-index: 1;"
+            aria-label="Ir para página inicial"
+            class="invisible-link"
+        ></a>
+
+        <div style="display: flex; align-items: center; position: relative; z-index: 2; pointer-events: none;">
+          <img src="../assets/transites-icon.svg" alt="Icon" height="50" width="50" style="margin: 0 10px 0 10px" />
+          <v-toolbar-title><b class="title">Trânsitos | <i>Circulations</i></b></v-toolbar-title>
+        </div>
       </div>
 
       <v-spacer></v-spacer>
@@ -54,6 +65,13 @@ export default {
     }
   },
   methods: {
+    handleLinkClick(event) {
+      if (event.button === 0 && !event.ctrlKey && !event.metaKey) {
+        event.preventDefault();
+        this.$router.push('/');
+      }
+    },
+
     async getGames() {
       this.isLoading = true;
       try {

@@ -26,24 +26,35 @@
               class="mx-auto my-8"
               max-width="344"
               elevation="16"
-              @click="$router.push(`/article/${entry.type}/${entry.id}`)"
+              style="position: relative;"
             >
-              <v-card-item>
-                <v-card-title>{{ entry.title }}</v-card-title>
-                <v-card-subtitle>{{ entry.subtitle }}</v-card-subtitle>
-                <div v-if="entry.tags && entry.tags.length">
-                  <v-chip v-for="tag in entry.tags" :key="tag.name" color="primary" class="mr-1">
-                    {{ tag.name }}
-                  </v-chip>
-                </div>
-                <div v-else>
-                  <v-chip color="grey" class="mr-1">Sem tags</v-chip>
-                </div>
-              </v-card-item>
+              <!-- Link invisível dentro do card -->
+              <a
+                :href="`/article/${entry.type}/${entry.id}`"
+                @click.prevent="(event) => handleLinkClick(event, entry)"
+                style="position: absolute; inset: 0; z-index: 1; cursor: pointer;"
+                :aria-label="entry.title"
+              ></a>
 
-              <v-card-text>
-                {{ entry.text }}
-              </v-card-text>
+              <!-- Conteúdo do card -->
+              <div style="position: relative; z-index: 0; pointer-events: none;">
+                <v-card-item>
+                  <v-card-title>{{ entry.title }}</v-card-title>
+                  <v-card-subtitle>{{ entry.subtitle }}</v-card-subtitle>
+                  <div v-if="entry.tags && entry.tags.length">
+                    <v-chip v-for="tag in entry.tags" :key="tag.name" color="primary" class="mr-1">
+                      {{ tag.name }}
+                    </v-chip>
+                  </div>
+                  <div v-else>
+                    <v-chip color="grey" class="mr-1">Sem tags</v-chip>
+                  </div>
+                </v-card-item>
+
+                <v-card-text>
+                  {{ entry.text }}
+                </v-card-text>
+              </div>
             </v-card>
           </v-col>
         </v-row>
@@ -62,6 +73,16 @@
 import { mapState, mapGetters } from 'vuex';
 
 export default {
+  methods: {
+    handleLinkClick(event, entry) {
+      const path = `/article/${entry.type}/${entry.id}`;
+
+      if (event.button === 0 && !event.ctrlKey && !event.metaKey) {
+        event.preventDefault();
+        this.$router.push(path);
+      }
+    }
+  },
   mounted() {
     // If there's a query parameter, update the store and perform search
     const query = this.$route.query.q;

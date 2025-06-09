@@ -34,6 +34,7 @@ const bannerService = {
         }
 
         return {
+          id: item.id,
           src: imageUrl,
           title: attributes.title,
           subtitle: attributes.alternativeTitles || '',

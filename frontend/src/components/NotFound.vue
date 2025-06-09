@@ -1,10 +1,10 @@
 <template>
   <div :style="propStyle" :class="center ? 'center' : ''">
     <v-card
-      class="rounded-xl"
-      style="padding: 30px; border: 5px solid var(--prop-color); color: var(--prop-color);"
-      variant="tonal"
-      outlined
+        class="rounded-xl"
+        style="padding: 30px; border: 5px solid var(--prop-color); color: var(--prop-color);"
+        variant="tonal"
+        outlined
     >
       <v-card-item>
         <v-card-title class="d-flex align-center mb-5" :class="$vuetify.display.xs ? 'text-h4' : 'text-h2'">
@@ -18,8 +18,19 @@
       </v-card-text>
 
       <v-card-actions>
-        <v-btn @click=buttonClick>
-          {{ buttonText }}
+        <v-btn style="position: relative;">
+          <!-- Link invisível dentro do botão -->
+          <a
+              href="/"
+              @click.prevent="handleLinkClick"
+              style="position: absolute; inset: 0; z-index: 1;"
+              aria-label="Voltar para página inicial"
+          ></a>
+
+          <!-- Texto do botão -->
+          <span style="position: relative; z-index: 2; pointer-events: none;">
+            {{ buttonText }}
+          </span>
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -27,6 +38,7 @@
 </template>
 
 <script>
+
 export default {
   props: {
     color: {
@@ -46,19 +58,33 @@ export default {
     },
     buttonCallback: {
       type: Function,
-      default: function() { return this.$router.push('/') }
+      default: function () {
+        return this.$router.push('/')
+      }
     },
-      center: {
+    center: {
       default: true
     }
   },
   methods: {
-    buttonClick() {
-      this.buttonCallback();
+    handleLinkClick(event) {
+      // Se tem callback customizado, executa
+      if (this.buttonCallback !== this.$options.props.buttonCallback.default) {
+        event.preventDefault();
+        this.buttonCallback();
+        return;
+      }
+
+      // Senão, apenas previne default para clique esquerdo
+      if (event.button === 0 && !event.ctrlKey && !event.metaKey) {
+        event.preventDefault();
+        this.$router.push('/');
+      }
+      // Middle click e Ctrl+click funcionam nativamente
     }
   },
   computed: {
-    propStyle () {
+    propStyle() {
       return {
         '--prop-color': this.color,
       }
