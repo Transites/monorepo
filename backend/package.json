@@ -7,19 +7,30 @@
     "dev": "strapi develop",
     "start": "strapi start",
     "build": "strapi build",
-    "strapi": "strapi"
+    "strapi": "strapi",
+    "healthcheck": "node config/healthcheck.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@strapi/plugin-cloud": "4.24.0",
     "@strapi/plugin-i18n": "4.24.0",
     "@strapi/plugin-users-permissions": "4.24.0",
     "@strapi/strapi": "4.24.0",
+    "@supabase/supabase-js": "^2.0.0",
     "better-sqlite3": "^8.6.0",
+    "cloudinary": "^1.40.0",
+    "dotenv": "^16.3.0",
     "pg": "^8.14.1",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
     "react-router-dom": "5.3.4",
+    "resend": "^2.0.0",
     "styled-components": "5.3.3"
+  },
+  "devDependencies": {
+    "jest": "^29.5.0"
   },
   "author": {
     "name": "A Strapi developer"
