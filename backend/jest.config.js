@@ -10,6 +10,7 @@ module.exports = {
   testMatch: [
     '**/config/**/*.test.js',
     '**/src/**/*.test.js',
+    '**/database/**/*.test.js',
   ],
 
   // An array of regexp pattern strings that are matched against all test paths
