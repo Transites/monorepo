@@ -8,7 +8,7 @@ describe('Database Schema Tests', () => {
   beforeAll(async () => {
     // Conectar ao banco de dados de teste
     pool = new Pool({
-      connectionString: process.env.TEST_DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/transitos_test',
+      connectionString: process.env.TEST_DATABASE_URL || 'postgresql://localhost:5432/transitos_test',
     });
 
     // Limpar o banco de dados de teste
@@ -16,7 +16,7 @@ describe('Database Schema Tests', () => {
     await pool.query('CREATE SCHEMA public');
 
     // Carregar e executar o schema
-    const schemaPath = path.join(__dirname, 'schema.sql');
+    const schemaPath = path.join(__dirname, '../../database/schema.sql');
     const schema = await fs.readFile(schemaPath, 'utf8');
     await pool.query(schema);
   });

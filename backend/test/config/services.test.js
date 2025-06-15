@@ -37,7 +37,7 @@ describe('Services Configuration', () => {
 
   test('should load environment variables correctly', () => {
     // Import the module after setting up environment
-    const services = require('./services');
+    const services = require('../../config/services');
 
     // Verify database config
     expect(services.database.url).toBe('postgresql://user:pass@localhost:5432/db');
@@ -68,7 +68,7 @@ describe('Services Configuration', () => {
     delete process.env.PORT;
 
     // Import the module after setting up environment
-    const services = require('./services');
+    const services = require('../../config/services');
 
     // Verify default values
     expect(services.email.fromName).toBe('Enciclopédia Transitos');
@@ -85,7 +85,7 @@ describe('Services Configuration', () => {
 
     // Importing the module should throw an error
     expect(() => {
-      require('./services');
+      require('../../config/services');
     }).toThrow('Missing required environment variables for Supabase: DATABASE_URL');
 
     // Reset modules for next test
@@ -97,7 +97,7 @@ describe('Services Configuration', () => {
 
     // Importing the module should throw an error
     expect(() => {
-      require('./services');
+      require('../../config/services');
     }).toThrow('Missing required environment variables for Resend: RESEND_API_KEY');
   });
 
@@ -110,7 +110,7 @@ describe('Services Configuration', () => {
 
     try {
       // This will throw because we deleted DATABASE_URL
-      require('./services');
+      require('../../config/services');
     } catch (error) {
       // Ignore the error, we just want to check if dotenv.config was called
     }

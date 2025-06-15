@@ -3,7 +3,7 @@ const fs = require('fs').promises;
 const path = require('path');
 
 // Mock do módulo config/services
-jest.mock('../config/services', () => ({
+jest.mock('../../config/services', () => ({
   database: {
     url: process.env.TEST_DATABASE_URL || 'postgresql://localhost:5432/transitos_test',
     ssl: false,
@@ -13,7 +13,7 @@ jest.mock('../config/services', () => ({
 }));
 
 // Importar o cliente após o mock
-const client = require('./client');
+const client = require('../../database/client');
 
 describe('Database Client Tests', () => {
   beforeAll(async () => {
@@ -26,17 +26,17 @@ describe('Database Client Tests', () => {
     await pool.query('CREATE SCHEMA public');
 
     // Carregar e executar o schema
-    const schemaPath = path.join(__dirname, 'schema.sql');
+    const schemaPath = path.join(__dirname, '../../database/schema.sql');
     const schema = await fs.readFile(schemaPath, 'utf8');
     await pool.query(schema);
 
     // Carregar e executar os índices
-    const indexesPath = path.join(__dirname, 'indexes.sql');
+    const indexesPath = path.join(__dirname, '../../database/indexes.sql');
     const indexes = await fs.readFile(indexesPath, 'utf8');
     await pool.query(indexes);
 
     // Carregar e executar os triggers
-    const triggersPath = path.join(__dirname, 'triggers.sql');
+    const triggersPath = path.join(__dirname, '../../database/triggers.sql');
     const triggers = await fs.readFile(triggersPath, 'utf8');
     await pool.query(triggers);
 

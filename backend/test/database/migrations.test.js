@@ -1,7 +1,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 const { Pool } = require('pg');
-const MigrationRunner = require('./migrations/migration-runner');
+const MigrationRunner = require('../../database/migrations/migration-runner');
 
 describe('Migration System Tests', () => {
   let pool;
@@ -62,7 +62,7 @@ describe('Migration System Tests', () => {
 
   test('Deve executar uma migração up', async () => {
     // Criar arquivo de migração temporário para teste
-    const testMigrationDir = path.join(__dirname, 'migrations');
+    const testMigrationDir = path.join(__dirname, '../../database/migrations');
     const testMigrationUp = path.join(testMigrationDir, 'test_up.sql');
 
     await fs.writeFile(testMigrationUp, `
@@ -106,7 +106,7 @@ describe('Migration System Tests', () => {
 
   test('Deve executar uma migração down', async () => {
     // Criar arquivos de migração temporários para teste
-    const testMigrationDir = path.join(__dirname, 'migrations');
+    const testMigrationDir = path.join(__dirname, '../../database/migrations');
     const testMigrationUp = path.join(testMigrationDir, 'test_up.sql');
     const testMigrationDown = path.join(testMigrationDir, 'test_down.sql');
 
@@ -168,7 +168,7 @@ describe('Migration System Tests', () => {
 
   test('Deve executar migrações pendentes', async () => {
     // Criar arquivos de migração temporários para teste
-    const testMigrationDir = path.join(__dirname, 'migrations');
+    const testMigrationDir = path.join(__dirname, '../../database/migrations');
     const testMigration1Up = path.join(testMigrationDir, '001_test_up.sql');
     const testMigration2Up = path.join(testMigrationDir, '002_test_up.sql');
 
@@ -223,7 +223,7 @@ describe('Migration System Tests', () => {
 
   test('Deve lidar com erros em migrações', async () => {
     // Criar arquivo de migração com erro
-    const testMigrationDir = path.join(__dirname, 'migrations');
+    const testMigrationDir = path.join(__dirname, '../../database/migrations');
     const testMigrationUp = path.join(testMigrationDir, 'error_up.sql');
 
     await fs.writeFile(testMigrationUp, `
@@ -278,7 +278,7 @@ describe('Migration System Tests', () => {
 
   test('Deve ignorar migrações já aplicadas', async () => {
     // Criar arquivo de migração temporário para teste
-    const testMigrationDir = path.join(__dirname, 'migrations');
+    const testMigrationDir = path.join(__dirname, '../../database/migrations');
     const testMigrationUp = path.join(testMigrationDir, 'applied_up.sql');
 
     await fs.writeFile(testMigrationUp, `

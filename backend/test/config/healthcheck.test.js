@@ -44,7 +44,7 @@ jest.mock('@supabase/supabase-js', () => {
 });
 
 // Mock services configuration
-jest.mock('./services', () => ({
+jest.mock('../../config/services', () => ({
   database: {
     url: 'postgresql://user:pass@localhost:5432/db',
     ssl: true,
@@ -72,8 +72,8 @@ describe('Healthcheck Module', () => {
   const { Client } = require('pg');
   const cloudinary = require('cloudinary').v2;
   const { createClient } = require('@supabase/supabase-js');
-  const healthcheck = require('./healthcheck');
-  const services = require('./services');
+  const healthcheck = require('../../config/healthcheck');
+  const services = require('../../config/services');
 
   // Reset all mocks before each test
   beforeEach(() => {
