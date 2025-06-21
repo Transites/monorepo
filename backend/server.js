@@ -19,6 +19,12 @@ class Server {
                 throw new Error(`Database unhealthy: ${healthCheck.error}`);
             }
 
+            // Iniciar jobs automáticos
+            if (process.env.NODE_ENV !== 'test') {
+                const tokenCleanupJob = require('./jobs/tokenCleanup');
+                tokenCleanupJob.start();
+            }
+
             this.server = this.app.listen(this.port, () => {
                 logger.info(`Server running on port ${this.port}`, {
                     port: this.port,
