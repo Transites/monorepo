@@ -22,7 +22,14 @@ class Server {
             // Iniciar jobs automáticos
             if (process.env.NODE_ENV !== 'test') {
                 const tokenCleanupJob = require('./jobs/tokenCleanup');
+                const emailNotificationJob = require('./jobs/emailNotifications');
+
                 tokenCleanupJob.start();
+                emailNotificationJob.start();
+
+                logger.info('Automated jobs started', {
+                    jobs: ['tokenCleanup', 'emailNotifications']
+                });
             }
 
             this.server = this.app.listen(this.port, () => {

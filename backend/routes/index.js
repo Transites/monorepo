@@ -3,7 +3,7 @@ const router = express.Router();
 
 // Import route modules
 const authRoutes = require('./auth');
-// const adminRoutes = require('./admin');
+const adminRoutes = require('./admin');
 // const submissionRoutes = require('./submissions');
 
 // API information
@@ -24,7 +24,7 @@ router.get('/', (req, res) => {
 
 // Mount routes
 router.use('/auth', authRoutes);
-// router.use('/admin', adminRoutes);
+router.use('/admin', adminRoutes);
 // router.use('/submissions', submissionRoutes);
 
 // Placeholder routes for testing

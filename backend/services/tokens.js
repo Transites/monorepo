@@ -50,6 +50,17 @@ class TokenService {
                 expiryDays
             });
 
+            // Buscar submissão para enviar email
+            const submission = await db.findById('submissions', submissionId);
+            if (submission) {
+                const emailService = require('./email');
+                await emailService.sendSubmissionToken(
+                    submission.author_email,
+                    submission,
+                    token
+                );
+            }
+
             return {
                 token,
                 expiresAt,

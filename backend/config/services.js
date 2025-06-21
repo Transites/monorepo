@@ -56,6 +56,9 @@ module.exports = {
     uploadMaxSize: process.env.UPLOAD_MAX_SIZE || '10MB',
     allowedTypes: (process.env.ALLOWED_TYPES || 'jpg,jpeg,png,gif,pdf,doc,docx').split(','),
   },
+  app: {
+    frontendUrl: process.env.FRONTEND_URL || 'https://enciclopedia.iea.usp.br',
+  },
   core: {
     nodeEnv: process.env.NODE_ENV || 'development',
     port: parseInt(process.env.PORT || '3000', 10),
