@@ -19,7 +19,7 @@ class AuthController {
             const { email, password, rememberMe = false } = req.body;
 
             // Buscar admin no banco
-            const admin = await db.findByEmail('admins', email.toLowerCase());
+            const admin = await db.findByAdminEmail('admins', email.toLowerCase());
             if (!admin) {
                 logger.security('Login attempt with invalid email', {
                     email,

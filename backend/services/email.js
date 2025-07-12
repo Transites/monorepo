@@ -6,8 +6,8 @@ const emailTemplates = require('./emailTemplates');
 class EmailService {
     constructor() {
         this.resend = new Resend(config.email.apiKey);
-        this.fromEmail = config.email.fromEmail;
-        this.fromName = config.email.fromName;
+        this.fromEmail = process.env.NODE_ENV !== 'production' ? "onboarding@resend.dev" : config.email.fromEmail;
+        this.fromName = process.env.NODE_ENV !== 'production' ? "Acme" : config.email.fromName;
         this.replyTo = config.email.replyTo;
         this.retryAttempts = 3;
         this.retryDelay = 1000; // 1 second base delay
@@ -32,12 +32,14 @@ class EmailService {
 
             const result = await this.resend.emails.send(emailData);
 
-            logger.audit('Email sent successfully', {
+            logger.audit("sendEmail", {
                 to: emailData.to,
                 subject,
                 messageId: result.data?.id,
-                retryCount
-            });
+                retryCount,
+                emailId: result?.id ?? null,
+                statusCode: result?.error?.statusCode || 200
+            })
 
             return {
                 success: true,
@@ -54,6 +56,9 @@ class EmailService {
             });
 
             // Retry logic
+            // TODO: retry logic only works if exception is thrown. however, resend failures aren't exceptions, they're returned as errors in the response body.
+            //  Therefore, this retry mechanism is NOT working!
+
             if (retryCount < this.retryAttempts) {
                 const delay = this.retryDelay * Math.pow(2, retryCount); // Exponential backoff
 
@@ -96,11 +101,21 @@ class EmailService {
 
             const subject = `[Transitos] Sua submissão foi criada - ${submission.title}`;
 
-            await this.sendEmail({
+            const result = await this.sendEmail({
                 to: authorEmail,
                 subject,
                 html
             });
+
+            if (!result.success) {
+                logger.error('Failed to send submission token email', {
+                    submissionId: submission.id,
+                    authorEmail,
+                    error: result.errorMessage,
+                    statusCode: result.statusCode
+                });
+                return result;
+            }
 
             logger.audit('Submission token email sent', {
                 submissionId: submission.id,
@@ -116,7 +131,7 @@ class EmailService {
                 authorEmail,
                 error: error.message
             });
-            throw error;
+            return { success: false, errorMessage: error.message };
         }
     }
 
@@ -139,11 +154,21 @@ class EmailService {
 
             const subject = `[Transitos Admin] Nova submissão: ${submission.title}`;
 
-            await this.sendEmail({
+            const result = await this.sendEmail({
                 to: adminEmails,
                 subject,
                 html
             });
+
+            if (!result.success) {
+                logger.error('Failed to send admin notification', {
+                    submissionId: submission.id,
+                    adminEmails,
+                    error: result.errorMessage,
+                    statusCode: result.statusCode
+                });
+                return result;
+            }
 
             logger.audit('Admin notification sent for new submission', {
                 submissionId: submission.id,
@@ -159,7 +184,7 @@ class EmailService {
                 adminEmails,
                 error: error.message
             });
-            throw error;
+            return { success: false, errorMessage: error.message };
         }
     }
 
@@ -182,11 +207,21 @@ class EmailService {
 
             const subject = `[Transitos] Feedback para sua submissão - ${submission.title}`;
 
-            await this.sendEmail({
+            const result = await this.sendEmail({
                 to: submission.author_email,
                 subject,
                 html
             });
+
+            if (!result.success) {
+                logger.error('Failed to send feedback email', {
+                    submissionId: submission.id,
+                    feedbackId: feedback.id,
+                    error: result.errorMessage,
+                    statusCode: result.statusCode
+                });
+                return result;
+            }
 
             logger.audit('Feedback email sent to author', {
                 submissionId: submission.id,
@@ -203,7 +238,7 @@ class EmailService {
                 feedbackId: feedback.id,
                 error: error.message
             });
-            throw error;
+            return { success: false, errorMessage: error.message };
         }
     }
 
@@ -222,11 +257,20 @@ class EmailService {
 
             const subject = `[Transitos] Sua submissão foi aprovada! - ${submission.title}`;
 
-            await this.sendEmail({
+            const result = await this.sendEmail({
                 to: submission.author_email,
                 subject,
                 html
             });
+
+            if (!result.success) {
+                logger.error('Failed to send approval notification', {
+                    submissionId: submission.id,
+                    error: result.errorMessage,
+                    statusCode: result.statusCode
+                });
+                return result;
+            }
 
             logger.audit('Approval notification sent to author', {
                 submissionId: submission.id,
@@ -241,7 +285,7 @@ class EmailService {
                 submissionId: submission.id,
                 error: error.message
             });
-            throw error;
+            return { success: false, errorMessage: error.message };
         }
     }
 
@@ -263,11 +307,20 @@ class EmailService {
 
             const subject = `[Transitos] Seu token expira em ${daysRemaining} dias - ${submission.title}`;
 
-            await this.sendEmail({
+            const result = await this.sendEmail({
                 to: submission.author_email,
                 subject,
                 html
             });
+
+            if (!result.success) {
+                logger.error('Failed to send expiration warning', {
+                    submissionId: submission.id,
+                    error: result.errorMessage,
+                    statusCode: result.statusCode
+                });
+                return result;
+            }
 
             logger.audit('Expiration warning sent', {
                 submissionId: submission.id,
@@ -282,7 +335,7 @@ class EmailService {
                 submissionId: submission.id,
                 error: error.message
             });
-            throw error;
+            return { success: false, errorMessage: error.message };
         }
     }
 
@@ -302,11 +355,20 @@ class EmailService {
 
             const subject = `[Transitos] Token expirado - ${submission.title}`;
 
-            await this.sendEmail({
+            const result = await this.sendEmail({
                 to: submission.author_email,
                 subject,
                 html
             });
+
+            if (!result.success) {
+                logger.error('Failed to send token expired notification', {
+                    submissionId: submission.id,
+                    error: result.errorMessage,
+                    statusCode: result.statusCode
+                });
+                return result;
+            }
 
             logger.audit('Token expired notification sent', {
                 submissionId: submission.id,
@@ -320,7 +382,7 @@ class EmailService {
                 submissionId: submission.id,
                 error: error.message
             });
-            throw error;
+            return { success: false, errorMessage: error.message };
         }
     }
 
@@ -339,11 +401,20 @@ class EmailService {
 
             const subject = `[Transitos Security] Atividade suspeita detectada`;
 
-            await this.sendEmail({
+            const result = await this.sendEmail({
                 to: adminEmails,
                 subject,
                 html
             });
+
+            if (!result.success) {
+                logger.error('Failed to send security alert', {
+                    activityData,
+                    error: result.errorMessage,
+                    statusCode: result.statusCode
+                });
+                return result;
+            }
 
             logger.audit('Security alert sent to admins', {
                 activityType: activityData.type,
@@ -357,7 +428,7 @@ class EmailService {
                 activityData,
                 error: error.message
             });
-            throw error;
+            return { success: false, errorMessage: error.message };
         }
     }
 
@@ -377,11 +448,20 @@ class EmailService {
 
             const subject = `[Transitos] Resumo diário - ${new Date().toLocaleDateString('pt-BR')}`;
 
-            await this.sendEmail({
+            const result = await this.sendEmail({
                 to: adminEmails,
                 subject,
                 html
             });
+
+            if (!result.success) {
+                logger.error('Failed to send daily summary', {
+                    summaryData,
+                    error: result.errorMessage,
+                    statusCode: result.statusCode
+                });
+                return result;
+            }
 
             logger.audit('Daily summary sent to admins', {
                 adminEmails,
@@ -395,7 +475,7 @@ class EmailService {
                 summaryData,
                 error: error.message
             });
-            throw error;
+            return { success: false, errorMessage: error.message };
         }
     }
 
@@ -409,20 +489,20 @@ class EmailService {
                 environment: process.env.NODE_ENV || 'development'
             });
 
-            await this.sendEmail({
+            const result = await this.sendEmail({
                 to: testEmail,
                 subject: '[Transitos] Teste de configuração de email',
                 html
             });
 
-            return { success: true, message: 'Email de teste enviado com sucesso' };
+            return { success: result.success, message: result?.errorMessage ?? 'Email enviado com sucesso' };
 
         } catch (error) {
             logger.error('Email configuration test failed', {
                 testEmail,
                 error: error.message
             });
-            throw error;
+            return { success: false, errorMessage: error.message };
         }
     }
 

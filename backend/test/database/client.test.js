@@ -97,7 +97,7 @@ describe('Database Client Tests', () => {
     });
 
     // Depois buscar por email
-    const found = await client.findByEmail('admins', 'find-by-email@example.com');
+    const found = await client.findByAdminEmail('admins', 'find-by-email@example.com');
 
     expect(found.id).toBe(created.id);
     expect(found.email).toBe('find-by-email@example.com');
@@ -205,7 +205,7 @@ describe('Database Client Tests', () => {
     expect(result.submission.title).toBe('Transaction Submission');
 
     // Verificar que os dados foram persistidos
-    const admin = await client.findByEmail('admins', 'transaction@example.com');
+    const admin = await client.findByAdminEmail('admins', 'transaction@example.com');
     expect(admin).toBeDefined();
 
     const submission = await client.findByToken('c'.repeat(64));
@@ -238,7 +238,7 @@ describe('Database Client Tests', () => {
     }
 
     // Verificar que o admin não foi persistido (rollback funcionou)
-    const admin = await client.findByEmail('admins', uniqueEmail);
+    const admin = await client.findByAdminEmail('admins', uniqueEmail);
     expect(admin).toBeUndefined();
   });
 

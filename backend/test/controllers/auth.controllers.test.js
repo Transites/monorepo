@@ -66,7 +66,7 @@ describe('AuthController', () => {
                 is_active: true,
                 last_login: new Date('2023-01-01')
             };
-            db.findByEmail.mockResolvedValue(admin);
+            db.findByAdminEmail.mockResolvedValue(admin);
 
             authService.comparePassword.mockResolvedValue(true);
 
@@ -78,7 +78,7 @@ describe('AuthController', () => {
 
             await authController.login(req, res, next);
 
-            expect(db.findByEmail).toHaveBeenCalledWith('admins', 'admin@iea.usp.br');
+            expect(db.findByAdminEmail).toHaveBeenCalledWith('admins', 'admin@iea.usp.br');
 
             expect(authService.comparePassword).toHaveBeenCalledWith('senha123', 'hashed-password');
 
@@ -107,11 +107,11 @@ describe('AuthController', () => {
                 password: 'senha123'
             };
 
-            db.findByEmail.mockResolvedValue(null);
+            db.findByAdminEmail.mockResolvedValue(null);
 
             await authController.login(req, res, next);
 
-            expect(db.findByEmail).toHaveBeenCalledWith('admins', 'invalid@example.com');
+            expect(db.findByAdminEmail).toHaveBeenCalledWith('admins', 'invalid@example.com');
 
             expect(logger.security).toHaveBeenCalledWith('Login attempt with invalid email', expect.any(Object));
 
@@ -131,7 +131,7 @@ describe('AuthController', () => {
                 password_hash: 'hashed-password',
                 is_active: true
             };
-            db.findByEmail.mockResolvedValue(admin);
+            db.findByAdminEmail.mockResolvedValue(admin);
 
             authService.comparePassword.mockResolvedValue(false);
 
@@ -157,11 +157,11 @@ describe('AuthController', () => {
                 password_hash: 'hashed-password',
                 is_active: false
             };
-            db.findByEmail.mockResolvedValue(admin);
+            db.findByAdminEmail.mockResolvedValue(admin);
 
             await authController.login(req, res, next);
 
-            expect(db.findByEmail).toHaveBeenCalledWith('admins', 'inactive@iea.usp.br');
+            expect(db.findByAdminEmail).toHaveBeenCalledWith('admins', 'inactive@iea.usp.br');
 
             expect(logger.security).toHaveBeenCalledWith('Login attempt with inactive admin', expect.any(Object));
 
@@ -182,7 +182,7 @@ describe('AuthController', () => {
                 password_hash: 'hashed-password',
                 is_active: true
             };
-            db.findByEmail.mockResolvedValue(admin);
+            db.findByAdminEmail.mockResolvedValue(admin);
 
             authService.comparePassword.mockResolvedValue(true);
 
@@ -228,7 +228,7 @@ describe('AuthController', () => {
                 password: 'senha123'
             };
 
-            db.findByEmail.mockResolvedValue(null);
+            db.findByAdminEmail.mockResolvedValue(null);
 
             await authController.login(req, res, next);
 

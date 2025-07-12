@@ -4,6 +4,8 @@
 
 -- Admin padrão para desenvolvimento
 -- Senha: admin123
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 INSERT INTO admins (email, password_hash, name) VALUES
 ('admin@enciclopedia.iea.usp.br', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj2ukWJLTrB2', 'Administrador Principal'),
 ('monica@iea.usp.br', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj2ukWJLTrB2', 'Monica Schpun'),

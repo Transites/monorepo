@@ -5,6 +5,8 @@ const responses = require('../utils/responses');
 const config = require('../config/services');
 const { validationResult } = require('express-validator');
 
+// TODO: Update controller to use the new emailService typed structures.
+// TODO: Update to work with TypeScript types.
 class EmailController {
     /**
      * POST /api/admin/email/test
@@ -26,6 +28,11 @@ class EmailController {
                 testEmail,
                 success: result.success
             });
+
+            // if (!result.success) {
+            //     return responses.
+            // }
+            throw new Error('finish updating controller with the new emailService.testEmailConfiguration response structure');
 
             return responses.success(res, result, 'Email de teste enviado com sucesso');
 
@@ -60,11 +67,21 @@ class EmailController {
             }
 
             // Reenviar token
-            await emailService.sendSubmissionToken(
+            const result = await emailService.sendSubmissionToken(
                 submission.author_email,
                 submission,
                 submission.token
             );
+
+            if (!result.success) {
+                logger.error('Failed to resend token email', {
+                    adminId: req.user?.id,
+                    submissionId,
+                    authorEmail: submission.author_email,
+                    error: result.errorMessage
+                });
+                return responses.error(res, 'Falha ao enviar email', result);
+            }
 
             logger.audit('Token email resent by admin', {
                 adminId: req.user.id,
@@ -127,11 +144,21 @@ class EmailController {
                 'Lembrete - Transitos'
             );
 
-            await emailService.sendEmail({
+            const result = await emailService.sendEmail({
                 to: submission.author_email,
                 subject: `[Transitos] Lembrete sobre sua submissão - ${submission.title}`,
                 html: customHtml
             });
+
+            if (!result.success) {
+                logger.error('Failed to send custom reminder', {
+                    adminId: req.user?.id,
+                    submissionId,
+                    authorEmail: submission.author_email,
+                    error: result.errorMessage
+                });
+                return responses.error(res, 'Falha ao enviar email', result);
+            }
 
             logger.audit('Custom reminder sent by admin', {
                 adminId: req.user.id,
@@ -212,13 +239,23 @@ class EmailController {
                         subject
                     );
 
-                    await emailService.sendEmail({
+                    const result = await emailService.sendEmail({
                         to: submission.author_email,
                         subject: `[Transitos] ${subject}`,
                         html: customHtml
                     });
 
-                    results.push({ submissionId, success: true, authorEmail: submission.author_email });
+                    if (!result.success) {
+                        results.push({
+                            submissionId,
+                            success: false,
+                            error: result.errorMessage,
+                            statusCode: result.statusCode,
+                            authorEmail: submission.author_email
+                        });
+                    } else {
+                        results.push({ submissionId, success: true, authorEmail: submission.author_email });
+                    }
 
                 } catch (error) {
                     results.push({ submissionId, success: false, error: error.message });

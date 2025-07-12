@@ -23,7 +23,7 @@ describe('Token Routes Integration', () => {
 
         // Create test admin user
         const passwordHash = await bcrypt.hash(testPassword, 12);
-        const existingAdmin = await db.findByEmail("admins", "admin@iea.usp.br");
+        const existingAdmin = await db.findByAdminEmail("admins", "admin@iea.usp.br");
         if (existingAdmin) {
             // If admin already exists, delete it to ensure a clean state
             await db.delete('admins', existingAdmin.id);
@@ -36,7 +36,7 @@ describe('Token Routes Integration', () => {
         });
 
         // Create test submission with token
-        const existingSubmission = await db.findByEmail("submissions", "author@test.com");
+        const existingSubmission = await db.findByAuthorEmail("submissions", "author@test.com");
         if (existingSubmission) {
             await db.delete('submissions', existingSubmission.id);
         }

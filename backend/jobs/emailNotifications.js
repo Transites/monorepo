@@ -57,21 +57,42 @@ class EmailNotificationJob {
             // Enviar avisos de 5 dias
             for (const submission of expiringIn5Days) {
                 if (Math.ceil(submission.days_to_expiry) === 5) {
-                    await emailService.sendExpirationWarning(submission, 5);
+                    const result = await emailService.sendExpirationWarning(submission, 5);
+                    if (!result.success) {
+                        logger.error('Failed to send 5-day expiration warning', {
+                            submissionId: submission.id,
+                            authorEmail: submission.author_email,
+                            error: result.errorMessage
+                        });
+                    }
                 }
             }
 
             // Enviar avisos de 3 dias
             for (const submission of expiringIn3Days) {
                 if (Math.ceil(submission.days_to_expiry) === 3) {
-                    await emailService.sendExpirationWarning(submission, 3);
+                    const result = await emailService.sendExpirationWarning(submission, 3);
+                    if (!result.success) {
+                        logger.error('Failed to send 3-day expiration warning', {
+                            submissionId: submission.id,
+                            authorEmail: submission.author_email,
+                            error: result.errorMessage
+                        });
+                    }
                 }
             }
 
             // Enviar avisos de 1 dia
             for (const submission of expiringIn1Day) {
                 if (Math.ceil(submission.days_to_expiry) === 1) {
-                    await emailService.sendExpirationWarning(submission, 1);
+                    const result = await emailService.sendExpirationWarning(submission, 1);
+                    if (!result.success) {
+                        logger.error('Failed to send 1-day expiration warning', {
+                            submissionId: submission.id,
+                            authorEmail: submission.author_email,
+                            error: result.errorMessage
+                        });
+                    }
                 }
             }
 
@@ -111,12 +132,20 @@ class EmailNotificationJob {
 
             // Notificar autores sobre expiração
             for (const submission of result.rows) {
-                await emailService.notifyTokenExpired(submission);
+                const emailResult = await emailService.notifyTokenExpired(submission);
 
-                logger.audit('Token expired notification sent', {
-                    submissionId: submission.id,
-                    authorEmail: submission.author_email
-                });
+                if (!emailResult.success) {
+                    logger.error('Failed to send token expired notification', {
+                        submissionId: submission.id,
+                        authorEmail: submission.author_email,
+                        error: emailResult.errorMessage
+                    });
+                } else {
+                    logger.audit('Token expired notification sent', {
+                        submissionId: submission.id,
+                        authorEmail: submission.author_email
+                    });
+                }
             }
 
             // Executar limpeza automática
@@ -164,12 +193,20 @@ class EmailNotificationJob {
 
             // Enviar apenas se houver atividade
             if (summaryData.newSubmissions > 0 || summaryData.pendingReviews > 0 || summaryData.publishedArticles > 0) {
-                await emailService.sendDailySummary(summaryData, this.adminEmails);
+                const result = await emailService.sendDailySummary(summaryData, this.adminEmails);
 
-                logger.audit('Daily summary sent', {
-                    summaryData,
-                    adminEmails: this.adminEmails
-                });
+                if (!result.success) {
+                    logger.error('Failed to send daily summary', {
+                        summaryData,
+                        adminEmails: this.adminEmails,
+                        error: result.errorMessage
+                    });
+                } else {
+                    logger.audit('Daily summary sent', {
+                        summaryData,
+                        adminEmails: this.adminEmails
+                    });
+                }
             }
 
         } catch (error) {

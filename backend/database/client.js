@@ -54,12 +54,20 @@ class DatabaseClient {
         return result.rows[0];
     }
 
-    async findByEmail(table, email) {
+    async findByAdminEmail(table, email) {
         const result = await this.query(
             `SELECT * FROM ${table} WHERE email = $1`,
             [email]
         );
         return result.rows[0];
+    }
+
+    async findByAuthorEmail(table, email) {
+        const result = await this.query(
+            `SELECT * FROM ${table} WHERE author_email = $1`,
+            [email]
+        );
+        return result.rows;
     }
 
     async findByToken(token) {
