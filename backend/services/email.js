@@ -3,6 +3,9 @@ const logger = require('../middleware/logging');
 const config = require('../config/services');
 const emailTemplates = require('./emailTemplates');
 
+// TODO: Update to use TypeScript.
+// TODO: Update to rely on error response from the API rather than exceptions.
+//  Resend responses do not throw exceptions, so it is TERRIBLY wrong to always return success: true when exceptions do not happen.
 class EmailService {
     constructor() {
         this.resend = new Resend(config.email.apiKey);
