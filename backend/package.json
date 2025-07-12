@@ -4,15 +4,17 @@
   "description": "Sistema de submissão e gestão de artigos acadêmicos - Enciclopédia Transitos",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "node dist/server.js",
+    "build": "tsc",
+    "dev": "nodemon --exec ts-node server.ts",
+    "dev:js": "nodemon server.js",
     "test": "jest --verbose --testPathIgnorePatterns=integration,database",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage --testPathIgnorePatterns=integration,database",
     "test:integration": "jest --testPathPattern=integration",
     "seed:admin": "psql $DATABASE_URL -f database/seeds/admin.sql",
-    "lint": "eslint . --ext .js",
-    "lint:fix": "eslint . --ext .js --fix"
+    "lint": "eslint . --ext .js,.ts",
+    "lint:fix": "eslint . --ext .js,.ts --fix"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -40,7 +42,14 @@
     "jest": "^29.7.0",
     "supertest": "^6.3.3",
     "eslint": "^8.56.0",
-    "eslint-config-node": "^4.1.0"
+    "eslint-config-node": "^4.1.0",
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.5",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.11",
+    "ts-node": "^10.9.2",
+    "ts-jest": "^29.1.1",
+    "nodemon-ts": "^1.0.0"
   },
   "engines": {
     "node": ">=18.0.0",
