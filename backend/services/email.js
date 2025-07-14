@@ -44,6 +44,9 @@ class EmailService {
                 statusCode: result?.error?.statusCode || 200
             })
 
+            // TODO: Tratamento de erro aqui está errado, pois o Resend não lança exceções para erros de envio.
+            //  Ele retorna um objeto com statusCode e error, que devem ser verificados.
+
             return {
                 success: true,
                 messageId: result.data?.id,

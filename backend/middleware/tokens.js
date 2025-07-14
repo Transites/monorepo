@@ -99,10 +99,10 @@ class TokenMiddleware {
      */
     validateAuthorEmail = async (req, res, next) => {
         try {
-            const email = req.body.email || req.query.email;
+            const authorEmail = req.body.author_email || req.query.author_email;
             const submissionId = req.submission?.id;
 
-            if (!email) {
+            if (!authorEmail) {
                 return responses.badRequest(res, 'Email do autor é obrigatório');
             }
 
@@ -111,7 +111,7 @@ class TokenMiddleware {
             }
 
             // Validar email do autor
-            const validation = await tokenService.validateAuthorEmail(submissionId, email);
+            const validation = await tokenService.validateAuthorEmail(submissionId, authorEmail);
 
             if (!validation.isValid) {
                 const errorMessages = {
@@ -126,7 +126,7 @@ class TokenMiddleware {
                     // Log tentativa suspeita
                     logger.security('Author email mismatch', {
                         submissionId,
-                        providedEmail: email,
+                        providedEmail: authorEmail,
                         expectedEmail: req.submission.author_email,
                         ip: req.ip,
                         userAgent: req.get('User-Agent')
@@ -137,7 +137,7 @@ class TokenMiddleware {
             }
 
             // Email válido - adicionar ao request
-            req.authorEmail = email;
+            req.authorEmail = authorEmail;
 
             next();
 
@@ -235,6 +235,66 @@ class TokenMiddleware {
 
             next();
         };
+    };
+
+    /**
+     * Middleware para adicionar informações do token à resposta
+     * Garante que informações importantes do token estejam disponíveis no frontend
+     */
+    addTokenInfoToResponse = (req, res, next) => {
+        try {
+            // Verifica se as informações do token estão disponíveis
+            if (!req.tokenInfo) {
+                logger.warn('Token info not available in request', {
+                    path: req.path,
+                    method: req.method
+                });
+                return next();
+            }
+
+            // Adiciona headers relacionados ao token
+            if (req.tokenInfo.isNearExpiry) {
+                res.set('X-Token-Expiry-Warning', 'true');
+                res.set('X-Token-Days-Remaining', req.tokenInfo.daysToExpiry.toString());
+            }
+
+            // Intercepta o método send para adicionar informações do token à resposta
+            const originalSend = res.send;
+            res.send = function(data) {
+                try {
+                    // Apenas modifica respostas de sucesso com formato JSON
+                    if (res.statusCode >= 200 && res.statusCode < 300 && data) {
+                        const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+
+                        // Se a resposta já tem tokenInfo, não sobrescreve
+                        if (parsedData.data && !parsedData.data.tokenInfo) {
+                            parsedData.data.tokenInfo = {
+                                expiresAt: req.tokenInfo.expiresAt,
+                                daysToExpiry: req.tokenInfo.daysToExpiry,
+                                needsRenewal: req.tokenInfo.needsRenewal
+                            };
+
+                            return originalSend.call(this, JSON.stringify(parsedData));
+                        }
+                    }
+                } catch (error) {
+                    logger.error('Error adding token info to response', {
+                        error: error.message,
+                        path: req.path
+                    });
+                }
+
+                return originalSend.call(this, data);
+            };
+
+            next();
+        } catch (error) {
+            logger.error('Error in addTokenInfoToResponse middleware', {
+                error: error.message,
+                path: req.path
+            });
+            next();
+        }
     };
 }
 

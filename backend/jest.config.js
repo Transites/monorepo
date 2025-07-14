@@ -6,9 +6,15 @@ module.exports = {
   // The test environment that will be used for testing
   testEnvironment: 'node',
 
+  // Transform files with ts-jest
+  transform: {
+    '^.+\\.tsx?$': 'ts-jest',
+  },
+
   // The glob patterns Jest uses to detect test files
   testMatch: [
     '**/test/**/*.test.js',
+    '**/test/**/*.test.ts',
   ],
 
   // An array of regexp pattern strings that are matched against all test paths

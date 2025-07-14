@@ -5,6 +5,7 @@ const db = require('../../database/client');
 const logger = require('../../middleware/logging');
 const tokenService = require('../../services/tokens');
 const constants = require('../../utils/constants');
+const uuid = require('uuid').v4;
 
 jest.mock('../../middleware/logging');
 
@@ -46,8 +47,7 @@ describe('Token Routes Integration', () => {
             author_name: 'Test Author',
             author_email: 'author@test.com',
             status: constants.SUBMISSION_STATUS.DRAFT,
-            created_at: new Date(),
-            updated_at: new Date()
+            token: uuid()
         });
 
         // Create token for test submission
@@ -67,7 +67,8 @@ describe('Token Routes Integration', () => {
             author_email: 'expired@test.com',
             status: constants.SUBMISSION_STATUS.EXPIRED,
             created_at: new Date(),
-            updated_at: new Date()
+            updated_at: new Date(),
+            token: uuid(),
         });
 
         // Create token for expired submission
@@ -126,8 +127,8 @@ describe('Token Routes Integration', () => {
 
             expect(response.status).toBe(410);
             expect(response.body.error).toBe('Token expirado');
-            expect(response.body.data).toHaveProperty('reason', 'TOKEN_EXPIRED');
-            expect(response.body.data).toHaveProperty('canRecover', true);
+            expect(response.body.details).toHaveProperty('reason', 'TOKEN_EXPIRED');
+            expect(response.body.details).toHaveProperty('canRecover', true);
         });
 
         test('GET /api/tokens/:token/validate - invalid token', async () => {

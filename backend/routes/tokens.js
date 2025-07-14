@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const tokenController = require('../controllers/tokens');
 const tokenMiddleware = require('../middleware/tokens');
-const authMiddleware = require('../middleware/auth');
 const tokenValidators = require('../validators/tokens');
 const errorHandler = require('../middleware/errors');
 
@@ -41,55 +40,6 @@ router.post('/:token/renew',
     tokenMiddleware.validateAuthorEmail,
     tokenMiddleware.logSubmissionAction('renew_token'),
     errorHandler.asyncHandler(tokenController.renewToken)
-);
-
-// ========== ROTAS ADMINISTRATIVAS ==========
-
-// POST /api/admin/tokens/:submissionId/regenerate
-// Regenerar token completamente
-// Private (Admin only)
-router.post('/admin/:submissionId/regenerate',
-    authMiddleware.requireAuth,
-    tokenValidators.validateSubmissionId,
-    authMiddleware.logAdminAction('regenerate_token'),
-    errorHandler.asyncHandler(tokenController.regenerateToken)
-);
-
-// POST /api/admin/tokens/:submissionId/reactivate
-// Reativar submissão expirada
-// Private (Admin only)
-router.post('/admin/:submissionId/reactivate',
-    authMiddleware.requireAuth,
-    tokenValidators.sanitizeTokenData,
-    tokenValidators.validateReactivation,
-    authMiddleware.logAdminAction('reactivate_submission'),
-    errorHandler.asyncHandler(tokenController.reactivateExpired)
-);
-
-// GET /api/admin/tokens/expiring
-// Listar submissões próximas do vencimento
-// Private (Admin only)
-router.get('/admin/expiring',
-    authMiddleware.requireAuth,
-    tokenValidators.validateDaysQuery,
-    errorHandler.asyncHandler(tokenController.getExpiringSubmissions)
-);
-
-// POST /api/admin/tokens/cleanup
-// Executar limpeza de tokens expirados
-// Private (Admin only)
-router.post('/admin/cleanup',
-    authMiddleware.requireAuth,
-    authMiddleware.logAdminAction('cleanup_expired_tokens'),
-    errorHandler.asyncHandler(tokenController.cleanupExpiredTokens)
-);
-
-// GET /api/admin/tokens/stats
-// Estatísticas de tokens
-// Private (Admin only)
-router.get('/admin/stats',
-    authMiddleware.requireAuth,
-    errorHandler.asyncHandler(tokenController.getTokenStats)
 );
 
 module.exports = router;

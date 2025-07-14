@@ -32,3 +32,8 @@ CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at DESC);
 
 -- Índice parcial para artigos em destaque
 CREATE INDEX idx_articles_featured ON articles(published_at DESC) WHERE is_featured = TRUE;
+
+-- Índices para anexos
+CREATE INDEX idx_attachments_submission ON submission_attachments(submission_id);
+CREATE INDEX idx_attachments_file_type ON submission_attachments(file_type);
+CREATE INDEX idx_attachments_created_at ON submission_attachments(created_at DESC);

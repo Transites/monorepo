@@ -42,6 +42,33 @@ module.exports = {
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     ],
 
+    // Limites específicos de submissão
+    SUBMISSION_LIMITS: {
+        MAX_ATTACHMENTS: 5,
+        AUTO_SAVE_INTERVAL: 30000, // 30 segundos
+        PREVIEW_MAX_LENGTH: 2000,
+        SLUG_MAX_LENGTH: 100
+    },
+
+    // Campos obrigatórios para submissão completa
+    REQUIRED_FIELDS: {
+        TITLE_MIN: 5,
+        SUMMARY_MIN: 50,
+        CONTENT_MIN: 100,
+        KEYWORDS_MIN: 1
+    },
+
+    // Mensagens de status
+    STATUS_MESSAGES: {
+        DRAFT: 'Rascunho - Continue editando',
+        UNDER_REVIEW: 'Em revisão pelos editores',
+        CHANGES_REQUESTED: 'Correções solicitadas',
+        APPROVED: 'Aprovado para publicação',
+        PUBLISHED: 'Publicado na enciclopédia',
+        REJECTED: 'Rejeitado',
+        EXPIRED: 'Token expirado'
+    },
+
     // Limits
     LIMITS: {
         TITLE_MIN: 5,

@@ -98,3 +98,7 @@ CREATE TRIGGER audit_submissions AFTER INSERT OR UPDATE OR DELETE ON submissions
 
 CREATE TRIGGER audit_articles AFTER INSERT OR UPDATE OR DELETE ON articles
     FOR EACH ROW EXECUTE FUNCTION audit_trigger_function();
+
+CREATE TRIGGER update_attachments_updated_at
+    BEFORE UPDATE ON submission_attachments
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

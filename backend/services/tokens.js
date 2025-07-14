@@ -206,7 +206,7 @@ class TokenService {
     /**
      * Renovar token (extending expiry)
      */
-    async renewToken(submissionId, additionalDays = null) {
+    async renewToken(submissionId, additionalDays = 0) {
         try {
             const days = additionalDays || this.defaultExpiryDays;
             const newExpiresAt = new Date();

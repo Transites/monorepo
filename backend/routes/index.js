@@ -4,7 +4,9 @@ const router = express.Router();
 // Import route modules
 const authRoutes = require('./auth');
 const adminRoutes = require('./admin');
-// const submissionRoutes = require('./submissions');
+const tokenRoutes = require('./tokens');
+const submissionRoutes = require('./submission');
+const authorRoutes = require('./author');
 
 // API information
 router.get('/', (req, res) => {
@@ -25,24 +27,8 @@ router.get('/', (req, res) => {
 // Mount routes
 router.use('/auth', authRoutes);
 router.use('/admin', adminRoutes);
-// router.use('/submissions', submissionRoutes);
-
-// Placeholder routes for testing
-router.get('/test', (req, res) => {
-    res.json({
-        message: 'API funcionando',
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId
-    });
-});
-
-router.post('/test', (req, res) => {
-    res.json({
-        message: 'POST endpoint funcionando',
-        receivedData: req.body,
-        timestamp: new Date().toISOString(),
-        requestId: req.requestId
-    });
-});
+router.use('/tokens', tokenRoutes);
+router.use('/submissions', submissionRoutes);
+router.use('/author', authorRoutes);
 
 module.exports = router;
