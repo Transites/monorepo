@@ -195,3 +195,26 @@ CREATE TABLE IF NOT EXISTS submission_attachments
                                                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'))
 );
 
+CREATE TABLE IF NOT EXISTS file_uploads
+(
+    id                   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    submission_id        UUID REFERENCES submissions (id) ON DELETE CASCADE,
+    original_name        VARCHAR(255)        NOT NULL,
+    cloudinary_public_id VARCHAR(255) UNIQUE NOT NULL,
+    url                  TEXT                NOT NULL,
+    secure_url           TEXT                NOT NULL,
+    format               VARCHAR(10)         NOT NULL,
+    resource_type        VARCHAR(20)         NOT NULL CHECK (resource_type IN ('image', 'document')),
+    size                 INTEGER             NOT NULL,
+    width                INTEGER,
+    height               INTEGER,
+    tags                 JSONB            DEFAULT '[]',
+    metadata             JSONB            DEFAULT '{}',
+    uploaded_at          TIMESTAMP        DEFAULT CURRENT_TIMESTAMP,
+    uploaded_by          VARCHAR(255)        NOT NULL,
+
+    -- Constraints
+    CONSTRAINT file_uploads_size_check CHECK (size > 0),
+    CONSTRAINT file_uploads_format_check CHECK (LENGTH(format) >= 1),
+    CONSTRAINT file_uploads_name_check CHECK (LENGTH(original_name) >= 1)
+);

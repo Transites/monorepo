@@ -4,7 +4,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "./dist",
-    "rootDir": "./",
+    "rootDir": "./src",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -13,16 +13,25 @@
     "allowJs": true,
     "checkJs": false,
     "declaration": true,
-    "sourceMap": true
+    "declarationMap": true,
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "@/*": ["./*"],
+      "@/types/*": ["./types/*"],
+      "@/services/*": ["./services/*"],
+      "@/controllers/*": ["./controllers/*"],
+      "@/middleware/*": ["./middleware/*"],
+      "@/utils/*": ["./utils/*"]
+    }
   },
   "include": [
-    "**/*.ts",
-    "**/*.js"
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "coverage",
-    "test"
+    "**/*.test.ts"
   ]
 }

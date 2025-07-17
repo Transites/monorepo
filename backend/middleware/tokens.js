@@ -22,16 +22,7 @@ class TokenMiddleware {
                 retryAfter: 3600
             },
             standardHeaders: true,
-            legacyHeaders: false,
-            onLimitReached: (req) => {
-                const token = req.params.token || req.body.token;
-                logger.security('Token rate limit reached', {
-                    ip: req.ip,
-                    token: token?.substring(0, 8) + '...' || 'unknown',
-                    userAgent: req.get('User-Agent'),
-                    path: req.path
-                });
-            }
+            legacyHeaders: false
         });
     }
 

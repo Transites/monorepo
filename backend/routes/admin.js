@@ -5,6 +5,7 @@ const emailRoutes = require('./email');
 const tokenValidators = require("../validators/tokens");
 const errorHandler = require("../middleware/errors");
 const tokenController = require("../controllers/tokens");
+const uploadController = require("../controllers/upload");
 
 // Mount email routes
 router.use('/email', emailRoutes);
@@ -70,5 +71,14 @@ router.get('/tokens/stats',
     authMiddleware.requireAuth,
     errorHandler.asyncHandler(tokenController.getTokenStats)
 )
+
+// POST /api/admin/upload/cleanup
+// Limpeza de arquivos órfãos
+// Private (Admin only)
+router.post('/upload/cleanup',
+    authMiddleware.requireAuth,
+    authMiddleware.logAdminAction('cleanup_orphaned_files'),
+    errorHandler.asyncHandler(uploadController.cleanupOrphanedFiles)
+);
 
 module.exports = router;

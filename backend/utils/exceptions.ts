@@ -61,6 +61,26 @@ export class AttachmentLimitException extends BaseException {
     }
 }
 
+export class InvalidFileTypeException extends BaseException {
+    readonly statusCode = 400;
+    readonly errorCode = 'INVALID_FILE_TYPE';
+
+    constructor(message: string, public readonly allowedTypes: string[]) {
+        super(message, { allowedTypes });
+    }
+}
+
+// 401 Unauthorized errors
+
+export class UnauthorizedException extends BaseException {
+    readonly statusCode = 401;
+    readonly errorCode = 'UNAUTHORIZED';
+
+    constructor(message: string = 'Acesso não autorizado') {
+        super(message);
+    }
+}
+
 // 404 Not Found errors
 export class SubmissionNotFoundException extends BaseException {
     readonly statusCode = 404;

@@ -37,3 +37,17 @@ CREATE INDEX idx_articles_featured ON articles(published_at DESC) WHERE is_featu
 CREATE INDEX idx_attachments_submission ON submission_attachments(submission_id);
 CREATE INDEX idx_attachments_file_type ON submission_attachments(file_type);
 CREATE INDEX idx_attachments_created_at ON submission_attachments(created_at DESC);
+
+-- Índices para performance
+CREATE INDEX idx_file_uploads_submission ON file_uploads(submission_id);
+CREATE INDEX idx_file_uploads_uploaded_by ON file_uploads(uploaded_by);
+CREATE INDEX idx_file_uploads_resource_type ON file_uploads(resource_type);
+CREATE INDEX idx_file_uploads_format ON file_uploads(format);
+CREATE INDEX idx_file_uploads_uploaded_at ON file_uploads(uploaded_at DESC);
+CREATE INDEX idx_file_uploads_size ON file_uploads(size);
+
+-- Índice para busca por tags
+CREATE INDEX idx_file_uploads_tags ON file_uploads USING gin(tags);
+
+-- Índice para busca por metadata
+CREATE INDEX idx_file_uploads_metadata ON file_uploads USING gin(metadata);

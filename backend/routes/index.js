@@ -7,6 +7,7 @@ const adminRoutes = require('./admin');
 const tokenRoutes = require('./tokens');
 const submissionRoutes = require('./submission');
 const authorRoutes = require('./author');
+const uploadRoutes = require('./upload');
 
 // API information
 router.get('/', (req, res) => {
@@ -30,5 +31,6 @@ router.use('/admin', adminRoutes);
 router.use('/tokens', tokenRoutes);
 router.use('/submissions', submissionRoutes);
 router.use('/author', authorRoutes);
+router.use('/upload', uploadRoutes);
 
 module.exports = router;

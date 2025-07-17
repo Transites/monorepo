@@ -102,3 +102,46 @@ CREATE TRIGGER audit_articles AFTER INSERT OR UPDATE OR DELETE ON articles
 CREATE TRIGGER update_attachments_updated_at
     BEFORE UPDATE ON submission_attachments
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- View para estatísticas de upload
+CREATE OR REPLACE VIEW upload_stats AS
+SELECT
+    resource_type,
+    format,
+    COUNT(*) as file_count,
+    SUM(size) as total_size,
+    AVG(size) as avg_size,
+    MAX(size) as max_size,
+    MIN(size) as min_size,
+    MAX(uploaded_at) as last_upload
+FROM file_uploads
+GROUP BY resource_type, format
+ORDER BY total_size DESC;
+
+-- Função para limpeza de arquivos órfãos
+CREATE OR REPLACE FUNCTION cleanup_orphaned_uploads()
+    RETURNS TABLE(deleted_count INTEGER, orphaned_files TEXT[]) AS $$
+DECLARE
+    orphaned_record RECORD;
+    deleted_files TEXT[] := '{}';
+    delete_count INTEGER := 0;
+BEGIN
+    -- Buscar arquivos órfãos
+    FOR orphaned_record IN
+        SELECT fu.id, fu.original_name, fu.cloudinary_public_id
+        FROM file_uploads fu
+                 LEFT JOIN submissions s ON fu.submission_id = s.id
+        WHERE s.id IS NULL
+        LOOP
+            -- Adicionar à lista de arquivos deletados
+            deleted_files := array_append(deleted_files, orphaned_record.original_name);
+
+            -- Deletar do banco
+            DELETE FROM file_uploads WHERE id = orphaned_record.id;
+
+            delete_count := delete_count + 1;
+        END LOOP;
+
+    RETURN QUERY SELECT delete_count, deleted_files;
+END;
+$$ language 'plpgsql';

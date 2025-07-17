@@ -32,14 +32,36 @@ module.exports = {
         'Outros'
     ],
 
-    // File types
     ALLOWED_FILE_TYPES: [
         'image/jpeg',
         'image/png',
         'image/gif',
         'application/pdf',
         'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'jpg',
+        'jpeg',
+        'png',
+        'gif',
+        'pdf',
+        'doc',
+        'docx'
+    ],
+
+    ALLOWED_IMAGE_TYPES: [
+        'jpg',
+        'jpeg',
+        'png',
+        'gif',
+        'webp'
+    ],
+
+    ALLOWED_DOCUMENT_TYPES: [
+        'pdf',
+        'doc',
+        'docx',
+        'txt',
+        'rtf'
     ],
 
     // Limites específicos de submissão
