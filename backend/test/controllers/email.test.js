@@ -8,23 +8,20 @@ const db = require('../../database/client');
 const logger = require('../../middleware/logging');
 const { validationResult } = require('express-validator');
 
-// Mock dependencies
+jest.mock('express-validator', () => ({
+  validationResult: jest.fn()
+}));
 jest.mock('../../services/email');
 jest.mock('../../services/emailTemplates');
 jest.mock('../../database/client');
 jest.mock('../../middleware/logging');
-jest.mock('express-validator', () => ({
-    validationResult: jest.fn()
-}));
 
 describe('EmailController', () => {
     let req, res, next;
 
     beforeEach(() => {
-        // Reset mocks
         jest.clearAllMocks();
 
-        // Setup request, response, next
         req = {
             body: {},
             user: { id: 'admin-123', email: 'admin@example.com', name: 'Admin User' }
@@ -37,7 +34,6 @@ describe('EmailController', () => {
 
         next = jest.fn();
 
-        // Mock validation result
         validationResult.mockReturnValue({
             isEmpty: jest.fn().mockReturnValue(true),
             array: jest.fn().mockReturnValue([])

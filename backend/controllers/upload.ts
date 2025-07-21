@@ -3,8 +3,11 @@ import { validationResult } from 'express-validator';
 import multer from 'multer';
 import uploadService from "../services/upload";
 import { BulkUploadResult, FileUpload } from "../types/upload";
-import logger from '../middleware/logging';
 import responses from '../utils/responses';
+import untypedLogger from '../middleware/logging';
+import { LoggerWithAudit } from "../types/migration";
+
+const logger = untypedLogger as unknown as LoggerWithAudit;
 
 // Configurar multer para upload em memória
 const upload = multer({

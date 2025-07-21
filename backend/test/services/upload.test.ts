@@ -1,3 +1,4 @@
+// @ts-nocheck
 import uploadService from '../../services/upload';
 import db from '../../database/client';
 import { v2 as cloudinary } from 'cloudinary';

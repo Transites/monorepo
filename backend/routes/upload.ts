@@ -1,7 +1,7 @@
 import express from 'express';
 import uploadController from '../controllers/upload';
 import uploadValidators from '../validators/upload';
-import errorHandler from '../middleware/errors';
+const errorHandler = require('../middleware/errors');
 
 const router = express.Router();
 

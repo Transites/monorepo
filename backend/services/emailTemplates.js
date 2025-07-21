@@ -112,7 +112,7 @@ class EmailTemplates {
     /**
      * Template: Token de submissão
      */
-    submissionToken({ authorName, submissionTitle, tokenUrl, expiresAt, supportEmail }) {
+    submissionToken({authorName, submissionTitle, tokenUrl, expiresAt, supportEmail}) {
         const expiryDate = new Date(expiresAt).toLocaleDateString('pt-BR');
 
         const content = `
@@ -150,7 +150,7 @@ class EmailTemplates {
     /**
      * Template: Nova submissão para admin
      */
-    adminNewSubmission({ submissionTitle, authorName, authorEmail, category, summary, adminUrl, submittedAt }) {
+    adminNewSubmission({submissionTitle, authorName, authorEmail, category, summary, adminUrl, submittedAt}) {
         const submitDate = new Date(submittedAt).toLocaleString('pt-BR');
 
         const content = `
@@ -186,13 +186,49 @@ class EmailTemplates {
     /**
      * Template: Feedback para autor
      */
-    feedbackToAuthor({ authorName, submissionTitle, feedbackContent, adminName, tokenUrl, feedbackDate, supportEmail }) {
+    feedbackToAuthor({
+        authorName,
+        submissionTitle,
+        feedbackContent,
+        adminName,
+        tokenUrl,
+        feedbackDate,
+        supportEmail,
+        status
+    }) {
         const date = new Date(feedbackDate).toLocaleDateString('pt-BR');
 
+        // Determine title, message content, and actions based on status
+        let title = 'Feedback sobre sua submissão';
+        let introMessage = `Recebemos um feedback sobre sua submissão "<strong>${submissionTitle}</strong>".`;
+        let nextSteps = `
+            <p><strong>Próximos passos:</strong></p>
+            <ol>
+                <li>Leia atentamente o feedback acima</li>
+                <li>Acesse sua submissão para fazer as correções</li>
+                <li>Após corrigir, envie novamente para revisão</li>
+            </ol>
+            <a href="${tokenUrl}" class="button">Editar Submissão</a>
+            <p><em>💡 Dica: Você pode editar sua submissão quantas vezes necessário antes de reenviar para revisão.</em></p>
+        `;
+
+        // Change content based on status
+        if (status === 'rejected') {
+            title = 'Sua submissão não foi aprovada';
+            introMessage = `Lamentamos informar que sua submissão "<strong>${submissionTitle}</strong>" não foi aprovada para publicação.`;
+            nextSteps = `
+                <p>Se você quiser compreender melhor esta decisão ou discutir possibilidades futuras,
+                entre em contato pelo email <a href="mailto:${supportEmail}">${supportEmail}</a></p>
+            `;
+        } else if (status === 'changes_requested') {
+            title = 'Correções solicitadas em sua submissão';
+            introMessage = `Sua submissão "<strong>${submissionTitle}</strong>" foi revisada e precisa de algumas alterações antes de ser aprovada.`;
+        }
+
         const content = `
-            <h2>Feedback sobre sua submissão</h2>
+            <h2>${title}</h2>
             <p>Olá <strong>${authorName}</strong>,</p>
-            <p>Recebemos um feedback sobre sua submissão "<strong>${submissionTitle}</strong>".</p>
+            <p>${introMessage}</p>
 
             <div class="info-box">
                 <p><strong>📝 Feedback de ${adminName} em ${date}:</strong></p>
@@ -201,27 +237,18 @@ class EmailTemplates {
                 </div>
             </div>
 
-            <p><strong>Próximos passos:</strong></p>
-            <ol>
-                <li>Leia atentamente o feedback acima</li>
-                <li>Acesse sua submissão para fazer as correções</li>
-                <li>Após corrigir, envie novamente para revisão</li>
-            </ol>
-
-            <a href="${tokenUrl}" class="button">Editar Submissão</a>
-
-            <p><em>💡 Dica: Você pode editar sua submissão quantas vezes necessário antes de reenviar para revisão.</em></p>
+            ${nextSteps}
 
             <p>Em caso de dúvidas sobre o feedback, entre em contato pelo email <a href="mailto:${supportEmail}">${supportEmail}</a></p>
         `;
 
-        return this.baseTemplate(content, 'Feedback Recebido - Transitos');
+        return this.baseTemplate(content, `${title} - Transitos`);
     }
 
     /**
      * Template: Submissão aprovada
      */
-    submissionApproved({ authorName, submissionTitle, articleUrl, publishedAt, supportEmail }) {
+    submissionApproved({authorName, submissionTitle, articleUrl, publishedAt, supportEmail}) {
         const publishDate = new Date(publishedAt).toLocaleDateString('pt-BR');
 
         const content = `
@@ -251,7 +278,7 @@ class EmailTemplates {
     /**
      * Template: Aviso de expiração de token
      */
-    tokenExpirationWarning({ authorName, submissionTitle, daysRemaining, tokenUrl, expiresAt, supportEmail }) {
+    tokenExpirationWarning({authorName, submissionTitle, daysRemaining, tokenUrl, expiresAt, supportEmail}) {
         const expiryDate = new Date(expiresAt).toLocaleDateString('pt-BR');
 
         const content = `
@@ -285,7 +312,7 @@ class EmailTemplates {
     /**
      * Template: Token expirado
      */
-    tokenExpired({ authorName, submissionTitle, recoveryUrl, supportEmail }) {
+    tokenExpired({authorName, submissionTitle, recoveryUrl, supportEmail}) {
         const content = `
             <h2>🔒 Token expirado</h2>
             <p>Olá <strong>${authorName}</strong>,</p>
@@ -322,7 +349,7 @@ class EmailTemplates {
     /**
      * Template: Alerta de segurança para admin
      */
-    securityAlert({ activityType, details, ipAddress, timestamp, adminUrl }) {
+    securityAlert({activityType, details, ipAddress, timestamp, adminUrl}) {
         const time = new Date(timestamp).toLocaleString('pt-BR');
 
         const content = `
@@ -355,7 +382,7 @@ class EmailTemplates {
     /**
      * Template: Resumo diário para admin
      */
-    dailySummary({ date, newSubmissions, pendingReviews, publishedArticles, expiringTokens, adminUrl }) {
+    dailySummary({date, newSubmissions, pendingReviews, publishedArticles, expiringTokens, adminUrl}) {
         const dateStr = new Date(date).toLocaleDateString('pt-BR');
 
         const content = `
@@ -393,7 +420,7 @@ class EmailTemplates {
     /**
      * Template: Email de teste
      */
-    testEmail({ timestamp, environment }) {
+    testEmail({timestamp, environment}) {
         const time = new Date(timestamp).toLocaleString('pt-BR');
 
         const content = `

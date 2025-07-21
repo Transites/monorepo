@@ -3,7 +3,6 @@ const logger = require('../middleware/logging');
 const config = require('../config/services');
 const emailTemplates = require('./emailTemplates');
 
-// TODO: Update to use TypeScript.
 // TODO: Update to rely on error response from the API rather than exceptions.
 //  Resend responses do not throw exceptions, so it is TERRIBLY wrong to always return success: true when exceptions do not happen.
 class EmailService {
@@ -208,10 +207,16 @@ class EmailService {
                 adminName,
                 tokenUrl,
                 feedbackDate: feedback.created_at,
-                supportEmail: this.replyTo
+                supportEmail: this.replyTo,
+                status: feedback.status || 'pending'
             });
 
-            const subject = `[Transitos] Feedback para sua submissão - ${submission.title}`;
+            let subject = `[Transitos] Feedback para sua submissão - ${submission.title}`;
+            if (feedback.status === 'rejected') {
+                subject = `[Transitos] Sua submissão não foi aprovada - ${submission.title}`;
+            } else if (feedback.status === 'changes_requested') {
+                subject = `[Transitos] Correções solicitadas - ${submission.title}`;
+            }
 
             const result = await this.sendEmail({
                 to: submission.author_email,

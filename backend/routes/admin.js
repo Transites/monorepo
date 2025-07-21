@@ -2,13 +2,14 @@ const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middleware/auth');
 const emailRoutes = require('./email');
+const adminReviewRoutes = require('./adminReview');
 const tokenValidators = require("../validators/tokens");
 const errorHandler = require("../middleware/errors");
 const tokenController = require("../controllers/tokens");
 const uploadController = require("../controllers/upload");
 
-// Mount email routes
 router.use('/email', emailRoutes);
+router.use('/review', adminReviewRoutes);
 
 // Admin info route
 router.get('/', authMiddleware.requireAuth, (req, res) => {
@@ -20,7 +21,8 @@ router.get('/', authMiddleware.requireAuth, (req, res) => {
             name: req.user.name
         },
         endpoints: {
-            email: '/api/admin/email'
+            email: '/api/admin/email',
+            review: '/api/admin/review'
         }
     });
 });

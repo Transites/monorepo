@@ -5,9 +5,12 @@ import { Request, Response, NextFunction } from 'express';
 import uploadController from '../../controllers/upload';
 import uploadService from '../../services/upload';
 import responses from '../../utils/responses';
-import logger from '../../middleware/logging';
 import { FileUpload, BulkUploadResult } from '../../types/upload';
 import { validationResult } from 'express-validator';
+import untypedLogger from '../../middleware/logging';
+import { LoggerWithAudit } from "../../types/migration";
+
+const logger = untypedLogger as unknown as LoggerWithAudit;
 
 // Mock dependencies
 jest.mock('../../services/upload');
@@ -91,7 +94,7 @@ describe('UploadController', () => {
                 size: 1024,
                 width: 100,
                 height: 100,
-                tags: ['test'],
+                tags: JSON.stringify(['test']),
                 metadata: {
                     optimizations: {
                         thumbnail: 'https://thumbnail.com',
@@ -208,7 +211,7 @@ describe('UploadController', () => {
                 format: 'pdf',
                 resourceType: 'document',
                 size: 2048,
-                tags: ['test'],
+                tags: JSON.stringify(['test']),
                 metadata: {
                     documentPreview: {
                         thumbnail: 'https://thumbnail.com',
@@ -328,7 +331,7 @@ describe('UploadController', () => {
                         size: 1024,
                         width: 100,
                         height: 100,
-                        tags: ['test'],
+                        tags: JSON.stringify(['test']),
                         metadata: {},
                         uploadedAt: new Date(),
                         uploadedBy: 'test@example.com'
@@ -343,7 +346,7 @@ describe('UploadController', () => {
                         format: 'pdf',
                         resourceType: 'document',
                         size: 2048,
-                        tags: ['test'],
+                        tags: JSON.stringify(['test']),
                         metadata: {},
                         uploadedAt: new Date(),
                         uploadedBy: 'test@example.com'
@@ -417,7 +420,7 @@ describe('UploadController', () => {
                         size: 1024,
                         width: 100,
                         height: 100,
-                        tags: ['test'],
+                        tags: JSON.stringify(['test']),
                         metadata: {},
                         uploadedAt: new Date(),
                         uploadedBy: 'test@example.com'
@@ -680,7 +683,7 @@ describe('UploadController', () => {
                 format: 'pdf',
                 resourceType: 'document',
                 size: 1024,
-                tags: ['test'],
+                tags: JSON.stringify(['test']),
                 metadata: {},
                 uploadedAt: new Date(),
                 uploadedBy: 'test@example.com'

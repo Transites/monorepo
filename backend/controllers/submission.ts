@@ -2,8 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import submissionService from '../services/submission';
 import responses from '../utils/responses';
 import { validationResult } from 'express-validator';
-import logger from '../middleware/logging';
 import { handleControllerError } from '../utils/errorHandler';
+import untypedLogger from '../middleware/logging';
+import { LoggerWithAudit } from "../types/migration";
+
+const logger = untypedLogger as unknown as LoggerWithAudit;
 
 interface SubmissionRequest extends Request {
     submission?: any;

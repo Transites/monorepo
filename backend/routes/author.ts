@@ -1,7 +1,7 @@
 import express from 'express';
 import submissionController from '../controllers/submission';
 import submissionValidators from '../validators/submission';
-import errorHandler from '../middleware/errors';
+const errorHandler = require('../middleware/errors');
 
 const router = express.Router();
 

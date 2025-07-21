@@ -218,3 +218,36 @@ CREATE TABLE IF NOT EXISTS file_uploads
     CONSTRAINT file_uploads_format_check CHECK (LENGTH(format) >= 1),
     CONSTRAINT file_uploads_name_check CHECK (LENGTH(original_name) >= 1)
 );
+
+-- Tabela de logs de ações administrativas
+CREATE TABLE IF NOT EXISTS admin_action_logs
+(
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    admin_id    UUID REFERENCES admins (id) ON DELETE CASCADE,
+    action      VARCHAR(100) NOT NULL,
+    target_type VARCHAR(50)  NOT NULL,
+    target_id   VARCHAR(255) NOT NULL,
+    details     JSONB            DEFAULT '{}',
+    ip_address  INET,
+    user_agent  TEXT,
+    timestamp   TIMESTAMP        DEFAULT CURRENT_TIMESTAMP,
+
+    -- Constraints
+    CONSTRAINT action_logs_action_check CHECK (LENGTH(action) >= 1),
+    CONSTRAINT action_logs_target_type_check CHECK (target_type IN
+                                                    ('submission', 'feedback', 'article', 'admin', 'multiple'))
+);
+
+-- Tabela de configurações de notificação
+CREATE TABLE IF NOT EXISTS notification_settings
+(
+    id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    admin_id          UUID REFERENCES admins (id) ON DELETE CASCADE UNIQUE,
+    new_submissions   BOOLEAN          DEFAULT true,
+    changes_requested BOOLEAN          DEFAULT true,
+    expiring_tokens   BOOLEAN          DEFAULT true,
+    daily_summary     BOOLEAN          DEFAULT true,
+    security_alerts   BOOLEAN          DEFAULT true,
+    created_at        TIMESTAMP        DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP        DEFAULT CURRENT_TIMESTAMP
+);

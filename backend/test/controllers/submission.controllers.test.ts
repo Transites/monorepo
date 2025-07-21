@@ -2,8 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import submissionController from '../../controllers/submission';
 import submissionService from '../../services/submission';
 import responses from '../../utils/responses';
-import logger from '../../middleware/logging';
 import { validationResult } from 'express-validator';
+import untypedLogger from '../../middleware/logging';
+import { LoggerWithAudit } from "../../types/migration";
+
+const logger = untypedLogger as unknown as LoggerWithAudit;
 
 // Mock dependencies
 jest.mock('../../services/submission');

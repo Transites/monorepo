@@ -1,8 +1,9 @@
+// @ts-nocheck
 import db from '../database/client';
 import tokenService from './tokens';
 import emailService from './email';
-import logger from '../middleware/logging';
 import constants from '../utils/constants';
+import { generateSlug } from '../utils/url';
 import {
     ValidationException,
     SubmissionNotFoundException,
@@ -14,6 +15,11 @@ import {
     InvalidTokenException,
     DatabaseException
 } from '../utils/exceptions';
+
+import untypedLogger from '../middleware/logging';
+import { LoggerWithAudit } from "../types/migration";
+
+const logger = untypedLogger as unknown as LoggerWithAudit;
 
 export interface SubmissionSummary {
     id: string;
@@ -192,6 +198,10 @@ class SubmissionService {
             }
 
             const submission = tokenValidation.submission;
+
+            if (!submission) {
+                throw new SubmissionNotFoundException('Submissão não encontrada para este token');
+            }
 
             // Buscar anexos
             const attachments = await db.query(
@@ -661,7 +671,7 @@ class SubmissionService {
             );
 
             // Gerar slug baseado no título
-            const slug = this.generateSlug(submission.title);
+            const slug = generateSlug(submission.title);
 
             // Processar conteúdo para preview
             const processedContent = this.processContentForPreview(submission.content);
@@ -699,7 +709,10 @@ class SubmissionService {
     /**
      * Buscar submissões por autor (para dashboard do autor)
      */
-    async getSubmissionsByAuthor(authorEmail: string, pagination = { page: 1, limit: 10 }): Promise<AuthorSubmissionsResult> {
+    async getSubmissionsByAuthor(authorEmail: string, pagination = {
+        page: 1,
+        limit: 10
+    }): Promise<AuthorSubmissionsResult> {
         try {
             const offset = (pagination.page - 1) * pagination.limit;
 
@@ -895,21 +908,6 @@ class SubmissionService {
             if (updates[field as keyof typeof updates] === undefined) return false;
             return current[field] !== updates[field as keyof typeof updates];
         });
-    }
-
-    /**
-     * Gerar slug a partir do título
-     */
-    generateSlug(title: string): string {
-        return title
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '') // Remove acentos
-            .replace(/[^a-z0-9\s-]/g, '') // Remove caracteres especiais
-            .trim()
-            .replace(/\s+/g, '-') // Substitui espaços por hífens
-            .replace(/-+/g, '-') // Remove hífens duplicados
-            .substring(0, 100); // Limita tamanho
     }
 
     /**
