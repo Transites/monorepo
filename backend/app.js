@@ -100,4 +100,26 @@ app.use('*', (req, res) => {
 app.use(errorHandler.notFound);
 app.use(errorHandler.general);
 
+if (process.env.NODE_ENV !== 'development') {
+    try {
+        const communicationService = require('./services/communicationService');
+        const tokenCleanupJob = require('./jobs/tokenCleanup'); // assumindo que existe
+
+        communicationService.initializeCronJobs();
+        tokenCleanupJob.start();
+
+        logger.info('Background jobs initialized successfully', {
+            environment: process.env.NODE_ENV,
+            jobs: ['communicationService', 'tokenCleanupJob']
+        });
+
+    } catch (error) {
+        logger.error('Failed to initialize background jobs', {
+            error: error.message,
+            stack: error.stack
+        });
+        // process.exit(1); // Descomentar se quiser forçar a parada da aplicação caso os jobs falhem na inicialização
+    }
+}
+
 module.exports = app;

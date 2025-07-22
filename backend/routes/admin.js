@@ -3,6 +3,7 @@ const router = express.Router();
 const authMiddleware = require('../middleware/auth');
 const emailRoutes = require('./email');
 const adminReviewRoutes = require('./adminReview');
+const communicationsRoutes = require('./communication');
 const tokenValidators = require("../validators/tokens");
 const errorHandler = require("../middleware/errors");
 const tokenController = require("../controllers/tokens");
@@ -10,6 +11,7 @@ const uploadController = require("../controllers/upload");
 
 router.use('/email', emailRoutes);
 router.use('/review', adminReviewRoutes);
+router.use('/communications', communicationsRoutes);
 
 // Admin info route
 router.get('/', authMiddleware.requireAuth, (req, res) => {
