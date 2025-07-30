@@ -65,23 +65,23 @@
     },
     methods: {
       async fetchVerbete() {
-        const base_url = import.meta.env.VITE_STRAPI_BASE_URL
+        const base_url = import.meta.env.VITE_API_BASE_URL || ''
   
         try {
-          const response = await axios.get(`${base_url}/api/person-articles/${this.id}`, {
-            params: {
-              populate: ['image', 'categories', 'tags', 'authors', 'sections']
-            }
-          })
-          const data = response.data.data
+          const response = await axios.get(`${base_url}/api/submissions/${this.id}`)
+          const data = response.data.submission
+          
+          // Extract metadata for additional information
+          const metadata = data.metadata || {}
+          
           this.verbete = {
-            title: data.attributes.title,
-            summary: data.attributes.summary,
-            imageUrl: data.attributes.image.data ? data.attributes.image.data.attributes.url : '',
-            category: data.attributes.categories.data.length ? data.attributes.categories.data[0].attributes.name : 'Uncategorized',
-            authors: data.attributes.authors.data,
-            tags: data.attributes.tags.data,
-            sections: data.attributes.sections
+            title: data.title,
+            summary: data.summary,
+            imageUrl: metadata.imageUrl || '',
+            category: data.category || 'Uncategorized',
+            authors: [{ name: data.author_name }],
+            tags: (data.keywords || []).map(keyword => ({ name: keyword })),
+            sections: metadata.sections || []
           }
         } catch (error) {
           console.error('Error fetching verbete:', error)
