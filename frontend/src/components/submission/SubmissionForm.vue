@@ -70,14 +70,15 @@
           Voltar
         </v-btn>
         <v-spacer></v-spacer>
-<!--        TODO: esse botão deveria redirecionar a pessoa? Salvar rascunho deveria ser implícito? Deveríamos abrir um aviso caso haja tentativa de navegação pré-finalização? -->
-<!--        TODO: Além disso, há falta de feedback quando o botão é clicado. Não dá pra saber se salvou ou se o botão tá quebrado. -->
+        <!--        TODO: esse botão deveria redirecionar a pessoa? Salvar rascunho deveria ser implícito? Deveríamos abrir um aviso caso haja tentativa de navegação pré-finalização? -->
+        <!--        TODO: Além disso, há falta de feedback quando o botão é clicado. Não dá pra saber se salvou ou se o botão tá quebrado. -->
         <v-btn
             color="grey-darken-1"
             variant="text"
+            :loading="isSavingDraft"
             @click="saveDraft"
         >
-          Salvar Rascunho
+          {{ isSavingDraft ? 'Salvando...' : 'Salvar Rascunho' }}
         </v-btn>
         <v-btn
             v-if="currentStep < steps.length - 1"
@@ -86,13 +87,13 @@
         >
           Próximo
         </v-btn>
-<!--        TODO: Quando esse botão eh clicado e da certo ou da erro, não há feedback. ridiculo, arrumar imediatamente. -->
         <v-btn
             v-else
             color="var(--transites-gray-purple)"
+            :loading="isSubmitting"
             @click="submitArticle"
         >
-          Submeter Verbete
+          {{ isSubmitting ? 'Submetendo...' : 'Submeter Verbete' }}
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -106,6 +107,7 @@ import ContentStep from './ContentStep.vue'
 import BibliographyStep from './BibliographyStep.vue'
 import MediaStep from './MediaStep.vue'
 import PreviewStep from './PreviewStep.vue'
+import submissionService from "@/services/submissionService"
 
 export default {
   name: 'SubmissionForm',
@@ -117,6 +119,21 @@ export default {
     MediaStep,
     PreviewStep
   },
+  props: {
+    // Props para modo de edição
+    isEditing: {
+      type: Boolean,
+      default: false
+    },
+    token: {
+      type: String,
+      default: null
+    },
+    readonly: {
+      type: Boolean,
+      default: false
+    }
+  },
   data() {
     return {
       currentStep: 0,
@@ -127,7 +144,11 @@ export default {
         {title: 'Mídia', icon: 'mdi-image-outline', complete: false},
         {title: 'Pré-visualização', icon: 'mdi-eye-outline', complete: false}
       ],
+      // ✅ ÚNICA fonte de verdade - gerenciada pelo Vuex store
       formData: {
+        author_name: '',
+        author_email: '',
+        author_institution: '',
         title: '',
         type: '',
         summary: '',
@@ -151,92 +172,182 @@ export default {
         bibliography: [],
         media: []
       },
-      stepRefs: ['basicInfoStep', 'contentStep', 'bibliographyStep', 'mediaStep', 'previewStep']
+      stepRefs: ['basicInfoStep', 'contentStep', 'bibliographyStep', 'mediaStep', 'previewStep'],
+      // Estados de loading
+      isSavingDraft: false,
+      isSubmitting: false,
+      autoSaveTimer: null
     }
   },
+  async created() {
+    console.log('SubmissionForm created - loading initial data')
+
+    if (this.isEditing && this.token) {
+      // ✅ Modo edição: carregar dados do token
+      await this.loadSubmissionData()
+    } else {
+      // ✅ Modo criação: carregar rascunho do store
+      await this.loadDraftFromStore()
+    }
+
+    // Configurar auto-save
+    this.setupAutoSave()
+  },
+  beforeUnmount() {
+    this.clearAutoSave()
+  },
   methods: {
+    // ✅ Função central para atualizar dados
     updateFormData(newData) {
+      console.log('Atualizando formData:', newData)
+      if (newData.birthDate) {
+        console.log('Atualizando data de nascimento:', newData.birthDate)
+      }
+      if (newData.foundation) {
+        console.log('Atualizando fundação:', newData.foundation)
+      }
       this.formData = {...this.formData, ...newData}
-    },
-    async validateStep(stepIndex, issues = []) {
-      // Update validation issues for the current step
-      const stepKeys = ['basicInfo', 'content', 'bibliography', 'media', 'preview']
-      this.validationIssues[stepKeys[stepIndex]] = issues
 
-      // Mark step as complete if no issues
-      this.steps[stepIndex].complete = issues.length === 0
-
-      return issues.length === 0
-    },
-    async validateCurrentStep() {
-      if (this.$refs[this.stepRefs[this.currentStep]]) {
-        return await this.$refs[this.stepRefs[this.currentStep]].validate()
-      }
-      return true
-    },
-    async nextStep() {
-      const isValid = await this.validateCurrentStep()
-      if (isValid) {
-        this.currentStep++
+      // Auto-save apenas em modo criação
+      if (!this.isEditing) {
+        this.scheduleAutoSave()
       }
     },
-    prevStep() {
-      this.currentStep--
-    },
-    goToStep(step) {
-      this.currentStep = step
-    },
-    async saveDraft() {
+
+    async loadSubmissionData() {
       try {
-        await this.$store.dispatch('personArticle/saveArticleDraft', this.formData)
-        this.$toast.success('Rascunho salvo com sucesso!')
+        const response = await submissionService.getSubmission(this.token)
+        this.formData = {...this.formData, ...response.data}
+        console.log('Dados de edição carregados:', this.formData)
       } catch (error) {
-        this.$toast.error('Erro ao salvar rascunho. Tente novamente.')
-        console.error('Error saving draft:', error)
+        console.error('Erro ao carregar submissão:', error)
+        this.$toast.error('Erro ao carregar dados da submissão')
       }
     },
+
+    async loadDraftFromStore() {
+      try {
+        const draft = await this.$store.dispatch('personArticle/loadArticleDraft')
+        if (draft) {
+          this.formData = {...this.formData, ...draft}
+          console.log('Rascunho carregado do store:', this.formData)
+        }
+      } catch (error) {
+        console.error('Erro ao carregar rascunho:', error)
+      }
+    },
+
+    async saveDraft() {
+      this.isSavingDraft = true
+      try {
+        if (this.isEditing) {
+          await submissionService.updateSubmission(this.token, this.formData)
+        } else {
+          await this.$store.dispatch('personArticle/saveArticleDraft', this.formData)
+        }
+      } catch (error) {
+        console.error('Erro ao salvar rascunho:', error)
+      } finally {
+        this.isSavingDraft = false
+      }
+    },
+
     async submitArticle() {
-      // Validate all steps before submission
+      // Validar todos os passos
       let allValid = true
       for (let i = 0; i < this.steps.length; i++) {
         if (this.$refs[this.stepRefs[i]]) {
           const isValid = await this.$refs[this.stepRefs[i]].validate()
           if (!isValid) {
             allValid = false
-            // If a step is invalid, go to that step
-            if (i !== this.currentStep) {
-              this.currentStep = i
-              break
-            }
+            this.currentStep = i
+            break
           }
         }
       }
 
-      if (allValid) {
-        try {
+      if (!allValid) {
+        // todo: adicionar feedback visual para o usuário perto do botao e remover esse toast inexistente.
+        this.$toast.warning('Por favor, corrija os erros antes de submeter o verbete.')
+        return
+      }
+
+      this.isSubmitting = true
+      try {
+        if (this.isEditing) {
+          await submissionService.submitForReview(this.token, this.formData)
+          this.$toast.success('Verbete atualizado e submetido para revisão!')
+        } else {
           await this.$store.dispatch('personArticle/submitArticle', this.formData)
           this.$toast.success('Verbete submetido com sucesso!')
-          this.$router.push('/')
-        } catch (error) {
-          this.$toast.error('Erro ao submeter verbete. Tente novamente.')
-          console.error('Error submitting article:', error)
         }
-      } else {
-        this.$toast.warning('Por favor, corrija os erros antes de submeter o verbete.')
+
+        this.$router.push('/')
+      } catch (error) {
+        console.error('Erro ao submeter verbete:', error)
+        this.$toast.error('Erro ao submeter verbete. Tente novamente.')
+      } finally {
+        this.isSubmitting = false
       }
+    },
+
+    // ✅ Auto-save (apenas modo criação)
+    setupAutoSave() {
+      if (!this.isEditing) {
+        this.scheduleAutoSave()
+      }
+    },
+
+    scheduleAutoSave() {
+      this.clearAutoSave()
+      this.autoSaveTimer = setTimeout(async () => {
+        try {
+          await this.$store.dispatch('personArticle/saveArticleDraft', this.formData)
+          console.log('Auto-save executado')
+        } catch (error) {
+          console.error('Erro no auto-save:', error)
+        }
+      }, 30000) // 30 segundos
+    },
+
+    clearAutoSave() {
+      if (this.autoSaveTimer) {
+        clearTimeout(this.autoSaveTimer)
+        this.autoSaveTimer = null
+      }
+    },
+
+    // Métodos de navegação
+    async validateStep(stepIndex, issues = []) {
+      const stepKeys = ['basicInfo', 'content', 'bibliography', 'media', 'preview']
+      this.validationIssues[stepKeys[stepIndex]] = issues
+      this.steps[stepIndex].complete = issues.length === 0
+      return issues.length === 0
+    },
+
+    async validateCurrentStep() {
+      if (this.$refs[this.stepRefs[this.currentStep]]) {
+        return await this.$refs[this.stepRefs[this.currentStep]].validate()
+      }
+      return true
+    },
+
+    async nextStep() {
+      const isValid = await this.validateCurrentStep()
+      if (isValid) {
+        this.currentStep++
+      }
+    },
+
+    prevStep() {
+      this.currentStep--
+    },
+
+    goToStep(step) {
+      this.currentStep = step
     }
   },
-  async created() {
-    // Check if there's a draft in the store
-    // const draft = this.$store.state.personArticle?.draft
-    // if (draft) {
-    //   this.formData = {...this.formData, ...draft}
-    // }
-    const draft = await this.$store.dispatch('personArticle/loadArticleDraft')
-    if (draft) {
-      this.formData = {...this.formData, ...draft}
-    }
-  },
+
   computed: {
     isLoading() {
       return this.$store.getters['personArticle/isLoading']
@@ -247,7 +358,7 @@ export default {
     submissionStatus() {
       return this.$store.getters['personArticle/getSubmissionStatus']
     }
-  },
+  }
 }
 </script>
 
