@@ -532,6 +532,52 @@ class EmailService {
     }
 
     /**
+     * Enviar links de acesso para artigos em progresso
+     */
+    async sendSubmissionAccessLinks(authorEmail, submissions) {
+        try {
+            const html = emailTemplates.submissionAccessLinks({
+                authorEmail,
+                submissions,
+                supportEmail: this.replyTo
+            });
+
+            const subject = `[Transitos] Seus artigos em progresso`;
+
+            const result = await this.sendEmail({
+                to: authorEmail,
+                subject,
+                html
+            });
+
+            if (!result.success) {
+                logger.error('Failed to send submission access links email', {
+                    authorEmail,
+                    submissionCount: submissions.length,
+                    error: result.errorMessage,
+                    statusCode: result.statusCode
+                });
+                return result;
+            }
+
+            logger.audit('Submission access links email sent', {
+                authorEmail,
+                submissionCount: submissions.length
+            });
+
+            return { success: true };
+
+        } catch (error) {
+            logger.error('Failed to send submission access links email', {
+                authorEmail,
+                submissionCount: submissions?.length || 0,
+                error: error.message
+            });
+            return { success: false, errorMessage: error.message };
+        }
+    }
+
+    /**
      * Utility: Sleep function
      */
     sleep(ms) {

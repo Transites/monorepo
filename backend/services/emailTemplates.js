@@ -446,6 +446,51 @@ class EmailTemplates {
 
         return this.baseTemplate(content, 'Teste de Email - Transitos');
     }
+
+    /**
+     * Template: Links de acesso para artigos em progresso
+     */
+    submissionAccessLinks({authorEmail, submissions, supportEmail}) {
+        // Gerar lista de submissões com links
+        let submissionsList = '';
+        submissions.forEach(submission => {
+            const tokenUrl = `${config.app.frontendUrl}/submissao/editar/${submission.token}`;
+            const expiryDate = new Date(submission.expires_at).toLocaleDateString('pt-BR');
+            const status = submission.status === 'DRAFT' ? 'Rascunho' : 'Correções Solicitadas';
+
+            submissionsList += `
+                <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #dee2e6; border-radius: 4px;">
+                    <p><strong>📝 Título:</strong> ${submission.title}</p>
+                    <p><strong>📅 Última atualização:</strong> ${new Date(submission.updated_at).toLocaleDateString('pt-BR')}</p>
+                    <p><strong>🔄 Status:</strong> ${status}</p>
+                    <p><strong>⏰ Expira em:</strong> ${expiryDate}</p>
+                    <a href="${tokenUrl}" class="button">Editar Artigo</a>
+                </div>
+            `;
+        });
+
+        const content = `
+            <h2>Seus Artigos em Progresso</h2>
+            <p>Olá,</p>
+            <p>Encontramos os seguintes artigos em progresso associados ao email <strong>${authorEmail}</strong>:</p>
+
+            <div class="info-box">
+                <p><strong>🔗 Links de acesso aos seus artigos:</strong></p>
+                ${submissionsList}
+            </div>
+
+            <p><strong>⚠️ Importante:</strong></p>
+            <ul>
+                <li>Estes links são pessoais e intransferíveis</li>
+                <li>Salve este email para acessar suas submissões</li>
+                <li>Você pode editar suas submissões quantas vezes quiser até enviá-las para revisão</li>
+            </ul>
+
+            <p>Em caso de dúvidas, entre em contato pelo email <a href="mailto:${supportEmail}">${supportEmail}</a></p>
+        `;
+
+        return this.baseTemplate(content, 'Seus Artigos em Progresso - Transitos');
+    }
 }
 
 module.exports = new EmailTemplates();
