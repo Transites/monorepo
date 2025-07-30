@@ -53,7 +53,7 @@ export default {
       searchQuery: '',
       games: [],
       isLoading: true,
-      apiUrl: `${api.getUri()}/person-articles`
+      apiUrl: `${api.getUri()}/submissions`
     };
   },
   computed: {
@@ -75,10 +75,15 @@ export default {
     async getGames() {
       this.isLoading = true;
       try {
-        const response = await axios.get(this.apiUrl);
-        this.games = response.data.data.map(item => ({
+        const response = await axios.get(this.apiUrl, {
+          params: {
+            top: 100,
+            skip: 0
+          }
+        });
+        this.games = response.data.submissions.map(item => ({
           id: item.id,
-          title: item.attributes.title
+          title: item.title
         }));
       } catch (e) {
         console.error(e);
