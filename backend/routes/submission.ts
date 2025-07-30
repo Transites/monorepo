@@ -90,30 +90,19 @@ router.post('/:token/auto-save',
     errorHandler.asyncHandler(submissionController.autoSave)
 );
 
-// POST /api/submissions/:token/attachments
-// Adicionar anexo
-// Public (requer token válido + email autor)
-router.post('/:token/attachments',
-    submissionValidators.validateTokenParam,
-    submissionValidators.validateAttachment,
-    tokenMiddleware.validateSubmissionToken,
-    tokenMiddleware.validateAuthorEmail,
-    tokenMiddleware.checkEditableStatus,
-    tokenMiddleware.logSubmissionAction('add_attachment'),
-    errorHandler.asyncHandler(submissionController.addAttachment)
+// POST /api/submissions/edit
+// Verificar artigos em progresso por email
+// Public
+router.post('/edit',
+    submissionValidators.validateEmailParam,
+    errorHandler.asyncHandler(submissionController.checkInProgressArticles)
 );
 
-// DELETE /api/submissions/:token/attachments/:attachmentId
-// Remover anexo
-// Public (requer token válido + email autor)
-router.delete('/:token/attachments/:attachmentId',
-    submissionValidators.validateTokenParam,
-    submissionValidators.validateAttachmentParam,
-    tokenMiddleware.validateSubmissionToken,
-    tokenMiddleware.validateAuthorEmail,
-    tokenMiddleware.checkEditableStatus,
-    tokenMiddleware.logSubmissionAction('remove_attachment'),
-    errorHandler.asyncHandler(submissionController.removeAttachment)
+// GET /api/submissions
+// Listar todas as submissões com suporte a busca e paginação
+// Public
+router.get('/',
+    errorHandler.asyncHandler(submissionController.listSubmissions)
 );
 
 module.exports = router;

@@ -46,6 +46,11 @@ export interface AuthorSubmissionsResult {
     pagination: PaginationInfo;
 }
 
+export interface ListSubmissionsResult {
+    submissions: SubmissionSummary[];
+    pagination: PaginationInfo;
+}
+
 interface SubmissionData {
     author_name: string;
     author_email: string;
@@ -491,6 +496,7 @@ class SubmissionService {
         }
     }
 
+    // TODO: mover função para dentro do serviço de upload.
     /**
      * Adicionar anexo à submissão
      */
@@ -551,6 +557,7 @@ class SubmissionService {
         }
     }
 
+    // TODO: mover função para dentro do serviço de upload.
     /**
      * Remover anexo da submissão
      */
@@ -764,6 +771,56 @@ class SubmissionService {
     }
 
     /**
+     * Buscar submissões em progresso por autor (para verificação de artigos em progresso)
+     */
+    async getInProgressSubmissionsByAuthor(authorEmail: string): Promise<AuthorSubmissionsResult> {
+        try {
+            // Buscar apenas submissões em status editável (DRAFT ou CHANGES_REQUESTED)
+            const editableStatuses = [
+                constants.SUBMISSION_STATUS.DRAFT,
+                constants.SUBMISSION_STATUS.CHANGES_REQUESTED
+            ];
+
+            const result = await db.query(`
+                SELECT id,
+                       token,
+                       title,
+                       status,
+                       category,
+                       created_at,
+                       updated_at,
+                       expires_at,
+                       (SELECT COUNT(*) FROM feedback WHERE submission_id = s.id) as feedback_count
+                FROM submissions s
+                WHERE author_email = $1
+                AND status = ANY($2)
+                ORDER BY updated_at DESC
+            `, [authorEmail, editableStatuses]);
+
+            const submissions = result.rows as SubmissionSummary[];
+
+            return {
+                submissions,
+                pagination: {
+                    page: 1,
+                    limit: submissions.length,
+                    total: submissions.length,
+                    totalPages: 1,
+                    hasNext: false,
+                    hasPrev: false
+                }
+            };
+
+        } catch (error: any) {
+            logger.error('Error getting in-progress submissions by author', {
+                authorEmail,
+                error: error?.message
+            });
+            throw error;
+        }
+    }
+
+    /**
      * Criar snapshot de versão
      */
     async createVersionSnapshot(submissionId: string, versionData: VersionData, client: any = null): Promise<any> {
@@ -943,6 +1000,87 @@ class SubmissionService {
     isValidEmail(email: string): boolean {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRegex.test(email);
+    }
+
+    /**
+     * Listar todas as submissões com suporte a busca e paginação
+     * @param searchTerm Termo de busca opcional
+     * @param pagination Parâmetros de paginação (top e skip)
+     * @returns Lista de submissões e informações de paginação
+     */
+    async listSubmissions(searchTerm?: string, pagination = {
+        top: 10,
+        skip: 0
+    }): Promise<ListSubmissionsResult> {
+        try {
+            let query = `
+                SELECT id,
+                       title,
+                       status,
+                       category,
+                       author_name,
+                       author_email,
+                       created_at,
+                       updated_at,
+                       expires_at,
+                       (SELECT COUNT(*) FROM feedback WHERE submission_id = s.id) as feedback_count
+                FROM submissions s
+                WHERE 1=1
+            `;
+
+            const queryParams: any[] = [];
+            let paramCount = 1;
+
+            // Adicionar filtro de busca se fornecido
+            if (searchTerm && searchTerm.trim()) {
+                query += `
+                    AND (
+                        to_tsvector('portuguese', title || ' ' || COALESCE(summary, '') || ' ' || COALESCE(content, '')) @@ plainto_tsquery('portuguese', $${paramCount})
+                        OR to_tsvector('portuguese', author_name || ' ' || author_email) @@ plainto_tsquery('portuguese', $${paramCount})
+                    )
+                `;
+                queryParams.push(searchTerm.trim());
+                paramCount++;
+            }
+
+            // Contar total de registros para paginação
+            const countQuery = `SELECT COUNT(*) FROM (${query}) as count_query`;
+            const countResult = await db.query(countQuery, queryParams);
+            const total = parseInt(countResult.rows[0].count);
+
+            // Adicionar ordenação e paginação
+            query += `
+                ORDER BY updated_at DESC
+                LIMIT $${paramCount} OFFSET $${paramCount + 1}
+            `;
+            queryParams.push(pagination.top, pagination.skip);
+
+            const result = await db.query(query, queryParams);
+
+            const totalPages = Math.ceil(total / pagination.top);
+            const currentPage = Math.floor(pagination.skip / pagination.top) + 1;
+
+            const submissions = result.rows as SubmissionSummary[];
+
+            return {
+                submissions,
+                pagination: {
+                    page: currentPage,
+                    limit: pagination.top,
+                    total,
+                    totalPages,
+                    hasNext: pagination.skip + pagination.top < total,
+                    hasPrev: pagination.skip > 0
+                }
+            };
+        } catch (error: any) {
+            logger.error('Error listing submissions', {
+                searchTerm,
+                pagination,
+                error: error?.message
+            });
+            throw new DatabaseException('Erro ao listar submissões', error);
+        }
     }
 }
 
