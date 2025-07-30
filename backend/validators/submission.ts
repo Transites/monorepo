@@ -111,31 +111,6 @@ class SubmissionValidators {
             .withMessage('Metadados devem ser um objeto válido')
     ];
 
-    // Validação de anexo
-    validateAttachment: ValidationChain[] = [
-        body('filename')
-            .trim()
-            .isLength({ min: 1, max: 255 })
-            .withMessage('Nome do arquivo deve ter entre 1 e 255 caracteres'),
-
-        body('url')
-            .isURL()
-            .withMessage('URL do arquivo deve ser válida'),
-
-        body('file_type')
-            .isIn(constants.ALLOWED_FILE_TYPES)
-            .withMessage(`Tipo de arquivo deve ser um dos: ${constants.ALLOWED_FILE_TYPES.join(', ')}`),
-
-        body('size')
-            .isInt({ min: 1, max: constants.LIMITS.FILE_SIZE_MAX })
-            .withMessage(`Tamanho do arquivo deve ser entre 1 byte e ${constants.LIMITS.FILE_SIZE_MAX} bytes`),
-
-        body('metadata')
-            .optional()
-            .isObject()
-            .withMessage('Metadados devem ser um objeto válido')
-    ];
-
     // Validação de submissão para revisão
     validateSubmitForReview: ValidationChain[] = [
         // Middleware vai validar se submissão está completa
@@ -168,13 +143,6 @@ class SubmissionValidators {
             .withMessage('Token deve conter apenas caracteres hexadecimais')
     ];
 
-    // Validação de parâmetro de anexo
-    validateAttachmentParam: ValidationChain[] = [
-        param('attachmentId')
-            .isUUID()
-            .withMessage('ID do anexo deve ser um UUID válido')
-    ];
-
     // Validação de auto-save (mais permissiva)
     validateAutoSave: ValidationChain[] = [
         body('title')
@@ -205,8 +173,6 @@ class SubmissionValidators {
         body('summary').trim(),
         body('content').trim(),
         body('category').trim(),
-        body('filename').trim(),
-        query('email').trim().toLowerCase()
     ];
 
     // Validação de email do autor (para middleware)
@@ -215,6 +181,16 @@ class SubmissionValidators {
             .isEmail()
             .withMessage('Email deve ter formato válido')
             .normalizeEmail()
+    ];
+
+    // Validação de email para verificação de artigos em progresso
+    validateEmailParam: ValidationChain[] = [
+        body('email')
+            .isEmail()
+            .withMessage('Email deve ter formato válido')
+            .normalizeEmail()
+            .isLength({ max: 255 })
+            .withMessage('Email muito longo')
     ];
 
     // Validação customizada para completude
