@@ -21,9 +21,6 @@ class CommunicationService {
             dailySummaryTime: '08:00',    // Hora do resumo diário
             cleanupTime: '02:00'          // Hora da limpeza automática
         };
-
-        // Inicializar tarefas automáticas
-        this.initializeCronJobs();
     }
 
     /**
