@@ -74,7 +74,7 @@ export default {
     results: [],
     isLoading: false,
     error: null,
-    apiUrl: `${api.getUri()}/person-articles`
+    apiUrl: `${api.getUri()}/submissions`
   },
   mutations: {
     SET_SEARCH_QUERY(state, query) {
@@ -110,24 +110,23 @@ export default {
         // First try with exact normalized query
         const response = await axios.get(state.apiUrl, {
           params: {
-            filters: {
-              title: {
-                $contains: normalizedQuery
-              }
-            },
-            populate: ['tags', 'categories']
+            search: normalizedQuery,
+            top: 20,
+            skip: 0
           }
         });
 
-        let results = response.data.data.map(item => ({
+        let results = response.data.submissions.map(item => ({
           id: item.id,
-          type: 'person-articles',
-          title: item.attributes.title || 'Título indisponível',
-          subtitle: item.attributes.subtitle || 'Subtítulo indisponível',
-          text: item.attributes.summary || 'Resumo indisponível',
-          tags: item.attributes.tags?.data.map(tag => ({
-            name: tag.attributes.name
-          })) || []
+          type: 'submission',
+          title: item.title || 'Título indisponível',
+          subtitle: item.category || 'Categoria indisponível',
+          text: item.summary || 'Resumo indisponível',
+          tags: item.keywords?.map(keyword => ({
+            name: keyword
+          })) || [],
+          status: item.status,
+          author: item.author_name
         }));
 
         // If no results found, try a broader search
@@ -135,22 +134,22 @@ export default {
           // Get all articles (with a reasonable limit) to perform similarity search
           const allResponse = await axios.get(state.apiUrl, {
             params: {
-              pagination: {
-                limit: 100 // Limit to prevent performance issues
-              },
-              populate: ['tags', 'categories']
+              top: 100, // Limit to prevent performance issues
+              skip: 0
             }
           });
 
-          const allArticles = allResponse.data.data.map(item => ({
+          const allArticles = allResponse.data.submissions.map(item => ({
             id: item.id,
-            type: 'person-articles',
-            title: item.attributes.title || 'Título indisponível',
-            subtitle: item.attributes.subtitle || 'Subtítulo indisponível',
-            text: item.attributes.summary || 'Resumo indisponível',
-            tags: item.attributes.tags?.data.map(tag => ({
-              name: tag.attributes.name
-            })) || []
+            type: 'submission',
+            title: item.title || 'Título indisponível',
+            subtitle: item.category || 'Categoria indisponível',
+            text: item.summary || 'Resumo indisponível',
+            tags: item.keywords?.map(keyword => ({
+              name: keyword
+            })) || [],
+            status: item.status,
+            author: item.author_name
           }));
 
           // Filter by similarity
