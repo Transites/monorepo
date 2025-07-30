@@ -296,6 +296,8 @@ class AdminReviewService {
     /**
      * Publicar submissão como artigo
      */
+    // TODO: atualizar esse metodo para nao mexer com tabela articles e manusear a tabela submissions diretamente, apenas atualizando o status da linha.
+    // TODO: deletar a tabela articles.
     public async publishSubmission(
         submissionId: string,
         adminId: string,
