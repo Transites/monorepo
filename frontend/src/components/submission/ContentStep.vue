@@ -68,6 +68,7 @@
             class="text-white mt-2"
             prepend-icon="mdi-plus"
             @click="addSection"
+            :disabled='true'
           >
             Adicionar Seção
           </v-btn>
