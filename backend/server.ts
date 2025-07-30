@@ -1,10 +1,16 @@
-require('dotenv').config();
+import dotenv from 'dotenv';
+import { Express } from 'express';
+import config from './config/services';
+import logger from './middleware/logging';
+import app from './app';
 
-const config = require('./config/services');
-const logger = require('./middleware/logging');
-const app = require('./app');
+dotenv.config();
 
 class Server {
+    private app: Express;
+    private port: number;
+    private server: any;
+
     constructor() {
         this.app = app;
         this.port = config.core.port || 3000;
@@ -20,7 +26,7 @@ class Server {
             }
 
             // Iniciar jobs automáticos
-            if (process.env.NODE_ENV !== 'test') {
+            if (process.env.NODE_ENV !== 'development') {
                 const tokenCleanupJob = require('./jobs/tokenCleanup');
                 const emailNotificationJob = require('./jobs/emailNotifications');
 
@@ -50,7 +56,7 @@ class Server {
         }
     }
 
-    async shutdown(signal) {
+    async shutdown(signal: string) {
         logger.info(`Received ${signal}, shutting down gracefully`);
 
         this.server.close(async () => {
@@ -76,7 +82,6 @@ class Server {
     }
 }
 
-// Start server if this file is run directly
 if (require.main === module) {
     const server = new Server();
     server.start();
