@@ -1,4 +1,6 @@
 import personArticleService from '@/services/personArticleService'
+// TODO: renomear servico para submissionService
+// TODO: renomear esse arquivo para submissionManager.js
 
 const state = {
   draft: null,
@@ -47,6 +49,7 @@ const actions = {
     commit('SET_SUBMISSION_ERROR', null)
 
     try {
+      console.log('before saveDraft');
       await personArticleService.saveDraft(formData)
       commit('SET_DRAFT', formData)
       return Promise.resolve()
@@ -98,14 +101,13 @@ const actions = {
     try {
       console.log('=== VUEX SUBMIT ACTION ===')
 
-      // Call the service (which makes the request)
       const result = await personArticleService.submitArticle(formData)
+      await uploadMainImage(formData.image)
 
       // Update state
       commit('SET_SUBMISSION_STATUS', 'success')
       commit('SET_LAST_SUBMISSION', result)
 
-      // Clear draft after success
       // TODO: Uncomment when not testing the request.
       // await dispatch('clearArticleDraft')
 
