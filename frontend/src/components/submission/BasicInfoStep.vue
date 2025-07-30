@@ -7,8 +7,52 @@
     </p>
 
     <v-form ref="form" @submit.prevent>
+      <!-- Dados do autor -->
       <v-row>
         <v-col cols="12">
+          <h3 class="text-subtitle-1 mb-3">Dados do Autor</h3>
+        </v-col>
+        <v-col cols="12" md="6">
+          <v-text-field
+              v-model="localData.authorName"
+              label="Nome do Autor*"
+              :rules="[v => !!v || 'Nome do autor é obrigatório', v => v.length >= 2 || 'Nome deve ter pelo menos 2 caracteres']"
+              hint="Insira o nome completo do autor"
+              persistent-hint
+              @update:model-value="updateData"
+          ></v-text-field>
+        </v-col>
+        <v-col cols="12" md="6">
+          <v-text-field
+              v-model="localData.authorEmail"
+              label="Email do Autor*"
+              :rules="[
+                v => !!v || 'Email do autor é obrigatório',
+                v => /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(v) || 'Email inválido'
+              ]"
+              hint="Insira um email válido"
+              persistent-hint
+              @update:model-value="updateData"
+          ></v-text-field>
+        </v-col>
+        <v-col cols="12">
+          <v-text-field
+              v-model="localData.authorInstitution"
+              label="Instituição do Autor"
+              hint="Insira a instituição à qual o autor está vinculado (opcional)"
+              persistent-hint
+              @update:model-value="updateData"
+          ></v-text-field>
+        </v-col>
+      </v-row>
+
+      <!-- Informações do verbete -->
+      <v-row>
+        <v-col cols="12">
+          <h3 class="text-subtitle-1 mb-3">Informações do Verbete</h3>
+        </v-col>
+        <v-col cols="12">
+<!--          TODO: adicionar limite minimo de 5 caracteres no titulo -->
           <v-text-field
               v-model="localData.title"
               label="Título do Verbete*"
@@ -258,7 +302,7 @@
               chips
               closable-chips
               :rules="[v => v.length > 0 || 'Adicione pelo menos uma tag']"
-              hint="Digite tags e pressione Enter para adicionar. Mínimo de 3 tags."
+              hint="Digite tags e pressione Enter para adicionar."
               persistent-hint
               :loading="isLoading.tags"
               :disabled="isLoading.tags"
@@ -273,7 +317,6 @@
 </template>
 
 <script>
-import personArticleService from '@/services/personArticleService'
 
 export default {
   name: 'BasicInfoStep',
@@ -288,6 +331,12 @@ export default {
     return {
       SUMMARY_MAX_LENGTH: 600,
       localData: {
+        // Dados do autor
+        authorName: '',
+        authorEmail: '',
+        authorInstitution: '',
+
+        // Informações do verbete
         title: '',
         type: '',
         summary: '',
@@ -365,10 +414,10 @@ export default {
     // Initialize local data with form data
     this.initializeLocalData()
 
-    // Fetch data from backend
-    this.fetchVerbeteTypes()
-    this.fetchCategories()
-    this.fetchTags()
+    // Use local pre-configured lists instead of fetching from backend
+    this.useLocalVerbeteTypes()
+    this.useLocalCategories()
+    this.useLocalTags()
   },
   watch: {
     formData: {
@@ -379,63 +428,30 @@ export default {
     }
   },
   methods: {
-    // Fetch verbete types from backend
-    async fetchVerbeteTypes() {
-      this.isLoading.verbeteTypes = true
-      this.loadingError.verbeteTypes = null
-
-      try {
-        this.verbeteTypes = await personArticleService.getVerbeteTypes()
-        console.log('Verbete types loaded:', this.verbeteTypes)
-      } catch (error) {
-        console.error('Error fetching verbete types:', error)
-        this.loadingError.verbeteTypes = 'Erro ao carregar tipos de verbete'
-        // Use fallback values
-        this.verbeteTypes = [...this.fallbackVerbeteTypes]
-      } finally {
-        this.isLoading.verbeteTypes = false
-      }
+    // Use local pre-configured verbete types
+    useLocalVerbeteTypes() {
+      this.verbeteTypes = [...this.fallbackVerbeteTypes]
     },
 
-    // Fetch categories from backend
-    async fetchCategories() {
-      this.isLoading.categories = true
-      this.loadingError.categories = null
-
-      try {
-        this.availableCategories = await personArticleService.getCategories()
-        console.log('Categories loaded:', this.availableCategories)
-      } catch (error) {
-        console.error('Error fetching categories:', error)
-        this.loadingError.categories = 'Erro ao carregar categorias'
-        // Use fallback values
-        this.availableCategories = [...this.fallbackCategories]
-      } finally {
-        this.isLoading.categories = false
-      }
+    // Use local pre-configured categories
+    useLocalCategories() {
+      this.availableCategories = [...this.fallbackCategories]
     },
 
-    // Fetch tags from backend
-    async fetchTags() {
-      this.isLoading.tags = true
-      this.loadingError.tags = null
-
-      try {
-        this.availableTags = await personArticleService.getTags()
-        console.log('Tags loaded:', this.availableTags)
-      } catch (error) {
-        console.error('Error fetching tags:', error)
-        this.loadingError.tags = 'Erro ao carregar tags'
-        // Use fallback values
-        this.availableTags = [...this.fallbackTags]
-      } finally {
-        this.isLoading.tags = false
-      }
+    // Use local pre-configured tags
+    useLocalTags() {
+      this.availableTags = [...this.fallbackTags]
     },
 
     initializeLocalData() {
       // Copy form data to local data, ensuring all required properties exist
       this.localData = {
+        // Dados do autor
+        authorName: this.formData.authorName || '',
+        authorEmail: this.formData.authorEmail || '',
+        authorInstitution: this.formData.authorInstitution || '',
+
+        // Informações do verbete
         title: this.formData.title || '',
         type: this.formData.type || '',
         summary: this.formData.summary || '',
@@ -482,11 +498,21 @@ export default {
       if (!isValid.valid) {
         const errors = []
 
+        // Validate author information
+        if (!this.localData.authorName) errors.push('Nome do autor é obrigatório')
+        else if (this.localData.authorName.length < 2) errors.push('Nome do autor deve ter pelo menos 2 caracteres')
+
+        if (!this.localData.authorEmail) errors.push('Email do autor é obrigatório')
+        else if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(this.localData.authorEmail)) {
+          errors.push('Email do autor inválido')
+        }
+
+        // Validate verbete information
         if (!this.localData.title) errors.push('Título é obrigatório')
         if (!this.localData.type) errors.push('Tipo de verbete é obrigatório')
         if (!this.localData.summary) errors.push('Resumo é obrigatório')
-        if (this.localData.summary && this.localData.summary.length > 300) {
-          errors.push('O resumo deve ter no máximo 300 caracteres')
+        if (this.localData.summary && this.localData.summary.length > this.SUMMARY_MAX_LENGTH) {
+          errors.push(`O resumo deve ter no máximo ${this.SUMMARY_MAX_LENGTH} caracteres`)
         }
 
         // Validate type-specific fields
