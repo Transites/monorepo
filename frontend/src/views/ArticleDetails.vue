@@ -88,13 +88,90 @@
       const { id } = route.params;
   
       try {
-        // TODO: refactor to use env variable
-        const response = await axios.get(`http://localhost:1337/api/person-articles/${id}?populate=*`);
-        this.article = response.data.data;
-        this.authors = this.article.attributes.authors.data.map(author => author.attributes.name);
-        this.categories = this.article.attributes.categories.data.map(category => category.attributes.name);
-        this.tags = this.article.attributes.tags.data.map(tag => tag.attributes.name);
-        this.articleImage = this.article.attributes.image?.data?.attributes?.url || '';
+        // Use API base URL from environment variable
+        const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+        const response = await axios.get(`${baseUrl}/api/submissions/${id}`);
+        
+        // Transform the submission data to match the expected structure
+        const submission = response.data.submission;
+        const metadata = submission.metadata || {};
+        
+        // Create a structured article object from the submission data
+        this.article = {
+          id: submission.id,
+          attributes: {
+            title: submission.title,
+            summary: submission.summary,
+            content: submission.content,
+            publishedAt: submission.published_at || submission.created_at,
+            updatedAt: submission.updated_at,
+            
+            // Extract metadata fields
+            alternativeTitles: metadata.alternativeTitles,
+            birth: metadata.birth,
+            death: metadata.death,
+            
+            // Create sections from content if not available in metadata
+            sections: metadata.sections || [
+              {
+                __component: 'sections.text',
+                id: 1,
+                title: 'Conteúdo',
+                content: submission.content
+              }
+            ],
+            
+            // Create image structure if available in metadata
+            image: metadata.imageUrl ? {
+              data: {
+                attributes: {
+                  url: metadata.imageUrl,
+                  caption: metadata.imageCaption || ''
+                }
+              }
+            } : { data: null },
+            
+            // Create authors structure
+            authors: {
+              data: [
+                {
+                  id: 1,
+                  attributes: {
+                    name: submission.author_name,
+                    institution: submission.author_institution
+                  }
+                }
+              ]
+            },
+            
+            // Create categories and tags structures
+            categories: {
+              data: submission.category ? [
+                {
+                  id: 1,
+                  attributes: {
+                    name: submission.category
+                  }
+                }
+              ] : []
+            },
+            
+            tags: {
+              data: (submission.keywords || []).map((keyword, index) => ({
+                id: index + 1,
+                attributes: {
+                  name: keyword
+                }
+              }))
+            }
+          }
+        };
+        
+        // Extract data for component use
+        this.authors = [submission.author_name];
+        this.categories = submission.category ? [submission.category] : [];
+        this.tags = submission.keywords || [];
+        this.articleImage = metadata.imageUrl || '';
       } catch (error) {
         this.error = true;
       }

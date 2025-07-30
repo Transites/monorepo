@@ -38,8 +38,37 @@
     async created() {
       const { id } = this.$route.params;
       try {
-        const response = await api.get(`/person-articles/${id}`);
-        this.article = response.data.data.attributes;
+        const response = await api.get(`/submissions/${id}`);
+        const submission = response.data.submission;
+        const metadata = submission.metadata || {};
+        
+        // Transform the submission data to match the expected structure
+        this.article = {
+          title: submission.title,
+          summary: submission.summary,
+          content: submission.content,
+          
+          // Extract image from metadata if available
+          image: metadata.imageUrl ? {
+            url: metadata.imageUrl,
+            caption: metadata.imageCaption || ''
+          } : null,
+          
+          // Create sections from content if not available in metadata
+          sections: metadata.sections || [
+            {
+              id: 1,
+              __component: 'section.free-text-section',
+              content: submission.content
+            }
+          ],
+          
+          // Map keywords to tags
+          tags: (submission.keywords || []).map((keyword, index) => ({
+            id: index + 1,
+            name: keyword
+          }))
+        };
       } catch (error) {
         console.error('Error fetching article:', error);
       }

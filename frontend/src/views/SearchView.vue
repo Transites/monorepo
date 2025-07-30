@@ -105,19 +105,26 @@
         }
       },
       applySearch() {
-        const base_url = import.meta.env.VITE_STRAPI_BASE_URL
+        const base_url = import.meta.env.VITE_API_BASE_URL || ''
         axios
-          .get(`${base_url}/api/person-articles?populate=tags`)
+          .get(`${base_url}/api/submissions`, {
+            params: {
+              search: this.Search.PrimaryValue.join(' ') || undefined,
+              top: 50,
+              skip: 0
+            }
+          })
           .then((response) => {
-            this.raw_response = response.data.data
+            this.raw_response = response.data.submissions
             this.searchResult = this.raw_response.map((entry) => {
               return {
                 id: entry.id,
-                title: entry.attributes.title,
-                text: entry.attributes.summary,
-                tags: entry.attributes.tags.data.map((tag) => {
+                title: entry.title,
+                subtitle: entry.category || '',
+                text: entry.summary,
+                tags: (entry.keywords || []).map((keyword) => {
                   return {
-                    name: tag.attributes.name
+                    name: keyword
                   }
                 })
               }

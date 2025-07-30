@@ -171,9 +171,67 @@ export default {
 
     const { id } = this.$route.params;
     try {
-      const response = await api.get(`/person-articles/${id}?populate=authors,Image`);
-      this.loadedArticle = response.data.data;
+      const response = await api.get(`/submissions/${id}`);
+      
+      // Transform the submission data to match the expected structure
+      const submission = response.data.submission;
+      const metadata = submission.metadata || {};
+      
+      this.loadedArticle = {
+        id: submission.id,
+        attributes: {
+          title: submission.title,
+          summary: submission.summary,
+          content: submission.content,
+          updatedAt: submission.updated_at,
+          
+          // Map metadata fields to expected structure
+          Artigo: submission.content,
+          Bibliografia: metadata.bibliography,
+          Obras: metadata.works,
+          
+          // Handle authors
+          authors: {
+            data: [
+              {
+                id: 1,
+                attributes: {
+                  name: submission.author_name,
+                  institution: submission.author_institution
+                }
+              }
+            ]
+          },
+          
+          // Handle images if available in metadata
+          Image: metadata.images ? {
+            data: metadata.images.map((img, index) => ({
+              id: index,
+              attributes: {
+                url: img.url,
+                alternativeText: img.alt || '',
+                caption: img.caption || '',
+                formats: {
+                  small: { url: img.url }
+                }
+              }
+            }))
+          } : null,
+          
+          // Map other metadata fields
+          birth: metadata.birth,
+          death: metadata.death,
+          Franca: metadata.france || [],
+          Brasil: metadata.brazil || [],
+          Abertura: metadata.opening || [],
+          Fechamento: metadata.closing || [],
+          inicio: metadata.start || {},
+          fim: metadata.end || {},
+          Eventos: metadata.events || []
+        }
+      };
     } catch (error) {
+      console.error('Error loading article:', error);
       this.error = 'Não foi possível carregar o verbete.';
     } finally {
       this.loading = false;
