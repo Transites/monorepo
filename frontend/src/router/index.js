@@ -6,6 +6,9 @@ import NormasDePublicacao from '@/components/NormasdePublicacao.vue';
 import SearchResults from '../views/SearchResults.vue';
 import Contribute from '@/components/Contribute.vue';
 import SubmissionPage from '../views/SubmissionPage.vue';
+import SubmissionEditPage from '../views/SubmissionEditPage.vue';
+import SubmissionErrorPage from '../views/SubmissionErrorPage.vue';
+import SubmissionForm from "@/components/submission/SubmissionForm.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -60,6 +63,31 @@ const router = createRouter({
       path: '/submit',
       name: 'SubmitArticle',
       component: SubmissionPage
+    },
+    {
+      path: '/submissao/nova',
+      name: 'SubmissionForm',
+      component: SubmissionForm,
+      meta: {
+        title: 'Nova Submissão - Trânsitos'
+      }
+    },
+    {
+      path: '/submissao/editar/:token',
+      name: 'SubmissionEdit',
+      component: SubmissionEditPage,
+      props: true,
+      meta: {
+        title: 'Editar Submissão - Trânsitos'
+      }
+    },
+    {
+      path: '/submission-error',
+      name: 'SubmissionError',
+      component: SubmissionErrorPage,
+      meta: {
+        title: 'Erro na Submissão - Trânsitos'
+      }
     },
     // Rota genérica para capturar qualquer caminho de 'article' que não foi definido
     {
