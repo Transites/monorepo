@@ -33,7 +33,7 @@ app.use(helmet({
 
 // CORS configuration
 const corsOptions = {
-    origin: process.env.NODE_ENV === 'test'
+    origin: process.env.NODE_ENV === 'development'
         ? '*' // Accept any origin in test environment
         : (config.core.corsOrigin || 'https://enciclopedia.iea.usp.br'),
     credentials: true,
@@ -45,18 +45,18 @@ app.use(cors(corsOptions));
 
 // General middleware
 app.use(compression());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({limit: '10mb'}));
+app.use(express.urlencoded({extended: true, limit: '10mb'}));
 
 // HTTP request logging - disabled in test environment
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== 'development') {
     app.use(morgan('combined', {
-        stream: { write: message => logger.info(message.trim()) }
+        stream: {write: message => logger.info(message.trim())}
     }));
 }
 
 // General rate limiting - disabled in test environment
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== 'development') {
     const generalLimiter = rateLimit({
         windowMs: config.core.rateLimitWindow || 15 * 60 * 1000, // 15 minutes
         max: config.core.rateLimitMax || 100,
