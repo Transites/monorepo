@@ -268,12 +268,13 @@ export default {
       )
 
       // Example: Check for very long paragraphs
-      const longParagraphFound = Array.from(this.editor.state.doc.content.content)
-        .some(node => node.type.name === 'paragraph' && node.textContent.length > 800)
+      // TODO: improve paragraph validation
+      // const longParagraphFound = Array.from(this.editor.state.doc.content.content)
+      //   .some(node => node.type.name === 'paragraph' && node.textContent.length > 800)
 
-      if (longParagraphFound) {
-        this.addValidationError(this.$t('submission.editor.longParagraphError'))
-      }
+      // if (longParagraphFound) {
+      //   this.addValidationError(this.$t('submission.editor.longParagraphError'))
+      // }
 
       // Check character count
       this.updateCharacterCount()
