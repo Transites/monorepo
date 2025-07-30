@@ -13,7 +13,7 @@ describe('Email Controller Integration', () => {
     const testPassword = 'Senha123!';
     let adminToken;
 
-    process.env.NODE_ENV = 'test';
+    process.env.NODE_ENV = 'development'
     // TODO: THIS DATABASE URL OVERRIDE IS NOT WORKING. FIX IT IMMEDIATELY !!!!
     process.env.DATABASE_URL = 'postgresql://test_user:test_password@localhost:5433/app_test';
 
