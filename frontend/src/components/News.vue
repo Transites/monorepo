@@ -90,19 +90,22 @@ export default {
     },
 
     async fetchDataFromStrapi() {
-      const base_url = import.meta.env.VITE_STRAPI_BASE_URL;
+      const base_url = import.meta.env.VITE_API_BASE_URL || '';
 
       try {
-        // Fazendo a requisição e ordenando pelo ID em ordem decrescente (mais recentes primeiro)
-        const response = await axios.get(`${base_url}/api/person-articles?pagination[limit]=8&populate=categories&sort=id:desc`);
+        // Fazendo a requisição para obter as submissões mais recentes
+        const response = await axios.get(`${base_url}/api/submissions`, {
+          params: {
+            top: 9,
+            skip: 0
+          }
+        });
 
-        // Filtrando manualmente os 9 artigos mais recentes
-        this.entries = response.data.data.slice(0, 9).map(entry => ({
-          title: entry.attributes.title,
+        // Mapeando os dados para o formato esperado pelo componente
+        this.entries = response.data.submissions.map(entry => ({
+          title: entry.title,
           id: entry.id,
-          category: entry.attributes.categories.data.length
-            ? entry.attributes.categories.data[0].attributes.name
-            : 'Uncategorized'
+          category: entry.category || 'Uncategorized'
         }));
 
       } catch (error) {
