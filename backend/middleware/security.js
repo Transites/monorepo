@@ -23,6 +23,10 @@ class SecurityMiddleware {
     }
 
     createSubmissionLimiter() {
+        if (process.env.NODE_ENV === 'development') {
+            // No rate limiting in development for easier testing
+            return (req, res, next) => next();
+        }
         return rateLimit({
             windowMs: 24 * 60 * 60 * 1000, // 24 hours
             max: 5, // máximo 5 submissões por IP por dia
