@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import submissionController from '../../controllers/submission';
 import submissionService from '../../services/submission';
+import emailService from '../../services/email';
 import responses from '../../utils/responses';
 import { validationResult } from 'express-validator';
 import untypedLogger from '../../middleware/logging';
@@ -10,6 +11,7 @@ const logger = untypedLogger as unknown as LoggerWithAudit;
 
 // Mock dependencies
 jest.mock('../../services/submission');
+jest.mock('../../services/email');
 jest.mock('../../utils/responses');
 jest.mock('../../middleware/logging');
 jest.mock('express-validator', () => ({
@@ -581,185 +583,6 @@ describe('SubmissionController', () => {
     });
   });
 
-  describe('addAttachment', () => {
-    const mockSubmissionId = 'mock-id';
-    const mockToken = 'mock-token';
-
-    const mockSubmission = {
-      id: mockSubmissionId,
-      token: mockToken,
-      title: 'Test Submission',
-      status: 'DRAFT'
-    };
-
-    const mockAttachmentData = {
-      filename: 'test-file.pdf',
-      filesize: 1024,
-      mimetype: 'application/pdf',
-      description: 'Test attachment',
-      url: 'https://example.com/files/test-file.pdf'
-    };
-
-    const mockCreatedAttachment = {
-      id: 'attachment-id',
-      ...mockAttachmentData,
-      submission_id: mockSubmissionId,
-      created_at: new Date()
-    };
-
-    beforeEach(() => {
-      mockRequest.params = { token: mockToken };
-      mockRequest.body = mockAttachmentData;
-      (mockRequest as any).submission = mockSubmission;
-
-      (submissionService.addAttachment as jest.Mock).mockResolvedValue(mockCreatedAttachment);
-    });
-
-    test('deve adicionar anexo com sucesso', async () => {
-      await submissionController.addAttachment(
-        mockRequest as any,
-        mockResponse as Response,
-        mockNext
-      );
-
-      expect(submissionService.addAttachment).toHaveBeenCalledWith(
-        mockSubmissionId,
-        mockAttachmentData
-      );
-      expect(responses.created).toHaveBeenCalledWith(
-        mockResponse,
-        {
-          attachment: mockCreatedAttachment,
-          message: 'Anexo adicionado com sucesso'
-        }
-      );
-    });
-
-    test('deve validar dados de entrada', async () => {
-      // Mock validation errors
-      (validationResult as unknown as jest.Mock).mockReturnValue({
-        isEmpty: jest.fn().mockReturnValue(false),
-        array: jest.fn().mockReturnValue([{ msg: 'Error message' }])
-      });
-
-      await submissionController.addAttachment(
-        mockRequest as any,
-        mockResponse as Response,
-        mockNext
-      );
-
-      expect(submissionService.addAttachment).not.toHaveBeenCalled();
-      expect(responses.badRequest).toHaveBeenCalled();
-    });
-
-    test('deve chamar next com erro em caso de falha', async () => {
-      const mockError = new Error('Test error');
-      (submissionService.addAttachment as jest.Mock).mockRejectedValue(mockError);
-
-      await submissionController.addAttachment(
-        mockRequest as any,
-        mockResponse as Response,
-        mockNext
-      );
-
-      expect(mockNext).toHaveBeenCalledWith(mockError);
-      expect(logger.error).toHaveBeenCalled();
-    });
-  });
-
-  describe('removeAttachment', () => {
-    const mockSubmissionId = 'mock-id';
-    const mockToken = 'mock-token';
-    const mockAttachmentId = 'attachment-id';
-
-    const mockSubmission = {
-      id: mockSubmissionId,
-      token: mockToken,
-      title: 'Test Submission',
-      status: 'DRAFT'
-    };
-
-    const mockRemovedAttachment = {
-      id: mockAttachmentId,
-      filename: 'test-file.pdf',
-      filesize: 1024,
-      mimetype: 'application/pdf',
-      description: 'Test attachment',
-      submission_id: mockSubmissionId,
-      created_at: new Date()
-    };
-
-    const mockRemoveResult = {
-      success: true,
-      removedAttachment: mockRemovedAttachment
-    };
-
-    beforeEach(() => {
-      mockRequest.params = { token: mockToken, attachmentId: mockAttachmentId };
-      (mockRequest as any).submission = mockSubmission;
-
-      (submissionService.removeAttachment as jest.Mock).mockResolvedValue(mockRemoveResult);
-    });
-
-    test('deve remover anexo com sucesso', async () => {
-      await submissionController.removeAttachment(
-        mockRequest as any,
-        mockResponse as Response,
-        mockNext
-      );
-
-      expect(submissionService.removeAttachment).toHaveBeenCalledWith(
-        mockSubmissionId,
-        mockAttachmentId
-      );
-      expect(responses.success).toHaveBeenCalledWith(
-        mockResponse,
-        {
-          removed: mockRemoveResult.success,
-          attachment: mockRemoveResult.removedAttachment
-        },
-        'Anexo removido com sucesso'
-      );
-    });
-
-    test('deve lidar com falha na remoção', async () => {
-      const failedRemoveResult = {
-        success: false,
-        removedAttachment: null
-      };
-      (submissionService.removeAttachment as jest.Mock).mockResolvedValue(failedRemoveResult);
-
-      await submissionController.removeAttachment(
-        mockRequest as any,
-        mockResponse as Response,
-        mockNext
-      );
-
-      expect(responses.success).toHaveBeenCalledWith(
-        mockResponse,
-        {
-          removed: false,
-          attachment: null
-        },
-        'Anexo removido com sucesso'
-      );
-    });
-
-    test('deve chamar next com erro em caso de falha', async () => {
-      const mockError = new Error('Test error');
-      (submissionService.removeAttachment as jest.Mock).mockRejectedValue(mockError);
-
-      await submissionController.removeAttachment(
-        mockRequest as any,
-        mockResponse as Response,
-        mockNext
-      );
-
-      expect(mockNext).toHaveBeenCalledWith(mockError);
-      expect(logger.error).toHaveBeenCalled();
-    });
-  });
-
   describe('getAuthorSubmissions', () => {
     const mockEmail = 'test@example.com';
     const mockPage = 1;
@@ -873,6 +696,145 @@ describe('SubmissionController', () => {
 
       expect(mockNext).toHaveBeenCalledWith(mockError);
       expect(logger.error).toHaveBeenCalled();
+    });
+  });
+  describe('checkInProgressArticles', () => {
+    const mockEmail = 'test@example.com';
+    const mockSubmissions = [
+      {
+        id: 'mock-id-1',
+        token: 'mock-token-1',
+        title: 'Test Submission 1',
+        status: 'DRAFT',
+        category: 'Category 1',
+        created_at: new Date(),
+        updated_at: new Date(),
+        expires_at: new Date(),
+        feedback_count: 0
+      },
+      {
+        id: 'mock-id-2',
+        token: 'mock-token-2',
+        title: 'Test Submission 2',
+        status: 'CHANGES_REQUESTED',
+        category: 'Category 2',
+        created_at: new Date(),
+        updated_at: new Date(),
+        expires_at: new Date(),
+        feedback_count: 1
+      }
+    ];
+
+    const mockResult = {
+      submissions: mockSubmissions,
+      pagination: {
+        page: 1,
+        limit: 2,
+        total: 2,
+        totalPages: 1,
+        hasNext: false,
+        hasPrev: false
+      }
+    };
+
+    beforeEach(() => {
+      mockRequest.body = { email: mockEmail };
+      (submissionService.getInProgressSubmissionsByAuthor as jest.Mock).mockResolvedValue(mockResult);
+      (emailService.sendSubmissionAccessLinks as jest.Mock).mockResolvedValue({ success: true });
+    });
+
+    test('deve retornar sucesso quando encontrar artigos em progresso', async () => {
+      await submissionController.checkInProgressArticles(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
+      expect(submissionService.getInProgressSubmissionsByAuthor).toHaveBeenCalledWith(mockEmail);
+      expect(responses.success).toHaveBeenCalledWith(
+        mockResponse,
+        {
+          count: 2,
+          message: `Um email com os acessos para os 2 artigos em progresso foi enviado para ${mockEmail}`
+        }
+      );
+      expect(logger.audit).toHaveBeenCalled();
+    });
+
+    test('deve retornar 404 quando não encontrar artigos em progresso', async () => {
+      (submissionService.getInProgressSubmissionsByAuthor as jest.Mock).mockResolvedValue({
+        submissions: [],
+        pagination: {
+          page: 1,
+          limit: 0,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false
+        }
+      });
+
+      await submissionController.checkInProgressArticles(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
+      expect(submissionService.getInProgressSubmissionsByAuthor).toHaveBeenCalledWith(mockEmail);
+      expect(responses.notFound).toHaveBeenCalled();
+      expect(emailService.sendSubmissionAccessLinks).not.toHaveBeenCalled();
+    });
+
+    test('deve aplicar validações de entrada', async () => {
+      // Mock validation errors
+      (validationResult as unknown as jest.Mock).mockReturnValue({
+        isEmpty: jest.fn().mockReturnValue(false),
+        array: jest.fn().mockReturnValue([{ msg: 'Email inválido' }])
+      });
+
+      await submissionController.checkInProgressArticles(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
+      expect(submissionService.getInProgressSubmissionsByAuthor).not.toHaveBeenCalled();
+      expect(responses.badRequest).toHaveBeenCalled();
+      expect(emailService.sendSubmissionAccessLinks).not.toHaveBeenCalled();
+    });
+
+    test('deve lidar com erros no envio de email', async () => {
+      // Setup to test the async email sending
+      jest.spyOn(global, 'setImmediate').mockImplementation((callback) => {
+        callback();
+        return { unref: jest.fn() } as any;
+      });
+
+      (emailService.sendSubmissionAccessLinks as jest.Mock).mockRejectedValue(new Error('Email error'));
+
+      await submissionController.checkInProgressArticles(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
+      expect(submissionService.getInProgressSubmissionsByAuthor).toHaveBeenCalledWith(mockEmail);
+      expect(responses.success).toHaveBeenCalled();
+      expect(logger.error).toHaveBeenCalledWith('Failed to send submission access links email', expect.any(Object));
+    });
+
+    test('deve chamar next com erro em caso de falha no serviço', async () => {
+      const mockError = new Error('Service error');
+      (submissionService.getInProgressSubmissionsByAuthor as jest.Mock).mockRejectedValue(mockError);
+
+      await submissionController.checkInProgressArticles(
+        mockRequest as Request,
+        mockResponse as Response,
+        mockNext
+      );
+
+      expect(mockNext).toHaveBeenCalledWith(mockError);
+      expect(emailService.sendSubmissionAccessLinks).not.toHaveBeenCalled();
     });
   });
 });
