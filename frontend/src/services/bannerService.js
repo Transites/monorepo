@@ -9,21 +9,20 @@ const bannerService = {
    */
   async getBannerData() {
     try {
-      // Fetch person-articles for the banner
-      const response = await api.get('/person-articles', {
+      // Fetch submissions for the banner
+      const response = await api.get('/submissions', {
         params: {
-          populate: ['Image']
+          top: 10,
+          skip: 0
         }
       })
 
       // Transform the data to match the format expected by the Banner component
-      const bannerItems = response.data.data.map(item => {
-        const attributes = item.attributes
-
-        // Get the image URL and ensure it has the full domain if it's a relative URL
+      const bannerItems = response.data.submissions.map(item => {
+        // Get the image URL from metadata if available
         let imageUrl = ''
-        if (attributes.Image && attributes.Image.data && attributes.Image.data.length > 0) {
-          const url = attributes.Image.data[0].attributes.url
+        if (item.metadata && item.metadata.imageUrl) {
+          const url = item.metadata.imageUrl
           // If the URL starts with a slash, it's a relative URL and we need to add the domain
           if (url.startsWith('/')) {
             const baseUrl = api.defaults.baseURL.replace('/api', '')
@@ -36,9 +35,9 @@ const bannerService = {
         return {
           id: item.id,
           src: imageUrl,
-          title: attributes.title,
-          subtitle: attributes.alternativeTitles || '',
-          text: attributes.summary || ''
+          title: item.title,
+          subtitle: item.category || '',
+          text: item.summary || ''
         }
       })
 
