@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import submissionService from '../services/submission';
+import emailService from '../services/email';
 import responses from '../utils/responses';
 import { validationResult } from 'express-validator';
 import { handleControllerError } from '../utils/errorHandler';
@@ -232,67 +233,6 @@ class SubmissionController {
     }
 
     /**
-     * POST /api/submissions/:token/attachments
-     * Adicionar anexo
-     */
-    async addAttachment(req: SubmissionRequest, res: Response, next: NextFunction): Promise<any> {
-        try {
-            const errors = validationResult(req);
-            if (!errors.isEmpty()) {
-                return responses.badRequest(res, 'Dados inválidos', errors.array());
-            }
-
-            const submission = req.submission;
-            const attachmentData = req.body;
-
-            const attachment = await submissionService.addAttachment(
-                submission.id,
-                attachmentData
-            );
-
-            return responses.created(res, {
-                attachment,
-                message: 'Anexo adicionado com sucesso'
-            });
-
-        } catch (error: any) {
-            return handleControllerError(error, res, next, {
-                submissionId: req.submission?.id,
-                filename: req.body.filename,
-                operation: 'addAttachment'
-            });
-        }
-    }
-
-    /**
-     * DELETE /api/submissions/:token/attachments/:attachmentId
-     * Remover anexo
-     */
-    async removeAttachment(req: SubmissionRequest, res: Response, next: NextFunction): Promise<any> {
-        try {
-            const submission = req.submission;
-            const { attachmentId } = req.params;
-
-            const result = await submissionService.removeAttachment(
-                submission.id,
-                attachmentId
-            );
-
-            return responses.success(res, {
-                removed: result.success,
-                attachment: result.removedAttachment
-            }, 'Anexo removido com sucesso');
-
-        } catch (error: any) {
-            return handleControllerError(error, res, next, {
-                submissionId: req.submission?.id,
-                attachmentId: req.params.attachmentId,
-                operation: 'removeAttachment'
-            });
-        }
-    }
-
-    /**
      * GET /api/author/submissions
      * Listar submissões do autor (requer email)
      */
@@ -358,6 +298,86 @@ class SubmissionController {
                 autoSaved: false,
                 error: 'Falha no salvamento automático',
                 message: 'Continue editando, tentaremos salvar novamente'
+            });
+        }
+    }
+
+    /**
+     * POST /api/submissions/edit
+     * Verificar artigos em progresso por email
+     */
+    async checkInProgressArticles(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                return responses.badRequest(res, 'Dados inválidos', errors.array());
+            }
+
+            const { email } = req.body;
+
+            // Buscar submissões em progresso do autor
+            const result = await submissionService.getInProgressSubmissionsByAuthor(email);
+
+            if (result.submissions.length === 0) {
+                return responses.notFound(res, 'Nenhum artigo em progresso encontrado para este email');
+            }
+
+            // Enviar email com links de acesso (async - não bloqueia)
+            setImmediate(async () => {
+                try {
+                    await emailService.sendSubmissionAccessLinks(
+                        email,
+                        result.submissions
+                    );
+                } catch (emailError: any) {
+                    logger.error('Failed to send submission access links email', {
+                        authorEmail: email,
+                        error: emailError?.message
+                    });
+                }
+            });
+
+            logger.audit('In-progress submissions checked', {
+                authorEmail: email,
+                submissionCount: result.submissions.length
+            });
+
+            return responses.success(res, {
+                count: result.submissions.length,
+                message: `Um email com os acessos para os ${result.submissions.length} artigos em progresso foi enviado para ${email}`
+            });
+
+        } catch (error: any) {
+            return handleControllerError(error, res, next, {
+                email: req.body.email,
+                operation: 'checkInProgressArticles'
+            });
+        }
+    }
+
+    /**
+     * GET /api/submissions
+     * Listar todas as submissões com suporte a busca e paginação
+     */
+    async listSubmissions(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+            // Extrair parâmetros de busca e paginação
+            const searchTerm = req.query.search as string | undefined;
+            const top = parseInt(req.query.top as string) || 10;
+            const skip = parseInt(req.query.skip as string) || 0;
+
+            // Buscar submissões
+            const result = await submissionService.listSubmissions(searchTerm, { top, skip });
+
+            return responses.success(res, {
+                submissions: result.submissions,
+                pagination: result.pagination
+            }, 'Submissões listadas com sucesso');
+
+        } catch (error: any) {
+            return handleControllerError(error, res, next, {
+                searchTerm: req.query.search,
+                operation: 'listSubmissions'
             });
         }
     }
