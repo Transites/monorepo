@@ -1,11 +1,11 @@
-import { Request, Response, NextFunction } from 'express';
+import {Request, Response, NextFunction} from 'express';
 import submissionService from '../services/submission';
 import emailService from '../services/email';
 import responses from '../utils/responses';
-import { validationResult } from 'express-validator';
-import { handleControllerError } from '../utils/errorHandler';
+import {validationResult} from 'express-validator';
+import {handleControllerError} from '../utils/errorHandler';
 import untypedLogger from '../middleware/logging';
-import { LoggerWithAudit } from "../types/migration";
+import {LoggerWithAudit} from "../types/migration";
 
 const logger = untypedLogger as unknown as LoggerWithAudit;
 
@@ -69,7 +69,7 @@ class SubmissionController {
      */
     async getSubmissionByToken(req: Request, res: Response, next: NextFunction): Promise<any> {
         try {
-            const { token } = req.params;
+            const {token} = req.params;
             const includeVersions = req.query.include_versions === 'true';
 
             const result = await submissionService.getSubmissionByToken(token, includeVersions);
@@ -79,8 +79,8 @@ class SubmissionController {
                 tokenInfo: result.tokenInfo,
                 canEdit: ['DRAFT', 'CHANGES_REQUESTED'].includes(result.submission.status),
                 canSubmitForReview: result.submission.status === 'DRAFT' ||
-                                  (result.submission.status === 'CHANGES_REQUESTED' &&
-                                   result.submission.feedback?.length > 0)
+                    (result.submission.status === 'CHANGES_REQUESTED' &&
+                        result.submission.feedback?.length > 0)
             };
 
             return responses.success(res, response, 'Submissão encontrada');
@@ -243,13 +243,13 @@ class SubmissionController {
                 return responses.badRequest(res, 'Dados inválidos', errors.array());
             }
 
-            const { email } = req.query;
+            const {email} = req.query;
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
 
             const result = await submissionService.getSubmissionsByAuthor(
                 email as string,
-                { page, limit }
+                {page, limit}
             );
 
             return responses.success(res, {
@@ -313,7 +313,7 @@ class SubmissionController {
                 return responses.badRequest(res, 'Dados inválidos', errors.array());
             }
 
-            const { email } = req.body;
+            const {email} = req.body;
 
             // Buscar submissões em progresso do autor
             const result = await submissionService.getInProgressSubmissionsByAuthor(email);
@@ -368,7 +368,7 @@ class SubmissionController {
             const skip = parseInt(req.query.skip as string) || 0;
 
             // Buscar submissões
-            const result = await submissionService.listSubmissions(searchTerm, requestedSubmissionState, { top, skip });
+            const result = await submissionService.listSubmissions(searchTerm, requestedSubmissionState, {top, skip});
 
             return responses.success(res, {
                 submissions: result.submissions,
