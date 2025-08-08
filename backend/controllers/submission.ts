@@ -362,12 +362,13 @@ class SubmissionController {
     async listSubmissions(req: Request, res: Response, next: NextFunction): Promise<any> {
         try {
             // Extrair parâmetros de busca e paginação
+            const requestedSubmissionState = validateListSubmissionsState(req.query.requestedState as string | undefined);
             const searchTerm = req.query.search as string | undefined;
             const top = parseInt(req.query.top as string) || 10;
             const skip = parseInt(req.query.skip as string) || 0;
 
             // Buscar submissões
-            const result = await submissionService.listSubmissions(searchTerm, { top, skip });
+            const result = await submissionService.listSubmissions(searchTerm, requestedSubmissionState, { top, skip });
 
             return responses.success(res, {
                 submissions: result.submissions,
@@ -381,6 +382,13 @@ class SubmissionController {
             });
         }
     }
+}
+
+function validateListSubmissionsState(submissionState: string | undefined): string | undefined {
+    if (submissionState != undefined && (submissionState === 'DRAFT' || submissionState === 'READY' || submissionState === 'BOTH')) {
+        return submissionState;
+    }
+    return undefined;
 }
 
 export default new SubmissionController();

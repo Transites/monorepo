@@ -3,7 +3,7 @@ import db from '../database/client';
 import tokenService from './tokens';
 import emailService from './email';
 import constants from '../utils/constants';
-import { generateSlug } from '../utils/url';
+import {generateSlug} from '../utils/url';
 import {
     ValidationException,
     SubmissionNotFoundException,
@@ -17,7 +17,7 @@ import {
 } from '../utils/exceptions';
 
 import untypedLogger from '../middleware/logging';
-import { LoggerWithAudit } from "../types/migration";
+import {LoggerWithAudit} from "../types/migration";
 
 const logger = untypedLogger as unknown as LoggerWithAudit;
 
@@ -585,7 +585,7 @@ class SubmissionService {
                 filename: attachment.rows[0].filename
             });
 
-            return { success: true, removedAttachment: attachment.rows[0] };
+            return {success: true, removedAttachment: attachment.rows[0]};
 
         } catch (error: any) {
             logger.error('Error removing attachment', {
@@ -793,7 +793,7 @@ class SubmissionService {
                        (SELECT COUNT(*) FROM feedback WHERE submission_id = s.id) as feedback_count
                 FROM submissions s
                 WHERE author_email = $1
-                AND status = ANY($2)
+                  AND status = ANY ($2)
                 ORDER BY updated_at DESC
             `, [authorEmail, editableStatuses]);
 
@@ -916,17 +916,17 @@ class SubmissionService {
      */
     validateCompleteness(submission: any): CompletenessResult {
         const requiredFields = [
-            { field: 'title', min: 5 },
-            { field: 'summary', min: 50 },
-            { field: 'content', min: 100 },
-            { field: 'category', min: 1 },
-            { field: 'keywords', min: 1, isArray: true }
+            {field: 'title', min: 5},
+            {field: 'summary', min: 50},
+            {field: 'content', min: 100},
+            {field: 'category', min: 1},
+            {field: 'keywords', min: 1, isArray: true}
         ];
 
         const missingFields: string[] = [];
         let completedFields = 0;
 
-        requiredFields.forEach(({ field, min, isArray }) => {
+        requiredFields.forEach(({field, min, isArray}) => {
             const value = submission[field];
 
             if (isArray) {
@@ -1005,10 +1005,11 @@ class SubmissionService {
     /**
      * Listar todas as submissões com suporte a busca e paginação
      * @param searchTerm Termo de busca opcional
+     * @param requestedSubmissionState Estado das submissões a serem retornadas (DRAFT, READY, BOTH)
      * @param pagination Parâmetros de paginação (top e skip)
      * @returns Lista de submissões e informações de paginação
      */
-    async listSubmissions(searchTerm?: string, pagination = {
+    async listSubmissions(searchTerm?: string, requestedSubmissionState?: string, pagination = {
         top: 10,
         skip: 0
     }): Promise<ListSubmissionsResult> {
@@ -1025,7 +1026,7 @@ class SubmissionService {
                        expires_at,
                        (SELECT COUNT(*) FROM feedback WHERE submission_id = s.id) as feedback_count
                 FROM submissions s
-                WHERE 1=1
+                WHERE 1 = 1
             `;
 
             const queryParams: any[] = [];
@@ -1043,8 +1044,19 @@ class SubmissionService {
                 paramCount++;
             }
 
+            switch (requestedSubmissionState) {
+                case 'DRAFT':
+                    query += `AND status = 'DRAFT'`;
+                    break;
+                case 'BOTH':
+                    break;
+                default:
+                    query += `AND status = 'PUBLISHED'`;
+            }
+
             // Contar total de registros para paginação
-            const countQuery = `SELECT COUNT(*) FROM (${query}) as count_query`;
+            const countQuery = `SELECT COUNT(*)
+                                FROM (${query}) as count_query`;
             const countResult = await db.query(countQuery, queryParams);
             const total = parseInt(countResult.rows[0].count);
 
