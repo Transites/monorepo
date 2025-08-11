@@ -42,7 +42,9 @@ export default {
     rules: [
       (value) => {
         if (value) return true
-        return this.$t('contribute.form.required')
+        return false
+        // todo: implement notification toast
+        // return this.$t('contribute.form.required')
       }
     ]
   }),

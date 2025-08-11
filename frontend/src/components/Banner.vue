@@ -99,12 +99,12 @@ export default {
       this.loading = false
       // Fallback to default items if there's an error
       this.items = [
-        {
-          src: 'http://enciclopedia.iea.usp.br:1337/uploads/capa_Cahiers_a741c06e2d.jpg',
-          title: 'Cahiers du Brésil Contemporain',
-          subtitle: 'Revista',
-          text: 'Em 1987, dois anos após a fundação do Centre de recherches sur le Brésil contemporain (CRBC) na École des Hautes Études en Sciences Sociales (EHESS), em Paris, Ignacy Sachs (1927-2023) criou os Cahiers du Brésil contemporain. A revista circulou até 2010, quando foi substituída por Brésil(s). Sciences humaines et sociales.'
-        }
+        // {
+        //   src: 'http://enciclopedia.iea.usp.br:1337/uploads/capa_Cahiers_a741c06e2d.jpg',
+        //   title: 'Cahiers du Brésil Contemporain',
+        //   subtitle: 'Revista',
+        //   text: 'Em 1987, dois anos após a fundação do Centre de recherches sur le Brésil contemporain (CRBC) na École des Hautes Études en Sciences Sociales (EHESS), em Paris, Ignacy Sachs (1927-2023) criou os Cahiers du Brésil contemporain. A revista circulou até 2010, quando foi substituída por Brésil(s). Sciences humaines et sociales.'
+        // }
       ]
     }
   },

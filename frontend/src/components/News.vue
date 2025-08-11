@@ -41,6 +41,7 @@
 
 <script>
 import axios from 'axios';
+import api from "@/services/api";
 
 export default {
   props: {
@@ -90,11 +91,9 @@ export default {
     },
 
     async fetchDataFromStrapi() {
-      const base_url = import.meta.env.VITE_API_BASE_URL || '';
-
       try {
         // Fazendo a requisição para obter as submissões mais recentes
-        const response = await axios.get(`${base_url}/api/submissions`, {
+        const response = await api.get(`/submissions`, {
           params: {
             top: 9,
             skip: 0

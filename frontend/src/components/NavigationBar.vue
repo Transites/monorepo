@@ -42,7 +42,6 @@
 
 <script>
 import _ from "lodash";
-import axios from "axios";
 import api from "@/services/api";
 import LanguageSwitcher from "@/components/LanguageSwitcher.vue";
 
@@ -53,7 +52,6 @@ export default {
       searchQuery: '',
       games: [],
       isLoading: true,
-      apiUrl: `${api.getUri()}/submissions`
     };
   },
   computed: {
@@ -75,13 +73,13 @@ export default {
     async getGames() {
       this.isLoading = true;
       try {
-        const response = await axios.get(this.apiUrl, {
+        const response = await api.get("/submissions", {
           params: {
             top: 100,
             skip: 0
           }
         });
-        this.games = response.data.submissions.map(item => ({
+        this.games = response.data.submissions?.map(item => ({
           id: item.id,
           title: item.title
         }));
