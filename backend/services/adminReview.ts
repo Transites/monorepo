@@ -314,38 +314,9 @@ class AdminReviewService {
                 throw new Error('Apenas submissões aprovadas podem ser publicadas');
             }
 
-            // Criar artigo
-            const articleId = crypto.randomUUID();
-            const publishedAt = new Date();
-
-            // Generate slug and article URL
+            // Generate slug and submission URL
             const slug = generateSlug(submission.title);
-            const articleUrl = generateArticleUrl(slug);
-
-            const articleQuery = `
-                INSERT INTO articles (id, submission_id, title, summary, content, keywords, category,
-                                      metadata, published_at, slug)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-                RETURNING *
-            `;
-
-            await this.db.query(articleQuery, [
-                articleId,
-                submissionId,
-                submission.title,
-                submission.summary,
-                submission.content,
-                publishRequest.keywordsOverride || submission.keywords,
-                publishRequest.categoryOverride || submission.category,
-                JSON.stringify({
-                    ...submission.metadata,
-                    publishedBy: adminId,
-                    publishNotes: publishRequest.publishNotes,
-                    originalSubmissionDate: submission.createdAt
-                }),
-                publishedAt,
-                slug
-            ]);
+            const submissionUrl = generateArticleUrl(slug);
 
             // Atualizar status da submissão
             await this.db.query(
@@ -354,28 +325,25 @@ class AdminReviewService {
             );
 
             // Enviar notificação de publicação para o autor
-            await this.emailService.notifyAuthorApproval(submission, articleUrl);
+            await this.emailService.notifyAuthorApproval(submission, submissionUrl);
 
             // Log da ação
-            await this.logAdminAction(adminId, 'publish_article', 'article', articleId, {
+            await this.logAdminAction(adminId, 'publish_submission', 'submission', {
                 submissionId,
                 publishNotes: publishRequest.publishNotes,
-                articleUrl
+                submissionUrl
             });
 
-            this.logger.audit('Article published', {
+            this.logger.audit('Submission published', {
                 submissionId,
-                articleId,
                 adminId,
                 publishedAt,
-                articleUrl
+                submissionUrl
             });
 
             return {
                 success: true,
-                articleId: articleId,
-                publishedAt: publishedAt,
-                articleUrl: articleUrl
+                articleUrl: submissionUrl
             };
 
         } catch (error) {

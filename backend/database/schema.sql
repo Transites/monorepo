@@ -86,36 +86,6 @@ CREATE TABLE submissions
     CONSTRAINT submissions_expires_check CHECK (expires_at > created_at)
 );
 
--- Tabela de artigos publicados
-CREATE TABLE articles
-(
-    id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    submission_id UUID UNIQUE REFERENCES submissions (id),
-    slug          VARCHAR(255) UNIQUE NOT NULL,
-
-    -- Conteúdo final
-    title         TEXT                NOT NULL,
-    summary       TEXT,
-    content       TEXT                NOT NULL,
-    keywords      TEXT[],
-    category      VARCHAR(100),
-
-    -- Metadados de publicação
-    metadata      JSONB            DEFAULT '{}',
-    attachments   JSONB            DEFAULT '[]',
-    view_count    INTEGER          DEFAULT 0,
-    is_featured   BOOLEAN          DEFAULT FALSE,
-
-    -- Timestamps
-    published_at  TIMESTAMP        DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMP        DEFAULT CURRENT_TIMESTAMP,
-
-    -- Constraints
-    CONSTRAINT articles_title_check CHECK (LENGTH(title) >= 5),
-    CONSTRAINT articles_content_check CHECK (LENGTH(content) >= 100),
-    CONSTRAINT articles_slug_check CHECK (slug ~* '^[a-z0-9-]+$')
-);
-
 -- Tabela de feedback/comentários
 CREATE TABLE feedback
 (
