@@ -74,7 +74,6 @@ export default {
     results: [],
     isLoading: false,
     error: null,
-    apiUrl: `${api.getUri()}/submissions`
   },
   mutations: {
     SET_SEARCH_QUERY(state, query) {
@@ -108,7 +107,7 @@ export default {
         const normalizedQuery = normalizeString(state.searchQuery);
 
         // First try with exact normalized query
-        const response = await axios.get(state.apiUrl, {
+        const response = await api.get("/submissions", {
           params: {
             search: normalizedQuery,
             top: 20,
@@ -116,7 +115,7 @@ export default {
           }
         });
 
-        let results = response.data.submissions.map(item => ({
+        let results = response.data.data.submissions.map(item => ({
           id: item.id,
           type: 'submission',
           title: item.title || 'Título indisponível',
@@ -130,16 +129,16 @@ export default {
         }));
 
         // If no results found, try a broader search
-        if (results.length === 0 && normalizedQuery.length > 3) {
+        if (results.length === 0 && normalizedQuery.length > 2) {
           // Get all articles (with a reasonable limit) to perform similarity search
-          const allResponse = await axios.get(state.apiUrl, {
+          const allResponse = await api.get("/submissions", {
             params: {
               top: 100, // Limit to prevent performance issues
               skip: 0
             }
           });
 
-          const allArticles = allResponse.data.submissions.map(item => ({
+          const allArticles = allResponse.data.data.submissions.map(item => ({
             id: item.id,
             type: 'submission',
             title: item.title || 'Título indisponível',
