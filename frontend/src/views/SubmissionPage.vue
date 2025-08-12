@@ -14,10 +14,10 @@
         <v-col cols="12" md="7" order="md-2" class="mb-6">
           <!-- Escrever novos artigos (destaque maior) -->
           <v-card elevation="3" class="pa-6 primary-card h-100">
-            <v-card-title class="text-h4 colored">Escrever Novos Artigos</v-card-title>
+            <v-card-title class="text-h4 colored">Escrever novos artigos</v-card-title>
             <v-card-text>
               <p class="text-body-1 mb-4">
-                Inicie a criação de um novo verbete para a enciclopédia Trânsitos | Circulations.
+                Inicie a criação de um novo verbete para a enciclopédia Trânsitos.
                 Você poderá salvar seu progresso como rascunho a qualquer momento.
               </p>
               <p class="text-body-2 mb-6">
@@ -41,7 +41,7 @@
         <v-col cols="12" md="5" order="md-1">
           <!-- Gerenciar artigos em progresso -->
           <v-card elevation="2" class="pa-6 secondary-card h-100">
-            <v-card-title class="text-h5 colored">Gerenciar Artigos em Progresso</v-card-title>
+            <v-card-title class="text-h5 colored">Gerenciar artigos em progresso</v-card-title>
             <v-card-text>
               <p class="text-body-1 mb-4">
                 Acesse seus artigos em progresso para continuar a edição.

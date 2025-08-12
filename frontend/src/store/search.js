@@ -1,4 +1,3 @@
-import axios from 'axios';
 import api from "@/services/api";
 
 // Utility function to normalize strings (remove accents, convert to lowercase)
@@ -41,6 +40,7 @@ const levenshteinDistance = (a, b) => {
 
 // Check if two strings are similar based on Levenshtein distance
 const isSimilar = (a, b, threshold = 0.3) => {
+    console.log("a: ", a, " b: ", b, " threshold: ", threshold)
   if (!a || !b) return false;
 
   // Normalize strings
@@ -49,6 +49,7 @@ const isSimilar = (a, b, threshold = 0.3) => {
 
   // Exact match after normalization
   if (normalizedA.includes(normalizedB) || normalizedB.includes(normalizedA)) {
+      console.log("exact match: ", normalizedA, " ", normalizedB, "")
     return true;
   }
 
@@ -63,6 +64,7 @@ const isSimilar = (a, b, threshold = 0.3) => {
   // Calculate similarity ratio (0 to 1, where 1 is exact match)
   const maxLength = Math.max(normalizedA.length, normalizedB.length);
   const similarityRatio = 1 - distance / maxLength;
+  console.log("similarityRatio: ", similarityRatio)
 
   return similarityRatio >= threshold;
 };
@@ -104,32 +106,35 @@ export default {
 
       try {
         // Normalize the search query to make it accent-insensitive
-        const normalizedQuery = normalizeString(state.searchQuery);
+        // const normalizedQuery = normalizeString(state.searchQuery);
+        //
+        // // First try with exact normalized query
+          // TODO: fix search with backend then re-enable this code.
+        // const response = await api.get("/submissions", {
+        //   params: {
+        //     search: normalizedQuery,
+        //     top: 20,
+        //     skip: 0
+        //   }
+        // });
 
-        // First try with exact normalized query
-        const response = await api.get("/submissions", {
-          params: {
-            search: normalizedQuery,
-            top: 20,
-            skip: 0
-          }
-        });
-
-        let results = response.data.data.submissions.map(item => ({
-          id: item.id,
-          type: 'submission',
-          title: item.title || 'Título indisponível',
-          subtitle: item.category || 'Categoria indisponível',
-          text: item.summary || 'Resumo indisponível',
-          tags: item.keywords?.map(keyword => ({
-            name: keyword
-          })) || [],
-          status: item.status,
-          author: item.author_name
-        }));
+        let results;
+        // let results = response.data.data.submissions.map(item => ({
+        //   id: item.id,
+        //   type: 'submission',
+        //   title: item.title || 'Título indisponível',
+        //   subtitle: item.category || 'Categoria indisponível',
+        //   text: item.summary || 'Resumo indisponível',
+        //   tags: item.keywords?.map(keyword => ({
+        //     name: keyword
+        //   })) || [],
+        //   status: item.status,
+        //   author: item.author_name
+        // }));
 
         // If no results found, try a broader search
-        if (results.length === 0 && normalizedQuery.length > 2) {
+        // if (results.length === 0 && normalizedQuery.length > 2) {
+        if (state.searchQuery.length > 0) {
           // Get all articles (with a reasonable limit) to perform similarity search
           const allResponse = await api.get("/submissions", {
             params: {
@@ -140,7 +145,7 @@ export default {
 
           const allArticles = allResponse.data.data.submissions.map(item => ({
             id: item.id,
-            type: 'submission',
+            type: item.metadata.type || 'submission',
             image: item.metadata.image.url || null,
             title: item.title || 'Título indisponível',
             subtitle: item.category || 'Categoria indisponível',
@@ -152,9 +157,14 @@ export default {
           }));
 
           // Filter by similarity
-          results = allArticles.filter(article => 
+          const titleSimilarities = allArticles.filter(article =>
             isSimilar(article.title, state.searchQuery)
           );
+          const tagsSimilarities = allArticles.filter(article =>
+            article.tags.some(tag => isSimilar(tag.name, state.searchQuery))
+          );
+          const uniqueValues = new Set([...titleSimilarities, ...tagsSimilarities]);
+          results = Array.from(uniqueValues);
         }
 
         commit('SET_RESULTS', results);
@@ -168,26 +178,28 @@ export default {
   },
   getters: {
     filteredResults: (state) => {
-      if (state.searchQuery.trim() === '') {
         return state.results;
-      }
-
-      const query = state.searchQuery;
-
-      return state.results.filter(entry => {
-        if (!entry.title) return false;
-
-        // First try exact match (after normalization)
-        const normalizedTitle = normalizeString(entry.title);
-        const normalizedQuery = normalizeString(query);
-
-        if (normalizedTitle.includes(normalizedQuery)) {
-          return true;
-        }
-
-        // If no exact match, try similarity match
-        return isSimilar(entry.title, query);
-      });
+      // if (state.searchQuery.trim() === '') {
+      //   return state.results;
+      // }
+      //
+      // const query = state.searchQuery;
+      //
+      // return state.results.filter(entry => {
+      //     console.log("entry: ", entry, " query: ", query)
+      //   if (!entry.title) return false;
+      //
+      //   // First try exact match (after normalization)
+      //   const normalizedTitle = normalizeString(entry.title);
+      //   const normalizedQuery = normalizeString(query);
+      //
+      //   if (normalizedTitle.includes(normalizedQuery)) {
+      //     return true;
+      //   }
+      //
+      //   // If no exact match, try similarity match
+      //   return isSimilar(entry.title, query);
+      // });
     }
   }
 };

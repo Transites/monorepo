@@ -3,7 +3,7 @@
     <Banner />
     <About />
     <Media />
-    <News />
+<!--    <News />-->
     <Contribute />
   </main>
 </template>
