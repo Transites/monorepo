@@ -19,6 +19,13 @@ router.post('/',
     errorHandler.asyncHandler(submissionController.createSubmission)
 );
 
+// GET /api/submissions/id/:id
+// Buscar submissão por ID
+// Public
+router.get('/id/:id',
+    errorHandler.asyncHandler(submissionController.getSubmissionById)
+);
+
 // GET /api/submissions/:token
 // Buscar submissão por token
 // Public (requer token válido)

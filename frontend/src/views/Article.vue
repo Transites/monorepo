@@ -171,10 +171,10 @@ export default {
 
     const { id } = this.$route.params;
     try {
-      const response = await api.get(`/submissions/${id}`);
-      
+      const response = await api.get(`/submissions/id/${id}`);
+
       // Transform the submission data to match the expected structure
-      const submission = response.data.submission;
+      const submission = response.data.data.submission;
       const metadata = submission.metadata || {};
       
       this.loadedArticle = {

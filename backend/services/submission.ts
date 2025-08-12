@@ -189,6 +189,79 @@ class SubmissionService {
     }
 
     /**
+     * Buscar submissão por ID
+     */
+    async getSubmissionById(submissionId: string, includeVersions = false): Promise<any> {
+        try {
+            // Buscar submissão
+            const submissionResult = await db.query(
+                'SELECT * FROM submissions WHERE id = $1',
+                [submissionId]
+            );
+
+            if (submissionResult.rows.length === 0) {
+                throw new SubmissionNotFoundException('Submissão não encontrada');
+            }
+
+            const submission = submissionResult.rows[0];
+
+            // Buscar anexos
+            const attachments = await db.query(
+                'SELECT id, filename, url, file_type, size FROM submission_attachments WHERE submission_id = $1',
+                [submission.id]
+            );
+
+            // Buscar versões se solicitado
+            let versions = [];
+            if (includeVersions) {
+                const versionsResult = await db.query(
+                    'SELECT * FROM submission_versions WHERE submission_id = $1 ORDER BY version_number DESC',
+                    [submission.id]
+                );
+                versions = versionsResult.rows;
+            }
+
+            // Buscar feedback mais recente
+            const feedback = await db.query(`
+                SELECT f.*, a.name as admin_name
+                FROM feedback f
+                         JOIN admins a ON f.admin_id = a.id
+                WHERE f.submission_id = $1
+                ORDER BY f.created_at DESC
+            `, [submission.id]);
+
+            const result = {
+                found: true,
+                submission: {
+                    ...submission,
+                    attachments: attachments.rows,
+                    feedback: feedback.rows,
+                    versions: versions
+                }
+            };
+
+            logger.audit('Submission accessed by ID', {
+                submissionId: submission.id,
+                authorEmail: submission.author_email
+            });
+
+            return result;
+
+        } catch (error: any) {
+            logger.error('Error getting submission by ID', {
+                submissionId,
+                error: error?.message
+            });
+
+            if (error instanceof SubmissionNotFoundException) {
+                throw error;
+            }
+
+            throw new DatabaseException('Erro ao buscar submissão', error);
+        }
+    }
+
+    /**
      * Buscar submissão por token
      */
     async getSubmissionByToken(token: string, includeVersions = false): Promise<any> {

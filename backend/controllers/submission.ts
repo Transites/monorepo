@@ -64,6 +64,41 @@ class SubmissionController {
     }
 
     /**
+     * GET /api/submissions/id/:id
+     * Buscar submissão por ID
+     */
+    async getSubmissionById(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+            const {id} = req.params;
+            const includeVersions = req.query.include_versions === 'true';
+
+            // Validar UUID
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(id)) {
+                return responses.badRequest(res, 'ID inválido', ['ID deve ser um UUID válido']);
+            }
+
+            const result = await submissionService.getSubmissionById(id, includeVersions);
+
+            const response = {
+                submission: result.submission,
+                canEdit: ['DRAFT', 'CHANGES_REQUESTED'].includes(result.submission.status),
+                canSubmitForReview: result.submission.status === 'DRAFT' ||
+                    (result.submission.status === 'CHANGES_REQUESTED' &&
+                        result.submission.feedback?.length > 0)
+            };
+
+            return responses.success(res, response, 'Submissão encontrada');
+
+        } catch (error: any) {
+            return handleControllerError(error, res, next, {
+                submissionId: req.params.id,
+                ip: req.ip
+            });
+        }
+    }
+
+    /**
      * GET /api/submissions/:token
      * Buscar submissão por token
      */
