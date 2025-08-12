@@ -40,20 +40,19 @@
               <div style="position: relative; z-index: 0; pointer-events: none;">
                 <v-card-item>
                   <v-card-title>{{ entry.title }}</v-card-title>
-                  <v-card-subtitle>{{ entry.subtitle }}</v-card-subtitle>
+                  <v-card-subtitle class="text-capitalize">{{ entry.subtitle }}</v-card-subtitle>
                   <div v-if="entry.tags && entry.tags.length">
-                    <v-chip v-for="tag in entry.tags" :key="tag.name" color="primary" class="mr-1">
+                    <v-chip v-for="tag in entry.tags.slice(0, 3)" :key="tag.name" color="primary" class="mr-1 mt-1">
                       {{ tag.name }}
+                    </v-chip>
+                    <v-chip v-if="entry.tags.length > 3" color="grey" class="mr-1">
+                      ...
                     </v-chip>
                   </div>
                   <div v-else>
                     <v-chip color="grey" class="mr-1">Sem tags</v-chip>
                   </div>
                 </v-card-item>
-
-                <v-card-text>
-                  {{ entry.text }}
-                </v-card-text>
               </div>
             </v-card>
           </v-col>

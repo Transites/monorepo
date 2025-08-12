@@ -1098,6 +1098,7 @@ class SubmissionService {
                        updated_at,
                        expires_at,
                        metadata,
+                       keywords,
                        (SELECT COUNT(*) FROM feedback WHERE submission_id = s.id) as feedback_count
                 FROM submissions s
                 WHERE 1 = 1
