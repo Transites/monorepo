@@ -27,7 +27,7 @@
     }
   },
   "include": [
-    "src/**/*"
+      "src-deprecated/**/*"
   ],
   "exclude": [
     "node_modules",
