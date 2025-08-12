@@ -102,7 +102,7 @@
       </div>
 
       <!-- Artigo -->
-      <div v-if="displayArticle.attributes.Artigo" class="article-section">
+      <div v-if="displayArticle.attributes.Artigo" class="article-section" style="margin-top: 20px;">
         <h2 class="section-title">Artigo</h2>
         <div v-html="displayArticle.attributes.Artigo" class="article-artigo"></div>
       </div>
@@ -123,7 +123,7 @@
       <div v-if="displayArticle.attributes.authors" class="article-authors">
         <h2 class="section-title">Autor(es):</h2>
         <ul class="author-list">
-          <li v-for="author in displayArticle.attributes.authors.data" :key="author.id">
+          <li v-for="author in displayArticle.attributes.authors.data" :key="author.id" style="margin-left: 20px; margin-bottom: 5px;">
             {{ author.attributes.name }} 
             <span v-if="author.attributes.institution"> - {{ author.attributes.institution }}</span>
           </li>
