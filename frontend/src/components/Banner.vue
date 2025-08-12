@@ -33,7 +33,7 @@
 
               <div class="TitleSubtitleContainer" style="position: relative; z-index: 2; pointer-events: none;">
                 <v-card-title class="cardTitleSubtitle">{{ item.title }}</v-card-title>
-                <v-card-subtitle class="cardTitleSubtitle">{{ item.subtitle }}</v-card-subtitle>
+                <v-card-subtitle style="text-transform: capitalize" class="cardTitleSubtitle">{{ item.subtitle }}</v-card-subtitle>
               </div>
             </v-carousel-item>
           </v-carousel>

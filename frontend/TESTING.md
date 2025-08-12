@@ -8,7 +8,7 @@ This document summarizes the testing implementation for the frontend components,
 
 1. **Testing Environment Setup**:
    - Installed Vitest, Vue Test Utils, JSDOM, and Testing Library
-   - Configured Vitest in vite.config.js
+   - Configured Vitest in vite.config.mjs
    - Added test scripts to package.json
 
 2. **Test Directory Structure**:

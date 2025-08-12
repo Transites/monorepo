@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@mdi/js": "^7.4.47",
+    "@tailwindcss/vite": "^4.1.11",
     "@types/node": "^22.15.18",
     "axios": "^1.6.2",
     "marked": "^11.0.1",
@@ -47,6 +48,7 @@
     "@vue/eslint-config-prettier": "^8.0.0",
     "@vue/eslint-config-typescript": "^12.0.0",
     "@vue/test-utils": "^2.4.0-alpha.2",
+    "autoprefixer": "^10.4.0",
     "eslint": "^8.54.0",
     "eslint-plugin-vue": "^9.18.1",
     "jsdom": "^26.1.0",

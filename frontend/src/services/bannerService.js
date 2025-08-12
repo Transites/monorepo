@@ -22,13 +22,9 @@ const bannerService = {
             const bannerItems = submissions.map(item => {
                 // Get the image URL from metadata if available
                 let imageUrl = ''
-                if (item.metadata && item.metadata.imageUrl) {
-                    const url = item.metadata.imageUrl
-                    // If the URL starts with a slash, it's a relative URL and we need to add the domain
-                    if (url.startsWith('/')) {
-                        const baseUrl = api.defaults.baseURL.replace('/api', '')
-                        imageUrl = baseUrl + url
-                    } else {
+                if (item.metadata && item.metadata.image) {
+                    const url = item.metadata.image.url
+                    if (url) {
                         imageUrl = url
                     }
                 }
