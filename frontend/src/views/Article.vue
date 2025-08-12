@@ -114,7 +114,7 @@
 
       <!-- Conteúdo do Artigo -->
       <div v-if="displayArticle.attributes.content" class="article-section">
-        <h2 class="section-title">Artigo</h2>
+        <h2 class="section-title"/>
         <div class="article-content-text">
           <div v-html="processContent(displayArticle.attributes.content)" class="markdown-content"></div>
         </div>
@@ -310,7 +310,7 @@ body {
 
 .image-section {
   flex: 1;
-  max-width: 300px;
+  max-width: 500px;
 }
 
 .image-container {
