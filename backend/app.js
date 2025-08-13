@@ -35,7 +35,7 @@ app.use(helmet({
 const corsOptions = {
     origin: process.env.NODE_ENV === 'development'
         ? '*' // Accept any origin in test environment
-        : (config.core.corsOrigin || 'https://enciclopedia.iea.usp.br'),
+        : (config.core.corsOrigin ? config.core.corsOrigin.split(',') : ['http://enciclopedia.iea.usp.br']),
     credentials: true,
     optionsSuccessStatus: 200,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],

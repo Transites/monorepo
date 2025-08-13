@@ -58,10 +58,11 @@ module.exports = {
         secure: process.env.CLOUDINARY_SECURE === 'true',
     },
     app: {
-        frontendUrl: process.env.FRONTEND_URL || 'https://enciclopedia.iea.usp.br',
+        frontendUrl: process.env.FRONTEND_URL || 'http://enciclopedia.iea.usp.br',
     },
     core: {
         nodeEnv: process.env.NODE_ENV || 'development',
         port: parseInt(process.env.PORT || '3000', 10),
+        corsOrigin: process.env.CORS_ORIGIN || ['*'],
     },
 };
