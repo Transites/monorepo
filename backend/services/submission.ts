@@ -1090,6 +1090,7 @@ class SubmissionService {
             let query = `
                 SELECT id,
                        title,
+                       summary,
                        status,
                        category,
                        author_name,

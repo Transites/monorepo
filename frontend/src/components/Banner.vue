@@ -51,8 +51,6 @@
           :style="$vuetify.display.smAndDown ? 'height: 150px' : ''"
         >
           <v-card-text v-if="!loading && items.length > 0">
-            {{console.log(items)}}
-            {{console.log(items[counter])}}
             <p
               class="bannerText"
               :style="
