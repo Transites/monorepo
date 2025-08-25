@@ -59,6 +59,7 @@ CREATE TABLE submissions
     title              TEXT                NOT NULL,
     summary            TEXT,
     content            TEXT,
+    content_html TEXT,  -- Cache do HTML renderizado
     keywords           TEXT[],
     category           VARCHAR(100),
 

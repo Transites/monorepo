@@ -146,7 +146,7 @@ export default {
           const allArticles = allResponse.data.data.submissions.map(item => ({
             id: item.id,
             type: item.metadata.type || 'submission',
-            image: item.metadata.image.url || null,
+            image: item.metadata.image?.url || null,
             title: item.title || 'Título indisponível',
             subtitle: item.category || 'Categoria indisponível',
             tags: item.keywords?.map(keyword => ({

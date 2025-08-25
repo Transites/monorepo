@@ -1,3 +1,4 @@
+<!--Enhanced Article View Component for new backend structure-->
 <template>
   <div id="article-view" class="article-container">
     <div v-if="error" class="error">
@@ -6,28 +7,28 @@
     <div v-else-if="loading" class="loading">
       Carregando...
     </div>
-    <div v-else-if="!displayArticle?.attributes?.content" class="error">
+    <div v-else-if="!displayArticle?.title" class="error">
       Erro: conteúdo do artigo não encontrado.
     </div>
     <div v-else class="article-content">
       <!-- Título -->
-      <h1 class="article-title">{{ displayArticle.attributes.title }}</h1>
+      <h1 class="article-title">{{ displayArticle.title }}</h1>
 
       <!-- Linha 1: Imagem + Informações Principais -->
       <div class="linha-1">
         <!-- Imagem -->
         <div class="image-section">
-          <div v-if="displayArticle.attributes.image" class="image-container">
+          <div v-if="displayArticle.metadata?.image" class="image-container">
             <img
-                :src="displayArticle.attributes.image.url"
-                :alt="displayArticle.attributes.image.alternativeText || 'Imagem do artigo'"
+                :src="displayArticle.metadata.image.url"
+                :alt="displayArticle.metadata.image.alternativeText || 'Imagem do artigo'"
                 class="article-image"
             />
-            <p v-if="displayArticle.attributes.image.caption" class="image-caption">
-              {{ displayArticle.attributes.image.caption }}
+            <p v-if="displayArticle.metadata.image.caption" class="image-caption">
+              {{ displayArticle.metadata.image.caption }}
             </p>
-            <p v-if="displayArticle.attributes.image.credit" class="image-credit">
-              {{ displayArticle.attributes.image.credit }}
+            <p v-if="displayArticle.metadata.image.credit" class="image-credit">
+              {{ displayArticle.metadata.image.credit }}
             </p>
           </div>
           <div v-else class="image-placeholder">
@@ -38,23 +39,21 @@
         <!-- Informações Principais -->
         <div class="main-info">
           <!-- Nascimento -->
-          <div v-if="displayArticle.attributes.birth && displayArticle.attributes.birth.date" class="info-item">
+          <div v-if="displayArticle.metadata?.birth?.date" class="info-item">
             <strong>Nascimento:</strong>
-            {{ displayArticle.attributes.birth.formatted || formatDate(displayArticle.attributes.birth.date) }}
-            <span v-if="displayArticle.attributes.birth.place">, {{ displayArticle.attributes.birth.place }}</span>
+            {{ displayArticle.metadata.birth.formatted || formatBirthDeath(displayArticle.metadata.birth) }}
           </div>
 
           <!-- Falecimento -->
-          <div v-if="displayArticle.attributes.death && displayArticle.attributes.death.date" class="info-item">
+          <div v-if="displayArticle.metadata?.death?.date" class="info-item">
             <strong>Falecimento:</strong>
-            {{ displayArticle.attributes.death.formatted || formatDate(displayArticle.attributes.death.date) }}
-            <span v-if="displayArticle.attributes.death.place">, {{ displayArticle.attributes.death.place }}</span>
+            {{ displayArticle.metadata.death.formatted || formatBirthDeath(displayArticle.metadata.death) }}
           </div>
 
           <!-- Resumo -->
-          <div v-if="displayArticle.attributes.summary" class="info-item resumo">
+          <div v-if="displayArticle.summary" class="info-item resumo">
             <strong>Resumo:</strong>
-            <p>{{ displayArticle.attributes.summary }}</p>
+            <p>{{ displayArticle.summary }}</p>
           </div>
         </div>
       </div>
@@ -62,69 +61,95 @@
       <!-- Linha 2: Informações Adicionais -->
       <div class="linha-2">
         <!-- Palavras-chave -->
-        <div v-if="displayArticle.attributes.keywords && displayArticle.attributes.keywords.length" class="info-group">
+        <div v-if="displayArticle.keywords?.length" class="info-group">
           <strong>Palavras-chave:</strong>
           <span class="keywords">
-            <span v-for="(keyword, index) in displayArticle.attributes.keywords" :key="index">
-              {{ keyword }}<span v-if="index < displayArticle.attributes.keywords.length - 1">, </span><span v-if="index === displayArticle.attributes.keywords.length - 1">.</span>
+            <span v-for="(keyword, index) in displayArticle.keywords" :key="index">
+              {{ keyword }}<span v-if="index < displayArticle.keywords.length - 1">, </span><span v-if="index === displayArticle.keywords.length - 1">.</span>
             </span>
           </span>
         </div>
 
         <!-- Ocupação -->
-        <div v-if="displayArticle.attributes.occupation && displayArticle.attributes.occupation.length" class="info-group">
+        <div v-if="displayArticle.metadata?.occupation?.length" class="info-group">
           <strong>Ocupação:</strong>
           <span class="occupations">
-            <span v-for="(occupation, index) in displayArticle.attributes.occupation" :key="index">
-              {{ occupation }}<span v-if="index < displayArticle.attributes.occupation.length - 1">, </span><span v-if="index === displayArticle.attributes.occupation.length - 1">.</span>
+            <span v-for="(occupation, index) in displayArticle.metadata.occupation" :key="index">
+              {{ occupation }}<span v-if="index < displayArticle.metadata.occupation.length - 1">, </span><span v-if="index === displayArticle.metadata.occupation.length - 1">.</span>
             </span>
           </span>
         </div>
 
         <!-- Organizações -->
-        <div v-if="displayArticle.attributes.organizations && displayArticle.attributes.organizations.length" class="info-group">
+        <div v-if="displayArticle.metadata?.organizations?.length" class="info-group">
           <strong>Organizações:</strong>
           <ul class="organizations-list">
-            <li v-for="(org, index) in displayArticle.attributes.organizations" :key="index">
+            <li v-for="(org, index) in displayArticle.metadata.organizations" :key="index">
               {{ org }}
             </li>
           </ul>
         </div>
 
         <!-- Nomes alternativos -->
-        <div v-if="displayArticle.attributes.alternativeNames && displayArticle.attributes.alternativeNames.length" class="info-group">
+        <div v-if="displayArticle.metadata?.alternativeNames?.length" class="info-group">
           <strong>Nomes alternativos:</strong>
           <span class="alt-names">
-            <span v-for="(name, index) in displayArticle.attributes.alternativeNames" :key="index">
-              {{ name }}<span v-if="index < displayArticle.attributes.alternativeNames.length - 1">, </span><span v-if="index === displayArticle.attributes.alternativeNames.length - 1">.</span>
+            <span v-for="(name, index) in displayArticle.metadata.alternativeNames" :key="index">
+              {{ name }}<span v-if="index < displayArticle.metadata.alternativeNames.length - 1">, </span><span v-if="index === displayArticle.metadata.alternativeNames.length - 1">.</span>
             </span>
           </span>
         </div>
 
         <!-- Temas -->
-        <div v-if="displayArticle.attributes.themes && displayArticle.attributes.themes.length" class="info-group">
+        <div v-if="displayArticle.metadata?.themes?.length" class="info-group">
           <strong>Temas:</strong>
           <ul class="themes-list">
-            <li v-for="(theme, index) in displayArticle.attributes.themes" :key="index">
+            <li v-for="(theme, index) in displayArticle.metadata.themes" :key="index">
               {{ theme }}
             </li>
           </ul>
         </div>
+
+        <!-- Períodos -->
+        <div v-if="displayArticle.metadata?.periods" class="info-group">
+          <strong>Períodos:</strong>
+          <div class="periods">
+            <div v-if="displayArticle.metadata.periods.main_period">
+              Principal: {{ displayArticle.metadata.periods.main_period }}
+            </div>
+            <div v-if="displayArticle.metadata.periods.france_period">
+              França: {{ displayArticle.metadata.periods.france_period }}
+            </div>
+            <div v-if="displayArticle.metadata.periods.career_period">
+              Carreira: {{ displayArticle.metadata.periods.career_period }}
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Conteúdo do Artigo -->
-      <div v-if="displayArticle.attributes.content" class="article-section">
+      <div v-if="displayArticle.content_html || displayArticle.content" class="article-section">
         <h2 class="section-title"/>
         <div class="article-content-text">
-          <div v-html="processContent(displayArticle.attributes.content)" class="markdown-content"></div>
+          <!-- Use content_html directly if available, otherwise process markdown content -->
+          <div v-if="displayArticle.content_html" v-html="sanitizeHtml(displayArticle.content_html)" class="html-content"></div>
+          <div v-else-if="displayArticle.content" v-html="processContent(displayArticle.content)" class="markdown-content"></div>
+        </div>
+      </div>
+
+      <!-- Seções adicionais do metadata -->
+      <div v-if="displayArticle.metadata?.sections?.length" class="article-section">
+        <div v-for="(section, index) in displayArticle.metadata.sections" :key="index" class="content-section">
+          <h3 class="section-subtitle">{{ section.title }}</h3>
+          <p class="section-content">{{ section.content }}</p>
         </div>
       </div>
 
       <!-- Obras -->
-      <div v-if="displayArticle.attributes.works && displayArticle.attributes.works.length" class="article-section">
+      <div v-if="displayArticle.metadata?.works?.length" class="article-section">
         <h2 class="section-title">Obras</h2>
         <ul class="works-list">
-          <li v-for="(work, index) in displayArticle.attributes.works" :key="index" class="work-item">
+          <li v-for="(work, index) in displayArticle.metadata.works" :key="index" class="work-item">
             <strong>{{ work.title }}</strong> ({{ work.year }})
             <span v-if="work.location || work.publisher">
               - {{ work.location }}<span v-if="work.location && work.publisher">: </span>{{ work.publisher }}
@@ -134,28 +159,32 @@
       </div>
 
       <!-- Bibliografia -->
-      <div v-if="displayArticle.attributes.bibliography && displayArticle.attributes.bibliography.length" class="article-section">
+      <div v-if="displayArticle.metadata?.bibliography?.length" class="article-section">
         <h2 class="section-title">Bibliografia</h2>
         <ul class="bibliography-list">
-          <li v-for="(ref, index) in displayArticle.attributes.bibliography" :key="index">
-            {{ ref.author }} ({{ ref.year }}). <em>{{ ref.title }}</em>. {{ ref.location }}: {{ ref.publisher }}.
+          <li v-for="(ref, index) in displayArticle.metadata.bibliography" :key="index">
+            {{ ref.author }} ({{ ref.year }}). <em>{{ ref.title }}</em>
+            <span v-if="ref.location && ref.publisher">. {{ ref.location }}: {{ ref.publisher }}</span><span v-else-if="ref.location">. {{ ref.location }}</span><span v-else-if="ref.publisher">. {{ ref.publisher }}</span>.
           </li>
         </ul>
       </div>
 
       <!-- Autores -->
-      <div v-if="displayArticle.attributes.authors && displayArticle.attributes.authors.length" class="article-section">
+      <div class="article-section">
         <h2 class="section-title">Autor(es):</h2>
         <ul class="author-list">
-          <li v-for="(author, index) in displayArticle.attributes.authors" :key="index">
-            {{ author.name }}
-            <span v-if="author.institution"> - {{ author.institution }}</span>
+          <li>
+            {{ displayArticle.author_name }}
+            <span v-if="displayArticle.author_institution"> - {{ displayArticle.author_institution }}</span>
+            <div v-if="displayArticle.author_email" class="author-email">
+              <em>{{ displayArticle.author_email }}</em>
+            </div>
           </li>
         </ul>
       </div>
 
-      <p class="updated">Última atualização: {{ formatDate(displayArticle.attributes.updatedAt) }}</p>
-      <p v-if="displayArticle.attributes.createdAt" class="created">Criado em: {{ formatDate(displayArticle.attributes.createdAt) }}</p>
+      <p class="updated">Última atualização: {{ formatDate(displayArticle.updated_at) }}</p>
+      <p v-if="displayArticle.created_at" class="created">Criado em: {{ formatDate(displayArticle.created_at) }}</p>
     </div>
   </div>
 </template>
@@ -163,9 +192,10 @@
 <script>
 import api from '@/services/api';
 import {useMarkdown} from "@/composables/markdown.js";
+import DOMPurify from 'dompurify';
 
 export default {
-  name: 'Article',
+  name: 'ArticleView',
   props: {
     article: {
       type: Object,
@@ -196,41 +226,25 @@ export default {
 
     const {id} = this.$route.params;
     try {
+      // Updated API call for new backend structure
       const response = await api.get(`/submissions/id/${id}`);
       const submission = response.data.data.submission;
-      const metadata = submission.metadata || {};
 
+      // Map the new database structure directly
       this.loadedArticle = {
         id: submission.id,
-        attributes: {
-          title: submission.title,
-          summary: submission.summary,
-          content: submission.content,
-          updatedAt: submission.updated_at,
-          createdAt: submission.created_at,
-          category: submission.category,
-          keywords: submission.keywords || [],
-          authors: submission.author_name ? [{
-            name: submission.author_name,
-            institution: submission.author_institution
-          }] : [],
-          image: metadata.image ? {
-            url: metadata.image.url,
-            alternativeText: metadata.image.alt || '',
-            caption: metadata.image.caption || '',
-            credit: metadata.image.credit || ''
-          } : null,
-          birth: metadata.birth,
-          death: metadata.death,
-          works: metadata.works || [],
-          bibliography: metadata.bibliography || [],
-          themes: metadata.themes || [],
-          occupation: metadata.occupation || [],
-          organizations: metadata.organizations || [],
-          alternativeNames: metadata.alternativeNames || [],
-          periods: metadata.periods,
-          sections: metadata.sections || []
-        }
+        title: submission.title,
+        summary: submission.summary,
+        content: submission.content,
+        content_html: submission.content_html, // New HTML field
+        updated_at: submission.updated_at,
+        created_at: submission.created_at,
+        category: submission.category,
+        keywords: submission.keywords || [],
+        author_name: submission.author_name,
+        author_email: submission.author_email,
+        author_institution: submission.author_institution,
+        metadata: submission.metadata || {} // Enhanced metadata structure
       };
     } catch (error) {
       console.error('Error loading article:', error);
@@ -241,10 +255,34 @@ export default {
   },
   methods: {
     formatDate(date) {
-      return new Date(date).toLocaleDateString();
+      if (!date) return '';
+      return new Date(date).toLocaleDateString('pt-BR');
     },
+
+    formatBirthDeath(birthDeathObj) {
+      if (!birthDeathObj) return '';
+      let result = '';
+      if (birthDeathObj.date) {
+        result += this.formatDate(birthDeathObj.date);
+      }
+      if (birthDeathObj.place) {
+        result += result ? `, ${birthDeathObj.place}` : birthDeathObj.place;
+      }
+      return result;
+    },
+
+    sanitizeHtml(html) {
+      if (!html) return '';
+      // Configure DOMPurify to allow safe HTML tags used in our content
+      return DOMPurify.sanitize(html, {
+        ALLOWED_TAGS: ['p', 'strong', 'em', 'u', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'blockquote', 'a'],
+        ALLOWED_ATTR: ['href', 'target', 'rel']
+      });
+    },
+
     processContent(content) {
       if (!content) return '';
+      // Keep original markdown processing for fallback
       let cleanContent = content
           .replace(/^\s*## /gm, '## ')
           .replace(/\n\s*\n/g, '\n\n')
@@ -254,6 +292,7 @@ export default {
           .trim();
       return useMarkdown(cleanContent);
     },
+
     useMarkdown,
   },
 };
@@ -413,6 +452,15 @@ body {
   margin-bottom: 5px;
 }
 
+.periods {
+  margin-top: 5px;
+}
+
+.periods div {
+  margin-bottom: 3px;
+  font-size: 0.95rem;
+}
+
 /* Seções do Artigo */
 .article-section {
   margin-top: 40px;
@@ -426,12 +474,51 @@ body {
   padding-bottom: 8px;
 }
 
+.section-subtitle {
+  font-size: 1.4rem;
+  margin-bottom: 10px;
+  color: var(--color-heading);
+  margin-top: 25px;
+}
+
+.content-section {
+  margin-bottom: 25px;
+}
+
+.section-content {
+  margin-bottom: 15px;
+  line-height: 1.7;
+  text-align: justify;
+}
+
 .article-content-text {
   font-size: 1.1rem;
   line-height: 1.8;
   margin-bottom: 20px;
   color: var(--color-text);
   text-align: justify;
+}
+
+/* HTML content specific styling */
+.html-content :deep(p) {
+  margin-bottom: 1.2em;
+  line-height: 1.8;
+}
+
+.html-content :deep(h2) {
+  font-size: 1.4rem;
+  margin-top: 30px;
+  margin-bottom: 15px;
+  color: var(--color-heading);
+  border-bottom: 1px solid var(--color-heading);
+  padding-bottom: 5px;
+}
+
+.html-content :deep(h3) {
+  font-size: 1.2rem;
+  margin-top: 25px;
+  margin-bottom: 12px;
+  color: var(--color-heading);
 }
 
 .works-list,
@@ -446,6 +533,13 @@ body {
 .author-list li {
   margin-bottom: 10px;
   line-height: 1.6;
+}
+
+.author-email {
+  font-size: 0.9rem;
+  color: var(--color-text);
+  opacity: 0.8;
+  margin-top: 3px;
 }
 
 /* Meta informações */
