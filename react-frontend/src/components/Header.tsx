@@ -1,5 +1,5 @@
 import { Search, Menu } from "lucide-react";
-import { Button } from "@/components/ui/button.tsx";
+import { Button } from "@/components/ui/button";
 
 const Header = () => {
   return (

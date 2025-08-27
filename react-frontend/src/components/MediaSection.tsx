@@ -1,5 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card.tsx";
-import { Badge } from "@/components/ui/badge.tsx";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const featuredContent = [
   {

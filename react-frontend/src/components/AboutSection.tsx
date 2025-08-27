@@ -1,7 +1,6 @@
 import { ArrowRight, Globe, BookOpen } from "lucide-react";
-import { Button } from "@/components/ui/button.tsx";
-// TODO: why are these @/components/ui imports underlined with red? do we need to update something in components.json? the app is running fine without errors though.
-import { Card, CardContent } from "@/components/ui/card.tsx";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 const AboutSection = () => {
   return (

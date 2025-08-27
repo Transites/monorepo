@@ -1,5 +1,5 @@
 import { User, BookOpen, Calendar, Building2, Briefcase } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const categories = [
   {

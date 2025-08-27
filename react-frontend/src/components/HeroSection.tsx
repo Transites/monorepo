@@ -1,6 +1,6 @@
 import { Search, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button.tsx";
-import { Input } from "@/components/ui/input.tsx";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useState } from "react";
 
 const HeroSection = () => {

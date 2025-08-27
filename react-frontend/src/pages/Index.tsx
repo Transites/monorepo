@@ -1,9 +1,9 @@
-import Header from "@/components/Header.tsx";
-import HeroSection from "@/components/HeroSection.tsx";
-import CategoriesSection from "@/components/CategoriesSection.tsx";
-import AboutSection from "@/components/AboutSection.tsx";
-import MediaSection from "@/components/MediaSection.tsx";
-import Footer from "@/components/Footer.tsx";
+import Header from "@/components/Header";
+import HeroSection from "@/components/HeroSection";
+import CategoriesSection from "@/components/CategoriesSection";
+import AboutSection from "@/components/AboutSection";
+import MediaSection from "@/components/MediaSection";
+import Footer from "@/components/Footer";
 
 const Index = () => {
   return (
