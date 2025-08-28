@@ -1,3 +1,11 @@
+/**
+ * ROUTE USAGE STATUS:
+ * ✅ ACTIVE: GET /api/submissions, GET /api/submissions/id/:id
+ * ❌ DEPRECATED: All token-based endpoints (POST, PUT, auto-save, etc.)
+ * 
+ * See BACKEND_ROUTE_USAGE_ANALYSIS.md for details
+ */
+
 import express from 'express';
 import submissionController from '../controllers/submission';
 import tokenMiddleware from '../middleware/tokens';
@@ -9,10 +17,23 @@ const router = express.Router();
 // Rate limiting para submissões
 const submissionRateLimit = require('../middleware/security').createSubmissionLimiter();
 
+// Middleware to add deprecation headers for unused endpoints
+const addDeprecationHeader = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    res.set('X-API-Deprecation-Warning', 'This endpoint is not used by current frontend');
+    res.set('X-API-Status', 'DEPRECATED - Legacy submission system not implemented in UI');
+    next();
+};
+
+/**
+ * @deprecated NOT USED by React frontend - submission workflow not implemented in UI
+ * @status UNTESTED - May not work as expected
+ * @warning DO NOT MODIFY without thorough testing and frontend implementation
+ */
 // POST /api/submissions
 // Criar nova submissão
-// Public (com rate limiting)
+// DEPRECATED - Legacy submission system
 router.post('/',
+    addDeprecationHeader,
     submissionRateLimit,
     submissionValidators.sanitizeSubmissionData,
     submissionValidators.validateCreateSubmission,
@@ -26,10 +47,16 @@ router.get('/id/:id',
     errorHandler.asyncHandler(submissionController.getSubmissionById)
 );
 
+/**
+ * @deprecated NOT USED by React frontend - token-based retrieval not implemented
+ * @status UNTESTED - May not work as expected  
+ * @warning DO NOT MODIFY without thorough testing and frontend implementation
+ */
 // GET /api/submissions/:token
 // Buscar submissão por token
-// Public (requer token válido)
+// DEPRECATED - Token system not used
 router.get('/:token',
+    addDeprecationHeader,
     tokenMiddleware.createTokenRateLimit(),
     submissionValidators.validateTokenParam,
     tokenMiddleware.validateSubmissionToken,
@@ -37,10 +64,16 @@ router.get('/:token',
     errorHandler.asyncHandler(submissionController.getSubmissionByToken)
 );
 
+/**
+ * @deprecated NOT USED by React frontend - submission editing not implemented
+ * @status UNTESTED - May not work as expected
+ * @warning DO NOT MODIFY without thorough testing and frontend implementation
+ */
 // PUT /api/submissions/:token
-// Atualizar submissão
-// Public (requer token válido + email autor)
+// Atualizar submissão  
+// DEPRECATED - Submission editing not used
 router.put('/:token',
+    addDeprecationHeader,
     tokenMiddleware.createTokenRateLimit(),
     submissionValidators.sanitizeSubmissionData,
     submissionValidators.validateTokenParam,
@@ -53,10 +86,16 @@ router.put('/:token',
     errorHandler.asyncHandler(submissionController.updateSubmission)
 );
 
+/**
+ * @deprecated NOT USED by React frontend - submission review workflow not implemented
+ * @status UNTESTED - May not work as expected
+ * @warning DO NOT MODIFY without thorough testing and frontend implementation
+ */
 // POST /api/submissions/:token/submit
 // Enviar submissão para revisão
-// Public (requer token válido + email autor + submissão completa)
+// DEPRECATED - Review workflow not used
 router.post('/:token/submit',
+    addDeprecationHeader,
     tokenMiddleware.createTokenRateLimit(),
     submissionValidators.validateTokenParam,
     tokenMiddleware.validateSubmissionToken,
@@ -67,28 +106,46 @@ router.post('/:token/submit',
     errorHandler.asyncHandler(submissionController.submitForReview)
 );
 
+/**
+ * @deprecated NOT USED by React frontend - preview functionality not implemented
+ * @status UNTESTED - May not work as expected
+ * @warning DO NOT MODIFY without thorough testing and frontend implementation
+ */
 // GET /api/submissions/:token/preview
 // Gerar preview da submissão
-// Public (requer token válido)
+// DEPRECATED - Preview not used
 router.get('/:token/preview',
+    addDeprecationHeader,
     submissionValidators.validateTokenParam,
     tokenMiddleware.validateSubmissionToken,
     errorHandler.asyncHandler(submissionController.getSubmissionPreview)
 );
 
+/**
+ * @deprecated NOT USED by React frontend - statistics not implemented
+ * @status UNTESTED - May not work as expected
+ * @warning DO NOT MODIFY without thorough testing and frontend implementation
+ */
 // GET /api/submissions/:token/stats
 // Obter estatísticas da submissão
-// Public (requer token válido)
+// DEPRECATED - Statistics not used
 router.get('/:token/stats',
+    addDeprecationHeader,
     submissionValidators.validateTokenParam,
     tokenMiddleware.validateSubmissionToken,
     errorHandler.asyncHandler(submissionController.getSubmissionStats)
 );
 
+/**
+ * @deprecated NOT USED by React frontend - auto-save not implemented
+ * @status UNTESTED - May not work as expected
+ * @warning DO NOT MODIFY without thorough testing and frontend implementation
+ */
 // POST /api/submissions/:token/auto-save
 // Salvamento automático
-// Public (requer token válido + email autor)
+// DEPRECATED - Auto-save not used
 router.post('/:token/auto-save',
+    addDeprecationHeader,
     submissionValidators.validateTokenParam,
     submissionValidators.validateAutoSave,
     tokenMiddleware.validateSubmissionToken,
@@ -97,10 +154,16 @@ router.post('/:token/auto-save',
     errorHandler.asyncHandler(submissionController.autoSave)
 );
 
+/**
+ * @deprecated NOT USED by React frontend - in-progress check not implemented
+ * @status UNTESTED - May not work as expected
+ * @warning DO NOT MODIFY without thorough testing and frontend implementation
+ */
 // POST /api/submissions/edit
 // Verificar artigos em progresso por email
-// Public
+// DEPRECATED - Progress check not used
 router.post('/edit',
+    addDeprecationHeader,
     submissionValidators.validateEmailParam,
     errorHandler.asyncHandler(submissionController.checkInProgressArticles)
 );

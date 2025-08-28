@@ -17,6 +17,10 @@ interface SubmissionRequest extends Request {
 
 class SubmissionController {
     /**
+     * @deprecated NOT USED by React frontend - submission creation not implemented in UI
+     * @status UNTESTED - May not work as expected, part of unused submission workflow
+     * @warning DO NOT MODIFY without implementing submission form UI first
+     * 
      * POST /api/submissions
      * Criar nova submissão
      */
@@ -99,6 +103,10 @@ class SubmissionController {
     }
 
     /**
+     * @deprecated NOT USED by React frontend - token-based retrieval not implemented in UI
+     * @status UNTESTED - May not work as expected, part of unused token system
+     * @warning DO NOT MODIFY without implementing token-based features first
+     * 
      * GET /api/submissions/:token
      * Buscar submissão por token
      */
@@ -129,6 +137,10 @@ class SubmissionController {
     }
 
     /**
+     * @deprecated NOT USED by React frontend - submission editing not implemented in UI
+     * @status UNTESTED - May not work as expected, part of unused submission workflow
+     * @warning DO NOT MODIFY without implementing submission editing UI first
+     * 
      * PUT /api/submissions/:token
      * Atualizar submissão
      */
@@ -209,6 +221,10 @@ class SubmissionController {
     }
 
     /**
+     * @deprecated NOT USED by React frontend - preview functionality not implemented in UI
+     * @status UNTESTED - May not work as expected, part of unused preview system
+     * @warning DO NOT MODIFY without implementing preview UI first
+     * 
      * GET /api/submissions/:token/preview
      * Gerar preview da submissão
      */
@@ -236,6 +252,10 @@ class SubmissionController {
     }
 
     /**
+     * @deprecated NOT USED by React frontend - statistics not implemented in UI
+     * @status UNTESTED - May not work as expected, part of unused statistics system
+     * @warning DO NOT MODIFY without implementing statistics UI first
+     * 
      * GET /api/submissions/:token/stats
      * Obter estatísticas da submissão
      */
@@ -268,6 +288,10 @@ class SubmissionController {
     }
 
     /**
+     * @deprecated NOT USED by React frontend - author dashboard not implemented in UI
+     * @status UNTESTED - May not work as expected, part of unused author system
+     * @warning DO NOT MODIFY without implementing author dashboard UI first
+     * 
      * GET /api/author/submissions
      * Listar submissões do autor (requer email)
      */
@@ -301,6 +325,10 @@ class SubmissionController {
     }
 
     /**
+     * @deprecated NOT USED by React frontend - auto-save not implemented in UI
+     * @status UNTESTED - May not work as expected, part of unused auto-save system
+     * @warning DO NOT MODIFY without implementing auto-save UI first
+     * 
      * POST /api/submissions/:token/auto-save
      * Auto-save (salvamento automático)
      */
@@ -338,6 +366,10 @@ class SubmissionController {
     }
 
     /**
+     * @deprecated NOT USED by React frontend - in-progress check not implemented in UI
+     * @status UNTESTED - May not work as expected, part of unused progress tracking
+     * @warning DO NOT MODIFY without implementing progress tracking UI first
+     * 
      * POST /api/submissions/edit
      * Verificar artigos em progresso por email
      */

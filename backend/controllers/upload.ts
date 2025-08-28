@@ -38,6 +38,13 @@ interface AuthenticatedRequest extends Request {
     user?: any;
 }
 
+/**
+ * ❌ ALL UPLOAD CONTROLLER METHODS DEPRECATED 
+ * File upload system not used by React frontend
+ * See BACKEND_ROUTE_USAGE_ANALYSIS.md for details
+ * 
+ * @warning DO NOT MODIFY without implementing file upload UI first
+ */
 class UploadController {
 
     // Middleware para upload de arquivo único
@@ -317,6 +324,10 @@ class UploadController {
     };
 
     /**
+     * @deprecated NOT USED by React frontend - upload statistics not implemented in UI
+     * @status UNTESTED - Part of unused statistics system
+     * @warning DO NOT MODIFY without implementing statistics UI first
+     * 
      * GET /api/upload/stats
      * Estatísticas de upload
      */
@@ -341,6 +352,10 @@ class UploadController {
     };
 
     /**
+     * @deprecated NOT USED by React frontend - file cleanup not implemented in UI
+     * @status UNTESTED - Part of unused admin maintenance system
+     * @warning DO NOT MODIFY without implementing admin file management UI first
+     * 
      * POST /api/admin/upload/cleanup
      * Limpeza de arquivos órfãos (apenas admin)
      */

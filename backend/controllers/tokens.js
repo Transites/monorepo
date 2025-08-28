@@ -4,6 +4,13 @@ const logger = require('../middleware/logging');
 const responses = require('../utils/responses');
 const { validationResult } = require('express-validator');
 
+/**
+ * ❌ ALL TOKEN CONTROLLER METHODS DEPRECATED
+ * Token system not used by React frontend
+ * See BACKEND_ROUTE_USAGE_ANALYSIS.md for details
+ * 
+ * @warning DO NOT MODIFY without implementing token-based features first
+ */
 class TokenController {
     /**
      * GET /api/tokens/:token/validate
@@ -62,6 +69,10 @@ class TokenController {
     }
 
     /**
+     * @deprecated NOT USED by React frontend - email verification not implemented
+     * @status UNTESTED - No token-based UI to test this functionality
+     * @warning DO NOT MODIFY without implementing email verification UI first
+     * 
      * POST /api/tokens/:token/verify-email
      * Verificar email do autor antes de dar acesso completo
      */

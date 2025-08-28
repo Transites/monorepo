@@ -4,6 +4,13 @@ const logger = require('../middleware/logging');
 const responses = require('../utils/responses');
 const { validationResult } = require('express-validator');
 
+/**
+ * ❌ ALL AUTH CONTROLLER METHODS DEPRECATED
+ * Authentication system not used by React frontend
+ * See BACKEND_ROUTE_USAGE_ANALYSIS.md for details
+ * 
+ * @warning DO NOT MODIFY without implementing admin UI first
+ */
 class AuthController {
     /**
      * POST /api/auth/login
@@ -156,6 +163,10 @@ class AuthController {
     }
 
     /**
+     * @deprecated NOT USED by React frontend - admin logout not implemented in UI
+     * @status UNTESTED - No admin interface to test this functionality
+     * @warning DO NOT MODIFY without implementing admin logout UI first
+     * 
      * POST /api/auth/logout
      * Faz logout do usuário
      */
@@ -186,6 +197,10 @@ class AuthController {
     }
 
     /**
+     * @deprecated NOT USED by React frontend - user profile not implemented in UI
+     * @status UNTESTED - No admin interface to test this functionality
+     * @warning DO NOT MODIFY without implementing user profile UI first
+     * 
      * GET /api/auth/me
      * Retorna dados do usuário logado
      */
@@ -212,6 +227,10 @@ class AuthController {
     }
 
     /**
+     * @deprecated NOT USED by React frontend - password change not implemented in UI
+     * @status UNTESTED - No admin interface to test this functionality
+     * @warning DO NOT MODIFY without implementing password change UI first
+     * 
      * PUT /api/auth/change-password
      * Altera senha do usuário logado
      */
