@@ -40,6 +40,13 @@ router.post('/',
     errorHandler.asyncHandler(submissionController.createSubmission)
 );
 
+// GET /api/submissions/search-fuzzy  
+// Busca fuzzy tolerante a erros de digitação
+// Public
+router.get('/search-fuzzy',
+    errorHandler.asyncHandler(submissionController.searchSubmissionsFuzzy)
+);
+
 // GET /api/submissions/id/:id
 // Buscar submissão por ID
 // Public

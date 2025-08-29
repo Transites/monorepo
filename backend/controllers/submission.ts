@@ -423,6 +423,78 @@ class SubmissionController {
     }
 
     /**
+     * GET /api/submissions/search-fuzzy
+     * Busca fuzzy tolerante a erros de digitação
+     */
+    async searchSubmissionsFuzzy(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+            // Extrair parâmetros de busca fuzzy
+            const searchTerm = req.query.search as string;
+            const threshold = parseFloat(req.query.threshold as string) || 0.15;
+            const top = parseInt(req.query.top as string) || 10;
+            const skip = parseInt(req.query.skip as string) || 0;
+
+            // Validar termo de busca obrigatório
+            if (!searchTerm || !searchTerm.trim()) {
+                return responses.badRequest(res, 'Termo de busca é obrigatório para busca fuzzy', [
+                    'O parâmetro "search" é obrigatório'
+                ]);
+            }
+
+            // Validar threshold
+            if (threshold < 0.05 || threshold > 1.0) {
+                return responses.badRequest(res, 'Limiar de similaridade inválido', [
+                    'O parâmetro "threshold" deve estar entre 0.05 e 1.0'
+                ]);
+            }
+
+            // Realizar busca fuzzy
+            const result = await submissionService.listSubmissionsWithFuzzy(
+                searchTerm.trim(), 
+                threshold, 
+                { top, skip }
+            );
+
+            logger.audit('Fuzzy search request', {
+                searchTerm: searchTerm.trim(),
+                threshold,
+                resultsCount: result.submissions.length,
+                exactMatches: result.metadata.exactCount,
+                fuzzyMatches: result.metadata.fuzzyCount,
+                avgRelevance: result.metadata.avgRelevance,
+                ip: req.ip
+            });
+
+            return responses.success(res, {
+                submissions: result.submissions,
+                pagination: result.pagination,
+                searchMetadata: {
+                    searchTerm: searchTerm.trim(),
+                    threshold,
+                    exactMatches: result.metadata.exactCount,
+                    fuzzyMatches: result.metadata.fuzzyCount,
+                    totalMatches: result.metadata.exactCount + result.metadata.fuzzyCount,
+                    averageRelevance: result.metadata.avgRelevance,
+                    searchType: 'fuzzy'
+                },
+                tips: result.metadata.exactCount === 0 && result.metadata.fuzzyCount > 0 ? [
+                    'Encontramos resultados similares ao seu termo de busca',
+                    'Resultados são ordenados por relevância',
+                    'Tente ajustar sua busca para encontrar mais resultados'
+                ] : undefined
+            }, `${result.submissions.length} resultados encontrados`);
+
+        } catch (error: any) {
+            return handleControllerError(error, res, next, {
+                searchTerm: req.query.search,
+                threshold: req.query.threshold,
+                operation: 'searchSubmissionsFuzzy',
+                ip: req.ip
+            });
+        }
+    }
+
+    /**
      * GET /api/submissions
      * Listar todas as submissões com suporte a busca e paginação
      */

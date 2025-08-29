@@ -1076,6 +1076,169 @@ class SubmissionService {
     }
 
     /**
+     * Listar submissões com busca fuzzy (tolerante a erros de digitação)
+     * @param searchTerm Termo de busca
+     * @param threshold Limiar de similaridade (padrão: 0.15)
+     * @param pagination Parâmetros de paginação
+     * @returns Lista de submissões com scores de relevância e tipos de match
+     */
+    async listSubmissionsWithFuzzy(searchTerm: string, threshold = 0.15, pagination = {
+        top: 10,
+        skip: 0
+    }): Promise<ListSubmissionsResult & { 
+        metadata: { 
+            exactCount: number; 
+            fuzzyCount: number; 
+            avgRelevance: number;
+            searchType: 'fuzzy';
+        } 
+    }> {
+        try {
+            if (!searchTerm || !searchTerm.trim()) {
+                throw new ValidationException('Search term is required for fuzzy search');
+            }
+
+            const cleanSearchTerm = searchTerm.trim();
+
+            // Hybrid search: exact matches first, fuzzy matches second
+            const hybridQuery = `
+                WITH exact_matches AS (
+                    SELECT 
+                        id, title, summary, status, category, author_name, author_email,
+                        created_at, updated_at, expires_at, metadata, keywords,
+                        1.0 as relevance_score, 
+                        'exact' as match_type,
+                        (SELECT COUNT(*) FROM feedback WHERE submission_id = s.id) as feedback_count
+                    FROM submissions s
+                    WHERE to_tsvector('portuguese', title || ' ' || COALESCE(summary, '') || ' ' || COALESCE(content, ''))
+                          @@ plainto_tsquery('portuguese', $1)
+                    AND status = 'PUBLISHED'
+                ),
+                fuzzy_matches AS (
+                    SELECT 
+                        id, title, summary, status, category, author_name, author_email,
+                        created_at, updated_at, expires_at, metadata, keywords,
+                        GREATEST(
+                            similarity(title, $1), 
+                            similarity(author_name, $1)
+                        ) as relevance_score,
+                        'fuzzy' as match_type,
+                        (SELECT COUNT(*) FROM feedback WHERE submission_id = s.id) as feedback_count
+                    FROM submissions s
+                    WHERE (similarity(title, $1) > $2 OR similarity(author_name, $1) > $2)
+                    AND id NOT IN (SELECT id FROM exact_matches)
+                    AND status = 'PUBLISHED'
+                ),
+                combined_results AS (
+                    SELECT *, 'exact' as result_source FROM exact_matches
+                    UNION ALL
+                    SELECT *, 'fuzzy' as result_source FROM fuzzy_matches
+                )
+                SELECT * FROM combined_results
+                ORDER BY relevance_score DESC, match_type ASC
+                LIMIT $3 OFFSET $4
+            `;
+
+            // Count query for pagination
+            const countQuery = `
+                WITH exact_matches AS (
+                    SELECT id
+                    FROM submissions s
+                    WHERE to_tsvector('portuguese', title || ' ' || COALESCE(summary, '') || ' ' || COALESCE(content, ''))
+                          @@ plainto_tsquery('portuguese', $1)
+                    AND status = 'PUBLISHED'
+                ),
+                fuzzy_matches AS (
+                    SELECT id
+                    FROM submissions s
+                    WHERE (similarity(title, $1) > $2 OR similarity(author_name, $1) > $2)
+                    AND id NOT IN (SELECT id FROM exact_matches)
+                    AND status = 'PUBLISHED'
+                )
+                SELECT 
+                    (SELECT COUNT(*) FROM exact_matches) as exact_count,
+                    (SELECT COUNT(*) FROM fuzzy_matches) as fuzzy_count,
+                    (SELECT COUNT(*) FROM exact_matches) + (SELECT COUNT(*) FROM fuzzy_matches) as total_count
+            `;
+
+            // Execute queries
+            const [resultQuery, countResult] = await Promise.all([
+                db.query(hybridQuery, [cleanSearchTerm, threshold, pagination.top, pagination.skip]),
+                db.query(countQuery, [cleanSearchTerm, threshold])
+            ]);
+
+            const submissions = resultQuery.rows as (SubmissionSummary & { 
+                relevance_score: number; 
+                match_type: 'exact' | 'fuzzy';
+                result_source: string;
+            })[];
+
+            const counts = countResult.rows[0];
+            const total = parseInt(counts.total_count);
+            const exactCount = parseInt(counts.exact_count);
+            const fuzzyCount = parseInt(counts.fuzzy_count);
+
+            // Calculate average relevance
+            const avgRelevance = submissions.length > 0 
+                ? submissions.reduce((sum, sub) => sum + sub.relevance_score, 0) / submissions.length
+                : 0;
+
+            const totalPages = Math.ceil(total / pagination.top);
+            const currentPage = Math.floor(pagination.skip / pagination.top) + 1;
+
+            logger.audit('Fuzzy search performed', {
+                searchTerm: cleanSearchTerm,
+                threshold,
+                exactMatches: exactCount,
+                fuzzyMatches: fuzzyCount,
+                totalResults: total,
+                avgRelevance: avgRelevance.toFixed(3)
+            });
+
+            return {
+                submissions: submissions.map(sub => ({
+                    id: sub.id,
+                    title: sub.title,
+                    status: sub.status,
+                    category: sub.category,
+                    created_at: sub.created_at,
+                    updated_at: sub.updated_at,
+                    expires_at: sub.expires_at,
+                    feedback_count: sub.feedback_count
+                })),
+                pagination: {
+                    page: currentPage,
+                    limit: pagination.top,
+                    total,
+                    totalPages,
+                    hasNext: pagination.skip + pagination.top < total,
+                    hasPrev: pagination.skip > 0
+                },
+                metadata: {
+                    exactCount,
+                    fuzzyCount,
+                    avgRelevance: parseFloat(avgRelevance.toFixed(3)),
+                    searchType: 'fuzzy'
+                }
+            };
+
+        } catch (error: any) {
+            logger.error('Error in fuzzy search', {
+                searchTerm,
+                threshold,
+                pagination,
+                error: error?.message
+            });
+
+            if (error instanceof ValidationException) {
+                throw error;
+            }
+
+            throw new DatabaseException('Erro na busca fuzzy', error);
+        }
+    }
+
+    /**
      * Listar todas as submissões com suporte a busca e paginação
      * @param searchTerm Termo de busca opcional
      * @param requestedSubmissionState Estado das submissões a serem retornadas (DRAFT, READY, BOTH)
