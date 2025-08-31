@@ -1,26 +1,49 @@
-# monorepo
+# Transitos Monorepo
 
-Este repositório contém o frontend do projeto Transites desenvolvido na disciplina Laboratório de Métodos Ágeis (MAC0472)
+This repository contains the Transitos project - an academic submission and encyclopedia management system developed for IEA-USP. It consists of a React frontend and Node.js/Express backend with PostgreSQL database.
 
-## Variáveis de ambiente
+## Architecture
 
-| Nome da Variável      | Descrição | Exemplo |
-| --------------------- | --------- | ------- |
-| VITE_CONTRIBUTE_EMAIL | Email usado na seção de contribuição | transitos@example.com |
-| VITE_STRAPI_BASE_URL  | URL do strapi | http://localhost:1337 |
+- **React Frontend** (`/react-frontend/`) - Modern React 18 application with TypeScript and Tailwind CSS
+- **Express.js Backend** (`/backend/`) - TypeScript API server with PostgreSQL database
+- **Documentation** (`/docs/`) - Project documentation and API references
 
-> [!NOTE]  
-> A variável `VITE_STRAPI_BASE_URL` precisa estar presente para que o frontend
-seja exibido corretamente.
+## Environment Variables
 
-## Como rodar o projeto
+| Variable Name | Description | Example |
+| ------------- | ----------- | ------- |
+| VITE_CONTRIBUTE_EMAIL | Contact email for contributions | transitos@example.com |
 
-```
+## Development Setup
+
+### Using Docker (Recommended)
+
+```bash
+# Start both frontend and backend
 docker-compose up
-```
 
-## Como parar de rodar o projeto
-
-```
+# Stop services  
 docker-compose down
 ```
+
+### Manual Setup
+
+#### Backend
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+#### React Frontend
+```bash
+cd react-frontend
+npm install
+npm run dev
+```
+
+## Documentation
+
+For detailed development information, see:
+- `/CLAUDE.md` - Complete development guide
+- `/docs/` - Technical documentation and API references

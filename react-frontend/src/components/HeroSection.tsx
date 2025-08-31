@@ -2,17 +2,52 @@ import { Search, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
+import { useSearch } from "@/hooks/use-search";
+import { SearchResults } from "@/components/SearchResults";
 
 const HeroSection = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [showResults, setShowResults] = useState(false);
+  
+  const {
+    query,
+    results,
+    isLoading,
+    error,
+    hasSearched,
+    hasResults,
+    setQuery,
+    search,
+    clearSearch
+  } = useSearch({
+    threshold: 0.15,
+    top: 10,
+    debounceMs: 500
+  });
 
   const suggestions = [
-    "Machado de Assis",
-    "Alliance Française",
-    "Semana de Arte Moderna",
+    "Vicente do Rego Monteiro",
+    "Plínio Sussekind",
+    "Alberto Betim",
     "Jean-Baptiste Debret",
     "Festival de Cannes"
   ];
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setQuery(suggestion);
+    setShowResults(true);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setQuery(value);
+    
+    if (!value.trim()) {
+      setShowResults(false);
+      clearSearch();
+    } else {
+      setShowResults(true);
+    }
+  };
 
   return (
     <section id="inicio" className="py-20 lg:py-32 bg-gradient-to-b from-background to-muted/30">
@@ -34,37 +69,94 @@ const HeroSection = () => {
           </p>
 
           {/* Search Section */}
-          <div className="max-w-2xl mx-auto mb-8">
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder="Pesquise pessoas, obras, eventos, organizações..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-14 text-lg pl-6 pr-20 rounded-full border-2 focus:border-primary"
-              />
-              <Button 
-                className="absolute right-2 top-2 h-10 px-6 rounded-full"
-                onClick={() => console.log('Searching for:', searchQuery)}
-              >
-                <Search className="h-4 w-4 mr-2" />
-                Buscar
-              </Button>
+          <div className="max-w-4xl mx-auto mb-8">
+            <div className="max-w-2xl mx-auto">
+              <div className="relative">
+                <div className="relative">
+                  <Input
+                    type="text"
+                    placeholder="Pesquise pessoas, obras, eventos, organizações..."
+                    value={query}
+                    onChange={handleInputChange}
+                    className="h-14 text-lg pl-6 pr-14 rounded-full border-2 focus:border-primary"
+                  />
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    {isLoading ? (
+                      <Search className="h-5 w-5 text-muted-foreground animate-spin" />
+                    ) : (
+                      <Search className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Search Suggestions */}
+              {!showResults && (
+                <div className="mt-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-3">💡 Sugestões de busca:</p>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {suggestions.map((suggestion, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className="px-3 py-1 text-sm bg-muted hover:bg-muted/70 text-foreground rounded-full transition-colors border border-border hover:border-primary/50"
+                      >
+                        {suggestion}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Search Suggestions */}
-            <div className="mt-4 flex flex-wrap justify-center gap-2">
-              <span className="text-sm text-muted-foreground">Sugestões:</span>
-              {suggestions.map((suggestion, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSearchQuery(suggestion)}
-                  className="text-sm text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
+            {/* Search Results */}
+            {showResults && (
+              <div className="mt-8 max-w-4xl mx-auto">
+                <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border rounded-xl p-4 md:p-6 shadow-xl">
+                  <div className="mb-6 flex items-center justify-between">
+                    <h2 className="text-lg md:text-xl font-semibold text-foreground">Resultados da busca</h2>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => {
+                        setShowResults(false);
+                        clearSearch();
+                      }}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      ✕ Fechar
+                    </Button>
+                  </div>
+                  
+                  {results && (
+                    <SearchResults
+                      results={results}
+                      query={query}
+                      isLoading={isLoading}
+                      onSubmissionClick={(id) => {
+                        console.log('View submission:', id);
+                        // Here you would navigate to the submission detail page
+                      }}
+                    />
+                  )}
+
+                  {error && (
+                    <div className="text-center py-12">
+                      <div className="text-destructive text-lg font-semibold mb-3">⚠️ Erro na busca</div>
+                      <p className="text-muted-foreground mb-6 max-w-md mx-auto">{error}</p>
+                      <Button 
+                        variant="outline" 
+                        size="default"
+                        className="mt-2"
+                        onClick={() => setQuery(query)}
+                      >
+                        🔄 Tentar novamente
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Scroll Indicator */}
