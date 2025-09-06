@@ -74,14 +74,28 @@ export default {
 					DEFAULT: 'hsl(var(--evento))',
 					foreground: 'hsl(var(--evento-foreground))'
 				},
-				organizacao: {
-					DEFAULT: 'hsl(var(--organizacao))',
-					foreground: 'hsl(var(--organizacao-foreground))'
+				instituicoes: {
+					DEFAULT: 'hsl(var(--instituicoes))',
+					foreground: 'hsl(var(--instituicoes-foreground))'
 				},
 				empresa: {
 					DEFAULT: 'hsl(var(--empresa))',
 					foreground: 'hsl(var(--empresa-foreground))'
-				}
+				},
+				agrupamentos: {
+					DEFAULT: 'hsl(var(--agrupamentos))',
+					foreground: 'hsl(var(--agrupamentos-foreground))'
+				},
+				conceitos: {
+					DEFAULT: 'hsl(var(--conceitos))',
+					foreground: 'hsl(var(--conceitos-foreground))'
+				},
+				darkpink: 'hsl(var(--darkpink))',
+				darkyellow: 'hsl(var(--darkyellow))',
+				magenta: 'hsl(var(--magenta))',
+				cyan: 'hsl(var(--cyan))',
+				green: 'hsl(var(--green))',
+				lime: 'hsl(var(--lime))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

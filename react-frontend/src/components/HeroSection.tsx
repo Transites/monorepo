@@ -53,13 +53,19 @@ const HeroSection = () => {
     <section id="inicio" className="py-20 lg:py-32 bg-gradient-to-b from-background to-muted/30">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          {/* Hero Title */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6">
-            Enciclopédia Digital dos
-            <span className="block text-primary mt-2">
-              Intercâmbios Brasil-França
-            </span>
+          {/* New branding text above title */}
+          <div className="text-red-500 text-2xl sm:text-3xl font-bold mb-4">
+            Trânsitos | Circulations
+          </div>
+          
+          {/* Updated title with color styling */}
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-4">
+            Enciclopédia Digital das{" "}
+            <span className="text-darkpink">Relações Brasil-França</span>
           </h1>
+          <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-darkyellow mb-6">
+            (1880-1990)
+          </div>
 
           {/* Hero Description */}
           <p className="text-xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">

@@ -1,42 +1,80 @@
 import { Mail, ExternalLink } from "lucide-react";
+import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
 
 const Footer = () => {
+  const { scrollToElement } = useSmoothScroll();
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, elementId: string) => {
+    e.preventDefault();
+    scrollToElement(elementId, 80); // 80px offset for navbar
+  };
+
   return (
     <footer className="bg-primary text-primary-foreground py-12">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-3 gap-8">
-          {/* Brand */}
-          <div>
-            <h3 className="text-2xl font-bold mb-2">Trânsitos</h3>
-            <p className="text-primary-foreground/80 text-sm">
-              Enciclopédia Digital dos Intercâmbios Brasil-França
-            </p>
+          {/* Transitos branding with logo */}
+          <div className="flex items-center gap-3">
+            <img 
+              src="/lovable-uploads/016cd4f1-53a9-4afa-bf7f-015c51ec76f6.png" 
+              alt="Trânsitos Logo" 
+              className="h-8 w-8"
+            />
+            <div>
+              <h3 className="text-2xl font-bold">Trânsitos</h3>
+              <p className="text-sm text-primary-foreground/80">Enciclopédia Digital</p>
+            </div>
           </div>
 
-          {/* Links */}
+          {/* Links importantes */}
           <div>
-            <h4 className="font-semibold mb-4">Links Úteis</h4>
+            <h4 className="font-semibold mb-4">Links importantes</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="#sobre" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors flex items-center">
+                <a 
+                  href="#sobre" 
+                  onClick={(e) => handleNavClick(e, 'sobre')}
+                  className="text-primary-foreground/80 hover:text-primary-foreground transition-colors cursor-pointer"
+                >
                   Sobre o Projeto
-                  <ExternalLink className="ml-1 h-3 w-3" />
                 </a>
               </li>
               <li>
-                <a href="#metodologia" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-                  Metodologia
+                <a 
+                  href="#sobre-nos"
+                  onClick={(e) => handleNavClick(e, 'sobre-nos')}
+                  className="text-primary-foreground/80 hover:text-primary-foreground transition-colors cursor-pointer"
+                >
+                  Quem somos
                 </a>
               </li>
               <li>
-                <a href="#creditos" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-                  Créditos
+                <a 
+                  href="#categorias"
+                  onClick={(e) => handleNavClick(e, 'categorias')}
+                  className="text-primary-foreground/80 hover:text-primary-foreground transition-colors cursor-pointer"
+                >
+                  Categorias
                 </a>
               </li>
               <li>
-                <a href="#colabore" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">
-                  Como Colaborar
+                <a 
+                  href="#destaque"
+                  onClick={(e) => handleNavClick(e, 'destaque')}
+                  className="text-primary-foreground/80 hover:text-primary-foreground transition-colors cursor-pointer"
+                >
+                  Conteúdo em Destaque
                 </a>
+              </li>
+              <li>
+                <span className="text-primary-foreground/50">
+                  Como Colaborar (em breve)
+                </span>
+              </li>
+              <li>
+                <span className="text-primary-foreground/50">
+                  Metodologia (em breve)
+                </span>
               </li>
             </ul>
           </div>

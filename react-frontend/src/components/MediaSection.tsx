@@ -1,33 +1,34 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getCategoryColor, LEGACY_CATEGORY_MAPPING } from "@/lib/categoryColors";
 
 const featuredContent = [
   {
     title: "Missão Artística Francesa de 1816",
-    category: "Evento",
-    categoryColor: "evento",
+    category: "Eventos",
+    categoryColor: getCategoryColor("eventos"),
     description: "A chegada dos artistas franceses ao Brasil e sua influência na arte nacional",
     image: "/placeholder.svg"
   },
   {
     title: "Joaquim Nabuco",
-    category: "Pessoa", 
-    categoryColor: "pessoa",
+    category: "Pessoas", 
+    categoryColor: getCategoryColor("pessoas"),
     description: "Diplomata e abolicionista brasileiro com forte ligação com a França",
     image: "/placeholder.svg"
   },
   {
     title: "Maison de France",
-    category: "Organização",
-    categoryColor: "organizacao", 
-    description: "Centro cultural que promove intercâmbios entre os dois países",
+    category: "Instituições",
+    categoryColor: getCategoryColor("instituições"), 
+    description: "Centro cultural francês no Rio de Janeiro que promoveu intercâmbios artísticos",
     image: "/placeholder.svg"
   }
 ];
 
 const MediaSection = () => {
   return (
-    <section className="py-16 bg-background">
+    <section id="destaque" className="py-16 bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-2xl font-bold text-foreground mb-2">

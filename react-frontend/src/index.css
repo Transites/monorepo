@@ -47,16 +47,31 @@ All colors MUST be HSL.
     --ring: 222.2 84% 4.9%;
 
     /* Encyclopedia Category Colors */
-    --pessoa: 0 72% 51%;        /* Red #DC2626 */
+    --pessoa: 0 72% 51%;         /* Red */
     --pessoa-foreground: 0 0% 100%;
-    --obra: 262 83% 58%;        /* Purple #7C3AED */
+    --obra: 262 83% 58%;         /* Purple */  
     --obra-foreground: 0 0% 100%;
-    --evento: 45 93% 47%;       /* Yellow #EAB308 */
+    --evento: 142 76% 36%;       /* Green */
     --evento-foreground: 222.2 84% 4.9%;
-    --organizacao: 199 89% 48%; /* Light Blue #0EA5E9 */
-    --organizacao-foreground: 0 0% 100%;
-    --empresa: 262 83% 58%;     /* Purple #7C3AED */
+    --instituicoes: 199 89% 48%; /* Light Blue (renamed from organizacao) */
+    --instituicoes-foreground: 0 0% 100%;
+    --empresa: 262 83% 58%;      /* Purple */
     --empresa-foreground: 0 0% 100%;
+    --agrupamentos: 186 100% 56%; /* Cyan */
+    --agrupamentos-foreground: 0 0% 100%;
+    --conceitos: 45 93% 47%;     /* Yellow */
+    --conceitos-foreground: 222.2 84% 4.9%;
+
+    /* Additional Colors for Text Styling */
+    --darkpink: 330 81% 60%;    /* For "Relações Brasil-França" */
+    --darkyellow: 45 93% 47%;   /* For "(1880-1990)" */
+    --magenta: 300 76% 72%;     /* For "pessoas" */
+    --purple: 262 83% 58%;      /* For "obras" (reuse existing) */
+    --blue: 199 89% 48%;        /* For "instituições" (reuse organizacao) */
+    --cyan: 186 100% 56%;       /* For "empresas" */
+    --green: 142 76% 36%;       /* For "agrupamentos" */
+    --lime: 84 81% 44%;         /* For "eventos" */
+    --yellow: 45 93% 47%;       /* For "conceitos" (reuse existing) */
 
     --radius: 0.5rem;
 

@@ -1,52 +1,69 @@
-import { User, BookOpen, Calendar, Building2, Briefcase } from "lucide-react";
+import { User, BookOpen, Calendar, Building2, Briefcase, Users, Lightbulb } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { getCategoryColor } from "@/lib/categoryColors";
 
 const categories = [
   {
-    id: "pessoa",
-    title: "Pessoa",
-    description: "Personalidades que conectaram Brasil e França através da história",
+    id: 'pessoas',
+    title: 'Pessoas',
+    description: 'Indivíduos que participaram dos intercâmbios culturais',
     icon: User,
-    color: "pessoa",
-    examples: "Escritores, artistas, diplomatas, intelectuais"
+    color: getCategoryColor('pessoas'),
+    examples: 'Escritores, artistas, acadêmicos, diplomatas'
   },
   {
-    id: "obra",
-    title: "Obra",
-    description: "Criações artísticas e literárias que marcaram os intercâmbios culturais",
+    id: 'obras',
+    title: 'Obras',
+    description: 'Produções artísticas, literárias e intelectuais',
     icon: BookOpen,
-    color: "obra",
-    examples: "Livros, pinturas, filmes, composições musicais"
+    color: getCategoryColor('obras'),
+    examples: 'Livros, pinturas, esculturas, manuscritos'
   },
   {
-    id: "evento",
-    title: "Evento",
-    description: "Acontecimentos históricos que fortaleceram as relações bilaterais",
-    icon: Calendar,
-    color: "evento",
-    examples: "Exposições, festivais, conferências, celebrações"
-  },
-  {
-    id: "organizacao",
-    title: "Organização",
-    description: "Instituições que promoveram intercâmbios e cooperação cultural",
+    id: 'instituicoes',
+    title: 'Instituições',
+    description: 'Organizações que promoveram os intercâmbios',
     icon: Building2,
-    color: "organizacao",
-    examples: "Universidades, museus, centros culturais, fundações"
+    color: getCategoryColor('instituições'),
+    examples: 'Universidades, museus, bibliotecas, fundações'
   },
   {
-    id: "empresa",
-    title: "Empresa",
-    description: "Empresas que facilitaram conexões comerciais e culturais",
+    id: 'empresas',
+    title: 'Empresas',
+    description: 'Empresas envolvidas nos intercâmbios comerciais',
     icon: Briefcase,
-    color: "empresa",
-    examples: "Editoras, produtoras, importadoras, consultorias"
+    color: getCategoryColor('empresas'),
+    examples: 'Editoras, galerias, importadoras, consultorias'
+  },
+  {
+    id: 'agrupamentos',
+    title: 'Agrupamentos',
+    description: 'Grupos e coletivos que participaram dos intercâmbios',
+    icon: Users,
+    color: getCategoryColor('agrupamentos'),
+    examples: 'Associações, movimentos, círculos, redes'
+  },
+  {
+    id: 'eventos',
+    title: 'Eventos',
+    description: 'Acontecimentos significativos nos intercâmbios',
+    icon: Calendar,
+    color: getCategoryColor('eventos'),
+    examples: 'Exposições, conferências, festivais, congressos'
+  },
+  {
+    id: 'conceitos',
+    title: 'Conceitos',
+    description: 'Ideias e conceitos centrais dos intercâmbios',
+    icon: Lightbulb,
+    color: getCategoryColor('conceitos'),
+    examples: 'Modernismo, cosmopolitismo, identidade, circulação'
   }
 ];
 
 const CategoriesSection = () => {
   return (
-    <section className="py-20 bg-background">
+    <section id="categorias" className="py-20 bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
@@ -57,15 +74,21 @@ const CategoriesSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+        <div className="flex flex-wrap justify-center gap-6 max-w-6xl mx-auto">
           {categories.map((category) => {
             const Icon = category.icon;
             return (
               <Card 
                 key={category.id}
-                className={`group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 border-l-4 hover:border-l-8`}
+                className={`group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 w-full sm:w-72 lg:w-64`}
                 style={{
-                  borderLeftColor: `hsl(var(--${category.color}))`
+                  boxShadow: `inset 4px 0 0 hsl(var(--${category.color}))`,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = `inset 8px 0 0 hsl(var(--${category.color}))`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = `inset 4px 0 0 hsl(var(--${category.color}))`;
                 }}
               >
                 <CardHeader className="pb-4">
