@@ -521,6 +521,36 @@ class SubmissionController {
             });
         }
     }
+
+    /**
+     * POST /api/submissions/fix-content-html
+     * Fix content_html for all articles that have NULL content_html
+     * Utility endpoint for maintenance
+     */
+    async fixContentHtml(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+            logger.audit('Fix content_html endpoint called', {
+                userAgent: req.get('User-Agent'),
+                ip: req.ip
+            });
+
+            const result = await submissionService.fixAllContentHtml();
+
+            return responses.success(res, {
+                summary: {
+                    updated: result.updated,
+                    failed: result.failed,
+                    total: result.updated + result.failed
+                },
+                errors: result.errors
+            }, `Content_html fix completed: ${result.updated} updated, ${result.failed} failed`);
+
+        } catch (error: any) {
+            return handleControllerError(error, res, next, {
+                operation: 'fixContentHtml'
+            });
+        }
+    }
 }
 
 function validateListSubmissionsState(submissionState: string | undefined): string | undefined {

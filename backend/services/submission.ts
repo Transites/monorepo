@@ -4,6 +4,7 @@ import tokenService from './tokens';
 import emailService from './email';
 import constants from '../utils/constants';
 import {generateSlug} from '../utils/url';
+import markdownProcessor from '../utils/markdownProcessor';
 import {
     ValidationException,
     SubmissionNotFoundException,
@@ -117,11 +118,16 @@ class SubmissionService {
 
             // Iniciar transação
             return await db.transaction(async (client: any) => {
+                // Process content to HTML
+                const contentHtml = submissionData.content 
+                    ? markdownProcessor.processForDatabase(submissionData.content)
+                    : null;
+
                 // Criar submissão
                 const submission = await client.query(`
                     INSERT INTO submissions (token, author_name, author_email, author_institution,
-                                             title, summary, content, keywords, category, metadata)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                                             title, summary, content, content_html, keywords, category, metadata)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                     RETURNING *
                 `, [
                     await tokenService.generateSecureToken(),
@@ -131,6 +137,7 @@ class SubmissionService {
                     submissionData.title,
                     submissionData.summary || null,
                     submissionData.content || '',
+                    contentHtml,
                     submissionData.keywords || [],
                     submissionData.category || null,
                     submissionData.metadata || {}
@@ -379,6 +386,14 @@ class SubmissionService {
                 const updateValues: any[] = [];
                 let paramCount = 1;
 
+                // Check if content changed to update content_html
+                let contentHtml = null;
+                if (updateData.content !== undefined && updateData.content !== currentSubmission.content) {
+                    contentHtml = updateData.content 
+                        ? markdownProcessor.processForDatabase(updateData.content)
+                        : null;
+                }
+
                 // Campos que podem ser atualizados
                 const updatableFields = [
                     'title', 'summary', 'content', 'keywords',
@@ -398,6 +413,13 @@ class SubmissionService {
                         paramCount++;
                     }
                 });
+
+                // Add content_html update if content changed
+                if (contentHtml !== null) {
+                    updateFields.push(`content_html = $${paramCount}`);
+                    updateValues.push(contentHtml);
+                    paramCount++;
+                }
 
                 if (updateFields.length === 0) {
                     return currentSubmission; // Nenhuma mudança
@@ -1331,6 +1353,91 @@ class SubmissionService {
                 error: error?.message
             });
             throw new DatabaseException('Erro ao listar submissões', error);
+        }
+    }
+
+    /**
+     * Fix all articles that have NULL content_html by processing their content field
+     * This is a utility method to migrate existing articles
+     */
+    async fixAllContentHtml(): Promise<{
+        updated: number;
+        failed: number;
+        errors: string[];
+    }> {
+        try {
+            logger.audit('Starting content_html fix for all articles', {});
+
+            // Find all submissions with valid content (force update if requested)
+            const forceUpdate = true; // Force update all articles
+            const articles = await db.query(`
+                SELECT id, title, content 
+                FROM submissions 
+                WHERE content IS NOT NULL 
+                  AND content != ''
+                ${!forceUpdate ? 'AND content_html IS NULL' : ''}
+                ORDER BY created_at DESC
+            `);
+
+            if (articles.rows.length === 0) {
+                logger.audit('No articles need content_html fix', {});
+                return { updated: 0, failed: 0, errors: [] };
+            }
+
+            logger.audit('Found articles needing content_html fix', {
+                count: articles.rows.length
+            });
+
+            let updated = 0;
+            let failed = 0;
+            const errors: string[] = [];
+
+            // Process each article
+            for (const article of articles.rows) {
+                try {
+                    const contentHtml = markdownProcessor.processForDatabase(article.content);
+                    
+                    if (contentHtml) {
+                        await db.query(`
+                            UPDATE submissions 
+                            SET content_html = $1, updated_at = CURRENT_TIMESTAMP 
+                            WHERE id = $2
+                        `, [contentHtml, article.id]);
+
+                        updated++;
+                        
+                        logger.audit('Fixed article content_html', {
+                            articleId: article.id,
+                            title: article.title
+                        });
+                    } else {
+                        failed++;
+                        errors.push(`Failed to process HTML for: ${article.title}`);
+                    }
+
+                } catch (error: any) {
+                    failed++;
+                    const errorMsg = `${article.title}: ${error?.message}`;
+                    errors.push(errorMsg);
+                    
+                    logger.error('Failed to fix article content_html', {
+                        articleId: article.id,
+                        title: article.title,
+                        error: error?.message
+                    });
+                }
+            }
+
+            const result = { updated, failed, errors };
+            logger.audit('Content_html fix completed', result);
+            
+            return result;
+
+        } catch (error: any) {
+            logger.error('Error in fixAllContentHtml', {
+                error: error?.message
+            });
+            throw new DatabaseException('Erro ao corrigir content_html', error);
         }
     }
 }

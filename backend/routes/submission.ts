@@ -182,4 +182,11 @@ router.get('/',
     errorHandler.asyncHandler(submissionController.listSubmissions)
 );
 
+// POST /api/submissions/fix-content-html
+// Fix content_html for articles that have NULL content_html (utility endpoint)
+// Public endpoint for maintenance
+router.post('/fix-content-html',
+    errorHandler.asyncHandler(submissionController.fixContentHtml)
+);
+
 module.exports = router;
