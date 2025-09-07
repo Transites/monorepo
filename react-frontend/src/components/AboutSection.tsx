@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { getCategoryColor } from '@/lib/categoryColors';
 import { useSmoothScroll } from '@/hooks/use-smooth-scroll';
@@ -8,15 +8,29 @@ import { useSmoothScroll } from '@/hooks/use-smooth-scroll';
 export default function AboutSection() {
   const [isExpanded, setIsExpanded] = useState(false);
   const { scrollToElement } = useSmoothScroll();
+  const expandedContentRef = useRef<HTMLDivElement>(null);
+
+  const isElementFullyVisible = (element: HTMLElement): boolean => {
+    const rect = element.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    
+    // Check if the element's bottom is within the viewport with some margin
+    return rect.bottom <= viewportHeight - 50; // 50px margin from bottom
+  };
 
   const toggleExpansion = () => {
-    setIsExpanded(!isExpanded);
-    
-    // Scroll to expanded content if expanding, accounting for navbar
     if (!isExpanded) {
+      setIsExpanded(true);
+      
+      // Check if we need to scroll after content is rendered
       setTimeout(() => {
-        scrollToElement('expanded-content', 100); // 100px offset for navbar + padding
-      }, 100);
+        const expandedContent = expandedContentRef.current;
+        if (expandedContent && !isElementFullyVisible(expandedContent)) {
+          scrollToElement('expanded-content', 100);
+        }
+      }, 200); // Wait for transition to start
+    } else {
+      setIsExpanded(false);
     }
   };
 
@@ -25,7 +39,7 @@ export default function AboutSection() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
-            Sobre o Projeto Trânsitos
+            Sobre o projeto Trânsitos
           </h2>
         </div>
 
@@ -33,7 +47,7 @@ export default function AboutSection() {
           {/* Preview text */}
           <div className="text-lg leading-relaxed text-center mb-8">
             <p>
-              Trânsitos|Circulations é uma enciclopédia digital, interativa e bilíngue que se destina a mapear, sistematizar e
+              Trânsitos | Circulations é uma enciclopédia digital, interativa e bilíngue que se destina a mapear, sistematizar e
               fomentar pesquisas sobre as relações franco-brasileiras, com enfoque em{' '}
               <span className={`text-${getCategoryColor('pessoas')} font-semibold`}>pessoas</span>,{' '}
               <span className={`text-${getCategoryColor('obras')} font-semibold`}>obras</span>,{' '}
@@ -46,8 +60,19 @@ export default function AboutSection() {
           </div>
 
           {/* Expanded content */}
-          {isExpanded && (
-            <div id="expanded-content" className="text-lg leading-relaxed text-center mb-8">
+          <div 
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div 
+              ref={expandedContentRef}
+              id="expanded-content" 
+              className="text-lg leading-relaxed text-center mb-8 transform transition-transform duration-300 ease-in-out"
+              style={{
+                transform: isExpanded ? 'translateY(0)' : 'translateY(-10px)'
+              }}
+            >
               <p>
                 Pessoas, grupos e obras circularam nos dois sentidos do Atlântico. São os trânsitos que buscamos recuperar e os
                 movimentos que entendemos redesenhar, em diferentes esferas
@@ -58,7 +83,7 @@ export default function AboutSection() {
                 leitores.
               </p>
             </div>
-          )}
+          </div>
 
           {/* Toggle button */}
           <div className="text-center">
