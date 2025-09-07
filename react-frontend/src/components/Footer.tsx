@@ -16,7 +16,7 @@ const Footer = () => {
           {/* Transitos branding with logo */}
           <div className="flex items-center gap-3">
             <img 
-              src="/lovable-uploads/016cd4f1-53a9-4afa-bf7f-015c51ec76f6.png" 
+              src="/uploads/016cd4f1-53a9-4afa-bf7f-015c51ec76f6.png"
               alt="Trânsitos Logo" 
               className="h-8 w-8"
             />
@@ -36,7 +36,7 @@ const Footer = () => {
                   onClick={(e) => handleNavClick(e, 'sobre')}
                   className="text-primary-foreground/80 hover:text-primary-foreground transition-colors cursor-pointer"
                 >
-                  Sobre o Projeto
+                  Sobre o projeto
                 </a>
               </li>
               <li>
@@ -63,24 +63,14 @@ const Footer = () => {
                   onClick={(e) => handleNavClick(e, 'destaque')}
                   className="text-primary-foreground/80 hover:text-primary-foreground transition-colors cursor-pointer"
                 >
-                  Conteúdo em Destaque
+                  Conteúdo em destaque
                 </a>
-              </li>
-              <li>
-                <span className="text-primary-foreground/50">
-                  Como Colaborar (em breve)
-                </span>
-              </li>
-              <li>
-                <span className="text-primary-foreground/50">
-                  Metodologia (em breve)
-                </span>
               </li>
             </ul>
           </div>
 
           {/* Contact */}
-          <div>
+          <div id="contato">
             <h4 className="font-semibold mb-4">Contato</h4>
             <div className="space-y-2 text-sm">
               <div className="flex items-center text-primary-foreground/80">
