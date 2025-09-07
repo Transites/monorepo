@@ -67,10 +67,10 @@ const CategoriesSection = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-            Explore por Categoria
+            Explore por categoria
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Navegue pelos diferentes tipos de entradas organizadas em cinco categorias principais
+            Navegue pelos diferentes tipos de entradas organizadas em sete categorias principais
           </p>
         </div>
 
@@ -78,9 +78,10 @@ const CategoriesSection = () => {
           {categories.map((category) => {
             const Icon = category.icon;
             return (
-              <Card 
+              // TODO: Not using cursor pointer for now. Add it back once integration with search for category is done.
+              <Card
                 key={category.id}
-                className={`group cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 w-full sm:w-72 lg:w-64`}
+                className={`group transition-all duration-300 hover:shadow-lg hover:-translate-y-1 w-full sm:w-72 lg:w-64`}
                 style={{
                   boxShadow: `inset 4px 0 0 hsl(var(--${category.color}))`,
                 }}
