@@ -184,7 +184,6 @@ export default function ArticleContent({ article }: ArticleContentProps) {
           </section>
         )}
 
-        <Separator />
       </header>
 
       {/* Resumo Section */}
