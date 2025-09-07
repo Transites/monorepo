@@ -76,7 +76,7 @@ const HeroSection = () => {
 
           {/* Search Section */}
           <div className="max-w-4xl mx-auto mb-8">
-            <div className="max-w-2xl mx-auto">
+            <div id="pesquisar" className="max-w-2xl mx-auto">
               <div className="relative">
                 <div className="relative">
                   <Input

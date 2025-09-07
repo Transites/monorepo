@@ -154,6 +154,36 @@ export default function ArticleContent({ article }: ArticleContentProps) {
           </div>
         )}
 
+        {/* Article Image */}
+        {article.metadata?.image && (
+          <section className="space-y-4">
+            <div className="relative">
+              <img
+                src={article.metadata.image.url}
+                alt={article.metadata.image.alternativeText || article.metadata.image.caption || article.title}
+                className="w-full h-auto rounded-lg shadow-lg object-cover max-h-[500px] md:max-h-[600px]"
+                loading="eager"
+              />
+              
+              {/* Image Caption */}
+              {article.metadata.image.caption && (
+                <div className="mt-3 space-y-1">
+                  <p className="text-sm text-muted-foreground italic leading-relaxed">
+                    {article.metadata.image.caption}
+                  </p>
+                  
+                  {/* Image Credit */}
+                  {article.metadata.image.credit && (
+                    <p className="text-xs text-muted-foreground">
+                      Crédito: {article.metadata.image.credit}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
         <Separator />
       </header>
 
@@ -268,7 +298,7 @@ export default function ArticleContent({ article }: ArticleContentProps) {
       )}
 
       {/* Related Articles Section - Placeholder */}
-      <div className="pt-8">
+      {/* <div className="pt-8">
         <Separator className="mb-8" />
         <Card>
           <CardHeader>
@@ -280,7 +310,7 @@ export default function ArticleContent({ article }: ArticleContentProps) {
             </p>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
     </article>
   );
 }
