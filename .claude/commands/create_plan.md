@@ -160,43 +160,47 @@ Once aligned on approach:
 
 After structure approval:
 
-1. **Write the plan** to `docs/{descriptive_name}_IMPLEMENTATION_PLAN.md`
+1. **Write the plan** to `docs/YYYY-MM-DD_{descriptive_name}_IMPLEMENTATION_PLAN.md` (using current date)
 2. **Use this template structure**:
 
 ```markdown
 # [Feature/Task Name] Implementation Plan
 
-## Overview
+**Date:** YYYY-MM-DD  
+**Task:** [Brief description of the implementation task]  
+**Status:** 📋 PLANNED - Ready for implementation  
+
+## 🎯 Overview
 
 [Brief description of what we're implementing and why]
 
-## Current State Analysis
+## 📊 Current State Analysis
 
 [What exists now, what's missing, key constraints discovered]
 
-## Desired End State
+## 🚀 Desired End State
 
 [A Specification of the desired end state after this plan is complete, and how to verify it]
 
-### Key Discoveries:
+### 🔍 Key Discoveries:
 - [Important finding with file:line reference]
 - [Pattern to follow]
 - [Constraint to work within]
 
-## What We're NOT Doing
+## ❌ What We're NOT Doing
 
 [Explicitly list out-of-scope items to prevent scope creep]
 
-## Implementation Approach
+## 🛠️ Implementation Approach
 
 [High-level strategy and reasoning]
 
-## Phase 1: [Descriptive Name]
+## Phase 1: 📝 [Descriptive Name]
 
-### Overview
+### 🎯 Overview
 [What this phase accomplishes]
 
-### Changes Required:
+### 🔧 Changes Required:
 
 #### 1. [Component/File Group]
 **File**: `path/to/file.ext`
@@ -206,9 +210,9 @@ After structure approval:
 // Specific code to add/modify
 ```
 
-### Success Criteria:
+### ✅ Success Criteria:
 
-#### Automated Verification:
+#### 🤖 Automated Verification:
 - [ ] Backend tests pass: `cd backend && npm test`
 - [ ] Backend integration tests pass: `cd backend && npm run test:integration`
 - [ ] Backend linting passes: `cd backend && npm run lint`
@@ -216,7 +220,7 @@ After structure approval:
 - [ ] Frontend linting passes: `cd react-frontend && npm run lint`
 - [ ] Frontend builds successfully: `cd react-frontend && npm run build`
 
-#### Manual Verification:
+#### 👨‍💻 Manual Verification:
 - [ ] Feature works as expected when tested via UI
 - [ ] Performance is acceptable under load
 - [ ] Edge case handling verified manually
@@ -224,13 +228,13 @@ After structure approval:
 
 ---
 
-## Phase 2: [Descriptive Name]
+## Phase 2: 📝 [Descriptive Name]
 
 [Similar structure with both automated and manual success criteria...]
 
 ---
 
-## Testing Strategy
+## 🧪 Testing Strategy
 
 ### Unit Tests:
 - [What to test]
@@ -244,19 +248,23 @@ After structure approval:
 2. [Another verification step]
 3. [Edge case to test manually]
 
-## Performance Considerations
+## ⚡ Performance Considerations
 
 [Any performance implications or optimizations needed]
 
-## Migration Notes
+## 📦 Migration Notes
 
 [If applicable, how to handle existing data/systems]
 
-## References
+## 📚 References
 
 - Original documentation: `docs/[relevant].md`
 - Related research: `docs/[relevant].md`
 - Similar implementation: `[file:line]`
+
+---
+
+**Conclusion**: [Brief summary of the implementation plan and expected outcomes]
 ```
 
 ### Step 5: Review and Finalization
