@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { Calendar, User, Tag, Building2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { addHeadingIds } from '@/lib/content-utils';
+import { addHeadingIds, enhanceContentParagraphs } from '@/lib/content-utils';
 import { Submission } from '@/lib/api';
 import DOMPurify from 'dompurify';
 
@@ -14,7 +14,14 @@ interface ArticleContentProps {
 export default function ArticleContent({ article }: ArticleContentProps) {
   const sanitizedContent = useMemo(() => {
     if (!article?.content_html) return '';
-    const contentWithIds = addHeadingIds(article.content_html);
+    
+    // First, enhance paragraphs to ensure proper spacing
+    const contentWithParagraphs = enhanceContentParagraphs(article.content_html);
+    
+    // Then add heading IDs as before
+    const contentWithIds = addHeadingIds(contentWithParagraphs);
+    
+    // Finally sanitize
     return DOMPurify.sanitize(contentWithIds, {
       ADD_ATTR: ['id', 'class'],
       ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'div', 'span', 'strong', 'em', 'u', 'a', 'ul', 'ol', 'li', 'blockquote', 'img', 'br', 'hr'],

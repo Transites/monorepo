@@ -4,8 +4,10 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { useSearch } from "@/hooks/use-search";
 import { SearchResults } from "@/components/SearchResults";
+import { useTranslation } from "react-i18next";
 
 const HeroSection = () => {
+  const { t } = useTranslation(["common", "content"]);
   const [showResults, setShowResults] = useState(false);
   
   const {
@@ -54,24 +56,21 @@ const HeroSection = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           {/* New branding text above title */}
-          <div className="text-red-500 text-2xl sm:text-3xl font-bold mb-4">
+          <div className="text-red-500 text-2xl sm:text-3xl font-bold mb-4 italic">
             Trânsitos | Circulations
           </div>
           
           {/* Updated title with color styling */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-4">
-            Enciclopédia Digital das{" "}
-            <span className="text-darkpink">Relações Brasil-França</span>
+            {t("content:hero.title")}
           </h1>
           <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-darkyellow mb-6">
-            (1880-1990)
+            {t("content:hero.period")}
           </div>
 
           {/* Hero Description */}
           <p className="text-xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
-            Explore séculos de relações culturais, artísticas e intelectuais entre o Brasil e a França. 
-            Uma plataforma acadêmica dedicada aos trânsitos, trocas e influências mútuas que moldaram 
-            nossa história cultural.
+            {t("content:hero.description")}
           </p>
 
           {/* Search Section */}
@@ -81,7 +80,7 @@ const HeroSection = () => {
                 <div className="relative">
                   <Input
                     type="text"
-                    placeholder="Pesquise pessoas, obras, eventos, organizações..."
+                    placeholder={t("common:search")}
                     value={query}
                     onChange={handleInputChange}
                     className="h-14 text-lg pl-6 pr-14 rounded-full border-2 focus:border-primary"
@@ -99,7 +98,7 @@ const HeroSection = () => {
               {/* Search Suggestions */}
               {!showResults && (
                 <div className="mt-6 text-center">
-                  <p className="text-sm text-muted-foreground mb-3">💡 Sugestões de busca:</p>
+                  <p className="text-sm text-muted-foreground mb-3">{t("common:searchSuggestions")}</p>
                   <div className="flex flex-wrap justify-center gap-2">
                     {suggestions.map((suggestion, index) => (
                       <button
@@ -120,7 +119,7 @@ const HeroSection = () => {
               <div className="mt-8 max-w-4xl mx-auto">
                 <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border rounded-xl p-4 md:p-6 shadow-xl">
                   <div className="mb-6 flex items-center justify-between">
-                    <h2 className="text-lg md:text-xl font-semibold text-foreground">Resultados da busca</h2>
+                    <h2 className="text-lg md:text-xl font-semibold text-foreground">{t("common:searchResults")}</h2>
                     <Button 
                       variant="ghost" 
                       size="sm"
@@ -130,7 +129,7 @@ const HeroSection = () => {
                       }}
                       className="text-muted-foreground hover:text-foreground"
                     >
-                      ✕ Fechar
+                      {t("common:close")}
                     </Button>
                   </div>
                   
@@ -148,7 +147,7 @@ const HeroSection = () => {
 
                   {error && (
                     <div className="text-center py-12">
-                      <div className="text-destructive text-lg font-semibold mb-3">⚠️ Erro na busca</div>
+                      <div className="text-destructive text-lg font-semibold mb-3">{t("common:searchError")}</div>
                       <p className="text-muted-foreground mb-6 max-w-md mx-auto">{error}</p>
                       <Button 
                         variant="outline" 
@@ -156,7 +155,7 @@ const HeroSection = () => {
                         className="mt-2"
                         onClick={() => setQuery(query)}
                       >
-                        🔄 Tentar novamente
+                        {t("common:searchRetry")}
                       </Button>
                     </div>
                   )}
@@ -168,7 +167,7 @@ const HeroSection = () => {
           {/* Scroll Indicator */}
           <div className="mt-16">
             <ChevronDown className="h-6 w-6 text-muted-foreground animate-bounce mx-auto" />
-            <p className="text-sm text-muted-foreground mt-2">Explore as categorias</p>
+            <p className="text-sm text-muted-foreground mt-2">{t("common:exploreCategories")}</p>
           </div>
         </div>
       </div>
