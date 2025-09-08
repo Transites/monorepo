@@ -1,15 +1,22 @@
-import { Search, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { LanguageToggle } from "./LanguageToggle";
 
 const Header = () => {
   const { scrollToElement } = useSmoothScroll();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, elementId: string) => {
     e.preventDefault();
+    
+    // Close mobile menu when navigation occurs
+    setIsMobileMenuOpen(false);
     
     // If we're not on the homepage, navigate there first
     if (location.pathname !== '/') {
@@ -68,12 +75,52 @@ const Header = () => {
             >
               Contato
             </a>
+            <LanguageToggle />
           </nav>
 
-          {/* Mobile Menu Button */}
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
+          {/* Mobile Menu */}
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-3/4 sm:max-w-sm">
+              <nav className="flex flex-col space-y-6 mt-8">
+                <a 
+                  href="#inicio" 
+                  onClick={(e) => handleNavClick(e, 'inicio')}
+                  className="text-lg font-medium text-foreground hover:text-primary transition-colors cursor-pointer"
+                >
+                  Início
+                </a>
+                <a 
+                  href="#pesquisar" 
+                  onClick={(e) => handleNavClick(e, 'pesquisar')}
+                  className="text-lg font-medium text-foreground hover:text-primary transition-colors cursor-pointer"
+                >
+                  Pesquisar
+                </a>
+                <a 
+                  href="#sobre" 
+                  onClick={(e) => handleNavClick(e, 'sobre')}
+                  className="text-lg font-medium text-foreground hover:text-primary transition-colors cursor-pointer"
+                >
+                  Sobre
+                </a>
+                <a 
+                  href="#contato" 
+                  onClick={(e) => handleNavClick(e, 'contato')}
+                  className="text-lg font-medium text-foreground hover:text-primary transition-colors cursor-pointer"
+                >
+                  Contato
+                </a>
+                <div className="border-t pt-6 mt-6">
+                  <LanguageToggle />
+                </div>
+              </nav>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
