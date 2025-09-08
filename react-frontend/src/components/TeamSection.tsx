@@ -1,10 +1,13 @@
+import { useTranslation } from "react-i18next";
+
 export default function TeamSection() {
+  const { t } = useTranslation(["content"]);
   return (
     <section id="sobre-nos" className="py-16 px-4 sm:px-6 lg:px-8 bg-background">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
-            Quem somos
+            {t("content:team.title")}
           </h2>
         </div>
 
@@ -12,7 +15,7 @@ export default function TeamSection() {
           {/* Coordinators */}
           <div>
             <h3 className="text-xl font-semibold text-foreground mb-4">
-              Coordenadores
+              {t("content:team.coordinators")}
             </h3>
             <p className="text-lg leading-relaxed text-muted-foreground">
               Marisa Midori Deaecto (USP), Mônica Raisa Schpun (EHESS), Olival Freire Jr. (UFBA) e
@@ -23,7 +26,7 @@ export default function TeamSection() {
           {/* Team */}
           <div>
             <h3 className="text-xl font-semibold text-foreground mb-4">
-              Equipe
+              {t("content:team.teamMembers")}
             </h3>
             <p className="text-lg leading-relaxed text-muted-foreground">
               Ana Fernandes (UFBA), Antonio Augusto Passos Videira (UERJ), Antonio Dimas (USP), Antonio Mota (
@@ -38,11 +41,10 @@ export default function TeamSection() {
           {/* Development */}
           <div>
             <h3 className="text-xl font-semibold text-foreground mb-4">
-              Desenvolvimento
+              {t("content:team.development")}
             </h3>
             <p className="text-lg leading-relaxed text-muted-foreground">
-              O site foi desenvolvido pelos alunos do curso de Matemática Aplicada Gyovanna Marques Kwasinei e Gustavo Araújo, sob a
-              orientação de Alfredo Goldman (USP).
+              {t("content:team.developmentText")}
             </p>
           </div>
         </div>

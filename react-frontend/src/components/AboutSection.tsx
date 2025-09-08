@@ -2,10 +2,11 @@
 
 import { useState, useRef } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { getCategoryColor } from '@/lib/categoryColors';
 import { useSmoothScroll } from '@/hooks/use-smooth-scroll';
+import { useTranslation } from 'react-i18next';
 
 export default function AboutSection() {
+  const { t } = useTranslation(["content", "common"]);
   const [isExpanded, setIsExpanded] = useState(false);
   const { scrollToElement } = useSmoothScroll();
   const expandedContentRef = useRef<HTMLDivElement>(null);
@@ -39,7 +40,7 @@ export default function AboutSection() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground">
-            Sobre o projeto Trânsitos
+            {t("content:about.title")}
           </h2>
         </div>
 
@@ -47,15 +48,7 @@ export default function AboutSection() {
           {/* Preview text */}
           <div className="text-lg leading-relaxed text-center mb-8">
             <p>
-              Trânsitos | Circulations é uma enciclopédia digital, interativa e bilíngue que se destina a mapear, sistematizar e
-              fomentar pesquisas sobre as relações franco-brasileiras, com enfoque em{' '}
-              <span className={`text-${getCategoryColor('pessoas')} font-semibold`}>pessoas</span>,{' '}
-              <span className={`text-${getCategoryColor('obras')} font-semibold`}>obras</span>,{' '}
-              <span className={`text-${getCategoryColor('instituições')} font-semibold`}>instituições</span>,{' '}
-              <span className={`text-${getCategoryColor('empresas')} font-semibold`}>empresas</span>,{' '}
-              <span className={`text-${getCategoryColor('agrupamentos')} font-semibold`}>agrupamentos</span>,{' '}
-              <span className={`text-${getCategoryColor('eventos')} font-semibold`}>eventos</span> e{' '}
-              <span className={`text-${getCategoryColor('conceitos')} font-semibold`}>conceitos</span>, no período de 1880 a 1990.
+              {t("content:about.intro")}
             </p>
           </div>
 
@@ -74,13 +67,7 @@ export default function AboutSection() {
               }}
             >
               <p>
-                Pessoas, grupos e obras circularam nos dois sentidos do Atlântico. São os trânsitos que buscamos recuperar e os
-                movimentos que entendemos redesenhar, em diferentes esferas
-                da sociedade, desde as cooperações intelectuais, científicas e artísticas até, ou principalmente, as migrações
-                motivadas por questões econômicas, políticas ou religiosas. A Enciclopédia tem duplo propósito: a) desenvolver
-                trabalhos inéditos, a partir de uma abordagem transdisciplinar; b) refletir sobre os usos da tecnologia para a
-                pesquisa, mas também desenvolver ferramentas próprias que potencializam as bases de dados e a interação com os
-                leitores.
+                {t("content:about.expanded")}
               </p>
             </div>
           </div>
@@ -93,12 +80,12 @@ export default function AboutSection() {
             >
               {isExpanded ? (
                 <>
-                  Mostrar menos
+                  {t("common:readLess")}
                   <ChevronUp className="w-5 h-5" />
                 </>
               ) : (
                 <>
-                  Saiba mais sobre o projeto
+                  {t("common:readMore")}
                   <ChevronDown className="w-5 h-5" />
                 </>
               )}

@@ -1,76 +1,78 @@
 import { User, BookOpen, Calendar, Building2, Briefcase, Users, Lightbulb } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCategoryColor } from "@/lib/categoryColors";
-
-const categories = [
-  {
-    id: 'pessoas',
-    title: 'Pessoas',
-    description: 'Indivíduos que participaram dos intercâmbios culturais',
-    icon: User,
-    color: getCategoryColor('pessoas'),
-    examples: 'Escritores, artistas, acadêmicos, diplomatas'
-  },
-  {
-    id: 'obras',
-    title: 'Obras',
-    description: 'Produções artísticas, literárias e intelectuais',
-    icon: BookOpen,
-    color: getCategoryColor('obras'),
-    examples: 'Livros, pinturas, esculturas, manuscritos'
-  },
-  {
-    id: 'instituicoes',
-    title: 'Instituições',
-    description: 'Organizações que promoveram os intercâmbios',
-    icon: Building2,
-    color: getCategoryColor('instituições'),
-    examples: 'Universidades, museus, bibliotecas, fundações'
-  },
-  {
-    id: 'empresas',
-    title: 'Empresas',
-    description: 'Empresas envolvidas nos intercâmbios comerciais',
-    icon: Briefcase,
-    color: getCategoryColor('empresas'),
-    examples: 'Editoras, galerias, importadoras, consultorias'
-  },
-  {
-    id: 'agrupamentos',
-    title: 'Agrupamentos',
-    description: 'Grupos e coletivos que participaram dos intercâmbios',
-    icon: Users,
-    color: getCategoryColor('agrupamentos'),
-    examples: 'Associações, movimentos, círculos, redes'
-  },
-  {
-    id: 'eventos',
-    title: 'Eventos',
-    description: 'Acontecimentos significativos nos intercâmbios',
-    icon: Calendar,
-    color: getCategoryColor('eventos'),
-    examples: 'Exposições, conferências, festivais, congressos'
-  },
-  {
-    id: 'conceitos',
-    title: 'Conceitos',
-    description: 'Ideias e conceitos centrais dos intercâmbios',
-    icon: Lightbulb,
-    color: getCategoryColor('conceitos'),
-    examples: 'Modernismo, cosmopolitismo, identidade, circulação'
-  }
-];
+import { useTranslation } from "react-i18next";
 
 const CategoriesSection = () => {
+  const { t } = useTranslation(["content"]);
+  
+  const categories = [
+    {
+      id: 'pessoas',
+      title: t('content:categories.pessoas.title'),
+      description: t('content:categories.pessoas.description'),
+      icon: User,
+      color: getCategoryColor('pessoas'),
+      examples: t('content:categories.pessoas.examples')
+    },
+    {
+      id: 'obras',
+      title: t('content:categories.obras.title'),
+      description: t('content:categories.obras.description'),
+      icon: BookOpen,
+      color: getCategoryColor('obras'),
+      examples: t('content:categories.obras.examples')
+    },
+    {
+      id: 'instituicoes',
+      title: t('content:categories.instituicoes.title'),
+      description: t('content:categories.instituicoes.description'),
+      icon: Building2,
+      color: getCategoryColor('instituições'),
+      examples: t('content:categories.instituicoes.examples')
+    },
+    {
+      id: 'empresas',
+      title: t('content:categories.empresas.title'),
+      description: t('content:categories.empresas.description'),
+      icon: Briefcase,
+      color: getCategoryColor('empresas'),
+      examples: t('content:categories.empresas.examples')
+    },
+    {
+      id: 'agrupamentos',
+      title: t('content:categories.agrupamentos.title'),
+      description: t('content:categories.agrupamentos.description'),
+      icon: Users,
+      color: getCategoryColor('agrupamentos'),
+      examples: t('content:categories.agrupamentos.examples')
+    },
+    {
+      id: 'eventos',
+      title: t('content:categories.eventos.title'),
+      description: t('content:categories.eventos.description'),
+      icon: Calendar,
+      color: getCategoryColor('eventos'),
+      examples: t('content:categories.eventos.examples')
+    },
+    {
+      id: 'conceitos',
+      title: t('content:categories.conceitos.title'),
+      description: t('content:categories.conceitos.description'),
+      icon: Lightbulb,
+      color: getCategoryColor('conceitos'),
+      examples: t('content:categories.conceitos.examples')
+    }
+  ];
   return (
     <section id="categorias" className="py-20 bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
-            Explore por categoria
+            {t("content:categories.title")}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Navegue pelos diferentes tipos de entradas organizadas em sete categorias principais
+            {t("content:categories.description")}
           </p>
         </div>
 

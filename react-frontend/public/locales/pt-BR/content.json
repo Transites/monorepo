@@ -1,0 +1,58 @@
+{
+  "hero": {
+    "title": "Enciclopédia Digital das Relações Brasil-França",
+    "period": "(1880-1990)",
+    "description": "Explore séculos de relações culturais, artísticas e intelectuais entre o Brasil e a França. Uma plataforma acadêmica dedicada aos trânsitos, trocas e influências mútuas que moldaram nossa história."
+  },
+  "categories": {
+    "title": "Explore por categoria",
+    "description": "Navegue pelos diferentes tipos de entradas organizadas em sete categorias principais",
+    "pessoas": {
+      "title": "Pessoas",
+      "description": "Indivíduos que participaram dos intercâmbios culturais",
+      "examples": "Escritores, artistas, acadêmicos, diplomatas"
+    },
+    "obras": {
+      "title": "Obras",
+      "description": "Produções artísticas, literárias e intelectuais",
+      "examples": "Livros, pinturas, esculturas, manuscritos"
+    },
+    "instituicoes": {
+      "title": "Instituições",
+      "description": "Organizações que promoveram os intercâmbios",
+      "examples": "Universidades, museus, bibliotecas, fundações"
+    },
+    "empresas": {
+      "title": "Empresas", 
+      "description": "Empresas envolvidas nos intercâmbios comerciais",
+      "examples": "Editoras, galerias, importadoras, consultorias"
+    },
+    "agrupamentos": {
+      "title": "Agrupamentos",
+      "description": "Grupos e coletivos que participaram dos intercâmbios", 
+      "examples": "Associações, movimentos, círculos, redes"
+    },
+    "eventos": {
+      "title": "Eventos",
+      "description": "Acontecimentos significativos nos intercâmbios",
+      "examples": "Exposições, conferências, festivais, congressos"
+    },
+    "conceitos": {
+      "title": "Conceitos",
+      "description": "Ideias e conceitos centrais dos intercâmbios",
+      "examples": "Modernismo, cosmopolitismo, identidade, circulação"
+    }
+  },
+  "about": {
+    "title": "Sobre o projeto Trânsitos",
+    "intro": "Trânsitos | Circulations é uma enciclopédia digital, interativa e bilíngue que se destina a mapear, sistematizar e fomentar pesquisas sobre as relações franco-brasileiras, com enfoque em pessoas, obras, instituições, empresas, agrupamentos, eventos e conceitos, no período de 1880 a 1990.",
+    "expanded": "Pessoas, grupos e obras circularam nos dois sentidos do Atlântico. São os trânsitos que buscamos recuperar e os movimentos que entendemos redesenhar, em diferentes esferas da sociedade, desde as cooperações intelectuais, científicas e artísticas até, ou principalmente, as migrações motivadas por questões econômicas, políticas ou religiosas. A Enciclopédia tem duplo propósito: a) desenvolver trabalhos inéditos, a partir de uma abordagem transdisciplinar; b) refletir sobre os usos da tecnologia para a pesquisa, mas também desenvolver ferramentas próprias que potencializam as bases de dados e a interação com os leitores."
+  },
+  "team": {
+    "title": "Quem somos",
+    "coordinators": "Coordenadores",
+    "teamMembers": "Equipe", 
+    "development": "Desenvolvimento",
+    "developmentText": "O site foi desenvolvido pelos alunos do curso de Matemática Aplicada Gyovanna Marques Kwasinei e Gustavo Araújo, sob a orientação de Alfredo Goldman (USP)."
+  }
+}
