@@ -364,6 +364,174 @@ After structure approval:
 - [ ] Feature works correctly on mobile devices
 ```
 
+## UI Verification with Playwright
+
+When implementation plans involve UI changes, include specific Playwright-based verification steps. This project uses visual testing to ensure UI functionality works correctly across different scenarios.
+
+### Playwright Test Structure
+
+Based on the project's existing test files (`react-frontend/test-article-content.js`, `react-frontend/visual-test.js`), follow this pattern:
+
+```javascript
+import { chromium } from 'playwright';
+
+(async () => {
+  console.log('🚀 Starting visual test of [feature name]...');
+  
+  const browser = await chromium.launch({ 
+    headless: false,
+    slowMo: 1000 // Slow down for better visibility
+  });
+  
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 720 }
+  });
+  
+  const page = await context.newPage();
+  
+  try {
+    // Load the specific page
+    console.log('📄 Loading [page name]...');
+    await page.goto('http://localhost:8080/your-page');
+    
+    // Wait for page load
+    await page.waitForTimeout(3000);
+    
+    // Perform verification checks
+    console.log('✅ Checking [specific feature]:');
+    
+    // Your test code here
+    
+    // Keep browser open for manual inspection
+    console.log('\n⏳ Browser will stay open for manual inspection...');
+    await page.waitForTimeout(120000);
+    
+  } catch (error) {
+    console.error('❌ Test failed:', error.message);
+  } finally {
+    await browser.close();
+  }
+})();
+```
+
+### Common Verification Patterns
+
+#### 1. Element Existence Checks
+```javascript
+// Check if elements exist
+const elementExists = await page.locator('selector').count();
+console.log(`   - Element: ${elementExists > 0 ? 'FOUND' : 'MISSING'}`);
+
+// Check for specific text content
+const textExists = await page.locator('text=Expected Content').count();
+console.log(`   - Content: ${textExists > 0 ? 'FOUND' : 'MISSING'}`);
+```
+
+#### 2. Content Verification
+```javascript
+// Extract and verify text content
+const title = await page.textContent('h1');
+console.log(`   - Title: "${title}"`);
+
+// Check content length for substantial content
+const content = await page.textContent('section#main');
+const hasContent = content && content.length > 100;
+console.log(`   - Has content: ${hasContent ? 'YES' : 'NO'} (${content?.length || 0} chars)`);
+```
+
+#### 3. Interactive Element Testing
+```javascript
+// Test button clicks and interactions
+console.log('🔄 Testing interactive element...');
+await page.click('button:has-text("Click Me")');
+await page.waitForTimeout(2000);
+
+// Test navigation
+await page.click('a:has-text("Navigation Link")');
+await page.waitForTimeout(3000);
+```
+
+#### 4. Scrolling and Visibility
+```javascript
+// Scroll to elements for better visibility
+await page.evaluate(() => {
+  document.getElementById('target-section')?.scrollIntoView({ behavior: 'smooth' });
+});
+await page.waitForTimeout(3000);
+
+// Progressive scrolling
+await page.evaluate(() => window.scrollTo(0, 500));
+await page.waitForTimeout(2000);
+```
+
+#### 5. Multiple Element Verification
+```javascript
+// Check for multiple elements (like headings)
+const headings = await page.locator('section#content h2').allTextContents();
+console.log(`   - Found headings: ${headings.length}`);
+headings.forEach((heading, index) => {
+  console.log(`     ${index + 1}. "${heading}"`);
+});
+```
+
+#### 6. Problem Detection
+```javascript
+// Check for problematic content (e.g., unprocessed markdown)
+const rawMarkdown = await page.locator('text=##').count();
+console.log(`   - Raw markdown headings (##): ${rawMarkdown > 0 ? 'FOUND - PROBLEM!' : 'NONE - GOOD'}`);
+```
+
+### Success Criteria Integration
+
+When writing implementation plans, include UI verification in both automated and manual success criteria:
+
+#### Automated UI Verification:
+```markdown
+- [ ] Playwright test script passes: `cd react-frontend && node visual-test.js`
+- [ ] No console errors during test execution
+- [ ] All expected elements are found by selectors
+```
+
+#### Manual UI Verification:
+```markdown
+- [ ] Visual inspection confirms correct layout and styling
+- [ ] Interactive elements respond appropriately
+- [ ] Content displays properly across different screen sizes
+- [ ] No visual regressions compared to existing functionality
+```
+
+### Test File Naming Convention
+
+Create test files following the project pattern:
+- `test-[feature-name].js` for specific feature testing
+- `visual-test-[page-name].js` for page-wide visual testing
+
+### Manual Inspection Guidelines
+
+Include specific manual verification steps in your tests:
+
+```javascript
+console.log('\n📋 SUMMARY:');
+console.log('1. Check if [specific element] displays properly');
+console.log('2. Verify [specific functionality] works as expected');
+console.log('3. Look for any [potential issues] that should be addressed');
+console.log('4. Confirm [visual elements] appear correctly');
+
+console.log('\n📋 Please review the following manually:');
+console.log('   1. [Specific visual check]');
+console.log('   2. [Interaction check]');
+console.log('   3. [Content accuracy check]');
+```
+
+### Integration with Implementation Plans
+
+When creating implementation plans that involve UI changes:
+
+1. **Include test creation as a task**: Add "Create Playwright test for [feature]" as a specific phase
+2. **Reference existing test patterns**: Look at `react-frontend/test-article-content.js` and `react-frontend/visual-test.js` for examples
+3. **Specify test scenarios**: Detail what the test should verify (elements, interactions, content)
+4. **Include both automated and manual steps**: Use Playwright for element detection, keep manual verification for visual/UX aspects
+
 ## Common Patterns
 
 ### For Database Changes:
