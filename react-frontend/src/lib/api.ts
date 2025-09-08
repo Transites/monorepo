@@ -268,4 +268,46 @@ export async function search(
   return searchWithFuzzy(searchTerm, options);
 }
 
+// Featured Content interfaces and API
+export interface FeaturedContentItem {
+  id: string;
+  title: string;
+  summary: string;
+  category: string;
+  author_name?: string;
+  metadata?: {
+    image?: {
+      url: string;
+      caption?: string;
+      credit?: string;
+      alternativeText?: string;
+    };
+    [key: string]: unknown;
+  };
+  display_order: number;
+}
+
+export interface FeaturedContentResponse {
+  featured: FeaturedContentItem[];
+}
+
+/**
+ * Get featured content items from the API
+ */
+export async function getFeaturedContent(): Promise<FeaturedContentResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/featured-content`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching featured content:', error);
+    throw error;
+  }
+}
+
 export { ApiError };

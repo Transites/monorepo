@@ -8,6 +8,7 @@ const tokenRoutes = require('./tokens');
 const submissionRoutes = require('./submission');
 const authorRoutes = require('./author');
 const uploadRoutes = require('./upload');
+const featuredContentRoutes = require('./featuredContent');
 
 // API information
 router.get('/', (req, res) => {
@@ -32,5 +33,6 @@ router.use('/tokens', tokenRoutes);
 router.use('/submissions', submissionRoutes);
 router.use('/author', authorRoutes);
 router.use('/upload', uploadRoutes);
+router.use('/featured-content', featuredContentRoutes);
 
 module.exports = router;
