@@ -34,7 +34,7 @@ app.use(helmet({
 // CORS configuration
 const corsOptions = {
     origin: process.env.NODE_ENV === 'development'
-        ? '*' // Accept any origin in test environment
+        ? ['http://localhost:8080', 'http://127.0.0.1:8080', 'http://localhost:8081', 'http://127.0.0.1:8081'] // Only allow Vite dev server
         : (config.core.corsOrigin ? config.core.corsOrigin.split(',') : ['http://enciclopedia.iea.usp.br']),
     credentials: true,
     optionsSuccessStatus: 200,
