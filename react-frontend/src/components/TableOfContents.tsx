@@ -78,9 +78,9 @@ export default function TableOfContents({ article, className }: TableOfContentsP
       <button
         onClick={() => handleSectionClick(section.id)}
         className={cn(
-          "block w-full text-left text-sm py-2 px-3 rounded-lg transition-all duration-300 ease-in-out",
+          "block w-full text-left text-sm py-2 px-3 rounded-lg transition-colors duration-150 ease-out",
           "text-muted-foreground hover:text-foreground font-medium",
-          "hover:bg-muted/50 hover:translate-x-1",
+          "hover:bg-muted/50",
           activeId === section.id && "bg-primary/15 text-primary shadow-sm border-l-2 border-primary"
         )}
       >
@@ -101,9 +101,9 @@ export default function TableOfContents({ article, className }: TableOfContentsP
       <button
         onClick={() => handleSectionClick(heading.id)}
         className={cn(
-          "block w-full text-left text-xs py-1.5 px-2 rounded-md transition-all duration-200 ease-in-out",
+          "block w-full text-left text-xs py-1.5 px-2 rounded-md transition-colors duration-100 ease-out",
           "text-muted-foreground hover:text-foreground",
-          "hover:bg-muted/30 hover:translate-x-0.5",
+          "hover:bg-muted/30",
           activeId === heading.id && "bg-primary/10 text-primary font-medium border-l border-primary/50",
           heading.level > 2 && "ml-2",
           heading.level > 3 && "ml-4"
@@ -129,7 +129,7 @@ export default function TableOfContents({ article, className }: TableOfContentsP
                   key={section.id}
                   onClick={() => handleSectionClick(section.id)}
                   className={cn(
-                    "flex-shrink-0 px-3 py-1.5 text-sm font-medium rounded-full transition-all duration-200",
+                    "flex-shrink-0 px-3 py-1.5 text-sm font-medium rounded-full transition-colors duration-150 ease-out",
                     "border border-border/50 hover:border-primary/50",
                     activeId === section.id
                       ? "bg-primary text-primary-foreground border-primary shadow-sm"
@@ -144,9 +144,6 @@ export default function TableOfContents({ article, className }: TableOfContentsP
         </div>
       </div>
 
-      {/* Mobile content padding to account for fixed TOC */}
-      <div className="lg:hidden h-16" />
-
       {/* Mobile Toggle Button (Backup - for overlay mode if needed) */}
       <div className="hidden">
         <Button
@@ -159,14 +156,6 @@ export default function TableOfContents({ article, className }: TableOfContentsP
           {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </Button>
       </div>
-
-      {/* Mobile Overlay (Hidden - using sticky navigation instead) */}
-      {false && isOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 bg-background/80 backdrop-blur-sm z-50"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
 
       {/* Desktop Table of Contents Sidebar */}
       <div className={cn(

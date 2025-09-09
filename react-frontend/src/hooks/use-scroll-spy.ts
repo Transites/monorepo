@@ -34,6 +34,15 @@ export function useScrollSpy(headingIds: string[], offset?: number) {
     const windowHeight = window.innerHeight;
     const documentHeight = document.documentElement.scrollHeight;
 
+    // If we're at the top of the page (within first 50px), activate the first section
+    if (window.scrollY <= 50) {
+      const firstId = headingIds[0];
+      if (firstId) {
+        setActiveId(firstId);
+        return;
+      }
+    }
+
     // If we're near the bottom of the page, activate the last section
     if (window.scrollY + windowHeight >= documentHeight - 100) {
       const lastId = headingIds[headingIds.length - 1];

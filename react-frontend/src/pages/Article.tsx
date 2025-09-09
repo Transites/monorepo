@@ -78,13 +78,13 @@ const Article = () => {
           onClick={() => navigate('/')} 
           variant="ghost" 
           size="sm" 
-          className="mb-6"
+          className="invisible sm:visible mb-6"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Voltar
         </Button>
         
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-0 lg:gap-8">
           <aside className="lg:col-span-1">
             <TableOfContents article={article} />
           </aside>

@@ -2,6 +2,7 @@ import { Search, Info, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { SearchResult, Submission } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 
@@ -23,7 +24,7 @@ export function SearchResults({
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2 text-muted-foreground">
-          <Search className="h-4 w-4 animate-spin" />
+          <LoadingSpinner size="sm" />
           <span>Buscando...</span>
         </div>
         {Array.from({ length: 3 }).map((_, i) => (
@@ -114,25 +115,10 @@ function SearchSummary({ results, query }: SearchSummaryProps) {
       <div className="flex items-center gap-2">
         <Search className="h-4 w-4 text-primary" />
         <span className="text-lg font-semibold text-foreground">
-          {pagination.total} {pagination.total === 1 ? 'resultado encontrado' : 'resultados encontrados'} 
-          {query && <span className="text-muted-foreground"> para "{query}"</span>}
+          {pagination.total} {pagination.total === 1 ? 'resultado encontrado para' : 'resultados encontrados para'}
+          {query && <span className="text-muted-foreground"> "{query}"</span>}
         </span>
       </div>
-
-      {results.tips && results.tips.length > 0 && (
-        <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-md p-3">
-          <div className="flex items-start gap-2">
-            <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-            <div className="space-y-1">
-              {results.tips.map((tip, index) => (
-                <p key={index} className="text-sm text-blue-700 dark:text-blue-300">
-                  {tip}
-                </p>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -157,7 +143,7 @@ function SubmissionCard({ submission, query, onClick }: SubmissionCardProps) {
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-xl font-semibold leading-tight mb-2 text-foreground">
+            <CardTitle className="place-self-start text-xl font-semibold leading-tight mb-2 text-foreground">
               {submission.title}
             </CardTitle>
             {submission.author_name && (
@@ -168,7 +154,7 @@ function SubmissionCard({ submission, query, onClick }: SubmissionCardProps) {
           </div>
           
           {submission.category && (
-            <Badge variant="outline" className="text-xs flex-shrink-0 font-medium">
+            <Badge variant="outline" className="text-xs flex-shrink-0 font-medium capitalize">
               {submission.category}
             </Badge>
           )}

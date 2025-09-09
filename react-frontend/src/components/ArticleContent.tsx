@@ -6,6 +6,29 @@ import { Separator } from '@/components/ui/separator';
 import { addHeadingIds, enhanceContentParagraphs } from '@/lib/content-utils';
 import { Submission } from '@/lib/api';
 import DOMPurify from 'dompurify';
+import { useImageOrientation } from '@/hooks/use-image-orientation';
+
+type ImageOrientation = 'portrait' | 'landscape' | 'square' | 'loading';
+
+// Add this helper function after imports
+const getImageClasses = (orientation: ImageOrientation, isLoading: boolean) => {
+  const baseClasses = "rounded-lg shadow-lg transition-all duration-300";
+  
+  if (isLoading) {
+    return `${baseClasses} w-full h-auto object-cover max-h-[500px] md:max-h-[600px] opacity-90`;
+  }
+  
+  switch (orientation) {
+    case 'portrait':
+      return `${baseClasses} h-auto object-contain max-h-[600px] md:max-h-[700px] mx-auto max-w-[400px] md:max-w-[500px]`;
+    case 'landscape':
+      return `${baseClasses} w-full h-auto object-cover max-h-[500px] md:max-h-[600px]`;
+    case 'square':
+      return `${baseClasses} h-auto object-contain max-h-[500px] md:max-h-[600px] mx-auto max-w-[500px] md:max-w-[600px]`;
+    default:
+      return `${baseClasses} w-full h-auto object-cover max-h-[500px] md:max-h-[600px]`;
+  }
+};
 
 interface ArticleContentProps {
   article: Submission;
@@ -28,6 +51,9 @@ export default function ArticleContent({ article }: ArticleContentProps) {
       ALLOWED_ATTR: ['href', 'src', 'alt', 'title', 'id', 'class']
     });
   }, [article?.content_html]);
+
+  // In the component, add this before the return statement
+  const { orientation, isLoading } = useImageOrientation(article.metadata?.image?.url);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return null;
@@ -82,10 +108,10 @@ export default function ArticleContent({ article }: ArticleContentProps) {
             {/* Birth and Death Dates */}
             {(article.metadata.birth || article.metadata.death) && (
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                {article.metadata.birth && (
+                {article.metadata.birth && (article.metadata.birth.formatted || article.metadata.birth.date) && (
                   <span>Nascimento: {article.metadata.birth.formatted || article.metadata.birth.date}</span>
                 )}
-                {article.metadata.death && (
+                {article.metadata.death && (article.metadata.death.formatted || article.metadata.death.date) && (
                   <span>Morte: {article.metadata.death.formatted || article.metadata.death.date}</span>
                 )}
               </div>
@@ -100,7 +126,7 @@ export default function ArticleContent({ article }: ArticleContentProps) {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {article.metadata.occupation.map((occupation: string, index: number) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
+                    <Badge key={index} variant="secondary" className="text-xs capitalize">
                       {occupation}
                     </Badge>
                   ))}
@@ -153,7 +179,7 @@ export default function ArticleContent({ article }: ArticleContentProps) {
             </div>
             <div className="flex flex-wrap gap-2">
               {article.keywords.map((keyword: string, index: number) => (
-                <Badge key={index} variant="default" className="text-xs">
+                <Badge key={index} variant="default" className="text-xs capitalize">
                   {keyword}
                 </Badge>
               ))}
@@ -165,12 +191,14 @@ export default function ArticleContent({ article }: ArticleContentProps) {
         {article.metadata?.image && (
           <section className="space-y-4">
             <div className="relative">
-              <img
-                src={article.metadata.image.url}
-                alt={article.metadata.image.alternativeText || article.metadata.image.caption || article.title}
-                className="w-full h-auto rounded-lg shadow-lg object-cover max-h-[500px] md:max-h-[600px]"
-                loading="eager"
-              />
+              <div className="flex justify-center">
+                <img
+                  src={article.metadata.image.url}
+                  alt={article.metadata.image.alternativeText || article.metadata.image.caption || article.title}
+                  className={getImageClasses(orientation, isLoading)}
+                  loading="eager"
+                />
+              </div>
               
               {/* Image Caption */}
               {article.metadata.image.caption && (

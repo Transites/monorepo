@@ -31,19 +31,35 @@ const Header = () => {
     }
   };
 
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    
+    // If we're not on the homepage, navigate there first
+    if (location.pathname !== '/') {
+      navigate('/');
+      // Wait for navigation to complete, then scroll to top
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);
+    } else {
+      // If we're already on homepage, scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
+          <a href="/" onClick={handleLogoClick} className="flex items-center hover:opacity-80 transition-opacity">
             <img 
               src="/uploads/016cd4f1-53a9-4afa-bf7f-015c51ec76f6.png"
               alt="Trânsitos Logo" 
               className="h-8 w-8 mr-3"
             />
             <h1 className="text-2xl font-bold text-primary">Trânsitos | Circulations</h1>
-          </Link>
+          </a>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">

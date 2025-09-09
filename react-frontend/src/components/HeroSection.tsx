@@ -1,6 +1,7 @@
 import { Search, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useState } from "react";
 import { useSearch } from "@/hooks/use-search";
 import { SearchResults } from "@/components/SearchResults";
@@ -77,19 +78,19 @@ const HeroSection = () => {
           <div className="max-w-4xl mx-auto mb-8">
             <div id="pesquisar" className="max-w-2xl mx-auto">
               <div className="relative">
-                <div className="relative">
+                <div className="relative group">
                   <Input
                     type="text"
                     placeholder={t("common:search")}
                     value={query}
                     onChange={handleInputChange}
-                    className="h-14 text-lg pl-6 pr-14 rounded-full border-2 focus:border-primary"
+                    className="h-14 text-lg pl-6 pr-14 rounded-full border border-border bg-background/50 backdrop-blur-sm transition-all duration-300 focus:border-primary focus:ring-2 focus:ring-primary/10 focus:shadow-lg focus:shadow-primary/5 hover:border-primary/30 hover:shadow-md"
                   />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors duration-200">
                     {isLoading ? (
-                      <Search className="h-5 w-5 text-muted-foreground animate-spin" />
+                      <LoadingSpinner size="sm" className="text-primary" />
                     ) : (
-                      <Search className="h-5 w-5 text-muted-foreground" />
+                      <Search className="h-5 w-5 text-muted-foreground group-hover:text-primary/70 transition-colors duration-200" />
                     )}
                   </div>
                 </div>
@@ -104,7 +105,7 @@ const HeroSection = () => {
                       <button
                         key={index}
                         onClick={() => handleSuggestionClick(suggestion)}
-                        className="px-3 py-1 text-sm bg-muted hover:bg-muted/70 text-foreground rounded-full transition-colors border border-border hover:border-primary/50"
+                        className="px-3 py-1 text-sm bg-muted/50 hover:bg-primary/5 text-foreground rounded-full transition-all duration-200 border border-border hover:border-primary/30 hover:shadow-sm transform hover:scale-105"
                       >
                         {suggestion}
                       </button>
@@ -116,10 +117,12 @@ const HeroSection = () => {
 
             {/* Search Results */}
             {showResults && (
-              <div className="mt-8 max-w-4xl mx-auto">
-                <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border rounded-xl p-4 md:p-6 shadow-xl">
+              <div className="mt-8 max-w-4xl mx-auto animate-in fade-in-0 slide-in-from-top-2 duration-300">
+                <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border rounded-xl p-4 md:p-6 shadow-xl transform transition-all duration-200 hover:shadow-2xl">
                   <div className="mb-6 flex items-center justify-between">
-                    <h2 className="text-lg md:text-xl font-semibold text-foreground">{t("common:searchResults")}</h2>
+                    <h2 className="text-lg md:text-xl font-semibold text-foreground">
+                      {t("common:searchResults")}
+                    </h2>
                     <Button 
                       variant="ghost" 
                       size="sm"
@@ -127,7 +130,7 @@ const HeroSection = () => {
                         setShowResults(false);
                         clearSearch();
                       }}
-                      className="text-muted-foreground hover:text-foreground"
+                      className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:bg-destructive/10 hover:text-destructive rounded-full"
                     >
                       {t("common:close")}
                     </Button>
@@ -148,11 +151,10 @@ const HeroSection = () => {
                   {error && (
                     <div className="text-center py-12">
                       <div className="text-destructive text-lg font-semibold mb-3">{t("common:searchError")}</div>
-                      <p className="text-muted-foreground mb-6 max-w-md mx-auto">{error}</p>
-                      <Button 
+                      <Button
                         variant="outline" 
                         size="default"
-                        className="mt-2"
+                        className="mt-2 transition-all duration-200 hover:scale-105"
                         onClick={() => setQuery(query)}
                       >
                         {t("common:searchRetry")}
