@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { search as apiSearch, SearchResult, ApiError } from '@/lib/api';
-import { useToast } from './use-toast';
 
 export interface UseSearchOptions {
   threshold?: number;
@@ -23,7 +22,6 @@ export function useSearch(options: UseSearchOptions = {}) {
     debounceMs = 300
   } = options;
 
-  const { toast } = useToast();
   const debounceRef = useRef<NodeJS.Timeout>();
 
   const [state, setState] = useState<SearchState>({
@@ -84,13 +82,6 @@ export function useSearch(options: UseSearchOptions = {}) {
           hasSearched: true,
           results: null
         }));
-
-        toast({
-          title: "Erro na busca",
-          description: errorMessage,
-          variant: "destructive",
-          duration: 5000,
-        });
       }
     };
 
@@ -99,7 +90,7 @@ export function useSearch(options: UseSearchOptions = {}) {
     } else {
       debounceRef.current = setTimeout(performSearch, debounceMs);
     }
-  }, [threshold, top, debounceMs, toast]);
+  }, [threshold, top, debounceMs]);
 
   const clearSearch = useCallback(() => {
     if (debounceRef.current) {
