@@ -11,6 +11,7 @@ services:
     - ./react-frontend/.env
     environment:
     - NODE_ENV=production
+    - VITE_API_BASE_URL=http://enciclopedia.iea.usp.br:1337/api
   backend:
     build:
       context: ./backend
