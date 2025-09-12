@@ -15,7 +15,7 @@ services:
       target: 'base'
     ports:
     - '1337:1337'
-    command: sh -c "npm run build && npm run start"
+    command: npm run start
     environment:
     - NODE_ENV=production
     - CORS_ORIGIN=http://enciclopedia.iea.usp.br:8080
