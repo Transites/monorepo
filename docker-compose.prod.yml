@@ -7,6 +7,8 @@ services:
     ports:
     - '8080:8080'
     command: sh -c "npm run build && npm run preview"
+    env_file:
+    - ./react-frontend/.env
     environment:
     - NODE_ENV=production
   backend:
@@ -17,7 +19,7 @@ services:
     - '1337:1337'
     command: npm run start
     env_file:
-    - .env
+    - ./backend/.env
     environment:
     - NODE_ENV=production
     - CORS_ORIGIN=http://enciclopedia.iea.usp.br:8080
