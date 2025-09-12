@@ -12,7 +12,7 @@ i18n
     supportedLngs: ["pt-BR", "fr-FR"],
     defaultNS: "common",
     ns: ["common", "navigation", "content"],
-    
+
     detection: {
       order: ["localStorage", "navigator", "htmlTag"],
       lookupLocalStorage: "i18nextLng",
@@ -27,7 +27,7 @@ i18n
       escapeValue: false,
     },
     
-    debug: import.meta.env.DEV,
+    debug: false,
   });
 
 export default i18n;

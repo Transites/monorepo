@@ -11,6 +11,8 @@ services:
     - './react-frontend:/app'
     - '/app/node_modules'
     command: npm run dev
+    environment:
+    - NODE_ENV=development
   backend:
     build:
       context: ./backend
@@ -21,3 +23,5 @@ services:
     - './backend:/app'
     - '/app/node_modules'
     command: npm run dev
+    environment:
+    - NODE_ENV=development

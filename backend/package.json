@@ -4,7 +4,7 @@
     "description": "Sistema de submissão e gestão de artigos acadêmicos - Enciclopédia Transitos",
     "main": "server.ts",
     "scripts": {
-        "start": "node server.ts",
+        "start": "node dist/server.js",
         "build": "tsc",
         "dev": "nodemon --exec ts-node server.ts",
         "test": "jest --verbose --testPathIgnorePatterns=integration,database",
