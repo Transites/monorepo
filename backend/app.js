@@ -111,8 +111,8 @@ const isLocalhost = (req, res, next) => {
     next();
 };
 
-// Apply IP filtering to ALL routes (ENABLED with debugging)
-app.use(isLocalhost);
+// IP filtering DISABLED - frontend requests come from external IPs
+// app.use(isLocalhost);
 
 // Custom security middleware
 app.use(securityMiddleware.requestLogger);
