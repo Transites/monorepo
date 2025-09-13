@@ -70,6 +70,38 @@ if (process.env.NODE_ENV !== 'development') {
     app.use(generalLimiter);
 }
 
+// MAXIMUM SECURITY: IP filtering middleware - BLOCK ALL EXCEPT LOCALHOST
+const isLocalhost = (req, res, next) => {
+    // SECURITY: Use ONLY direct socket connection IP (no headers, no trust proxy)
+    const clientIP = req.socket.remoteAddress || req.connection.remoteAddress;
+
+    // SECURITY: Strict localhost IPs only (no hostname resolution)
+    const allowedIPs = [
+        '127.0.0.1',       // IPv4 localhost
+        '::1',             // IPv6 localhost
+        '::ffff:127.0.0.1' // IPv6-mapped IPv4 localhost
+    ];
+
+    // SECURITY: Block EVERYTHING except exact IP match
+    if (!allowedIPs.includes(clientIP)) {
+        // SECURITY: No information disclosure in error
+        return res.status(403).send('Acesso proibido');
+    }
+
+    // EXTRA SECURITY: Block suspicious User-Agents (curl, wget, automated tools)
+    const userAgent = req.headers['user-agent'] || '';
+    const suspiciousAgents = ['curl', 'wget', 'python-requests', 'postman', 'insomnia'];
+
+    if (suspiciousAgents.some(agent => userAgent.toLowerCase().includes(agent))) {
+        return res.status(403).send('Acesso proibido');
+    }
+
+    next();
+};
+
+// Apply IP filtering to ALL routes
+app.use(isLocalhost);
+
 // Custom security middleware
 app.use(securityMiddleware.requestLogger);
 app.use(securityMiddleware.sanitizeInput);
