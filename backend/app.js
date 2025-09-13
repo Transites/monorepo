@@ -81,9 +81,16 @@ const isLocalhost = (req, res, next) => {
         '::1',             // IPv6 localhost
         '::ffff:127.0.0.1' // IPv6-mapped IPv4 localhost
     ];
+    
+    // DOCKER: Allow internal Docker network (192.168.x.x, 172.x.x.x, 10.x.x.x)
+    const isDockerNetwork = clientIP && (
+        clientIP.startsWith('192.168.') ||
+        clientIP.startsWith('172.') ||
+        clientIP.startsWith('10.')
+    );
 
-    // SECURITY: Block EVERYTHING except exact IP match
-    if (!allowedIPs.includes(clientIP)) {
+    // SECURITY: Block EVERYTHING except localhost or Docker internal
+    if (!allowedIPs.includes(clientIP) && !isDockerNetwork) {
         // SECURITY: No information disclosure in error
         return res.status(403).send('Acesso proibido');
     }
@@ -91,8 +98,10 @@ const isLocalhost = (req, res, next) => {
     // EXTRA SECURITY: Block suspicious User-Agents (curl, wget, automated tools)
     const userAgent = req.headers['user-agent'] || '';
     const suspiciousAgents = ['curl', 'wget', 'python-requests', 'postman', 'insomnia'];
-
-    if (suspiciousAgents.some(agent => userAgent.toLowerCase().includes(agent))) {
+    const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari');
+    
+    // Block automated tools but allow browsers (frontend needs this)
+    if (!isBrowser && suspiciousAgents.some(agent => userAgent.toLowerCase().includes(agent))) {
         return res.status(403).send('Acesso proibido');
     }
 
