@@ -74,6 +74,9 @@ if (process.env.NODE_ENV !== 'development') {
 const isLocalhost = (req, res, next) => {
     // SECURITY: Use ONLY direct socket connection IP (no headers, no trust proxy)
     const clientIP = req.socket.remoteAddress || req.connection.remoteAddress;
+    
+    // DEBUG: Log IPs temporariamente para diagnóstico
+    console.log(`[DEBUG] Client IP: ${clientIP}, User-Agent: ${req.headers['user-agent']?.substring(0, 50)}`);
 
     // SECURITY: Strict localhost IPs only (no hostname resolution)
     const allowedIPs = [
@@ -108,7 +111,7 @@ const isLocalhost = (req, res, next) => {
     next();
 };
 
-// Apply IP filtering to ALL routes
+// Apply IP filtering to ALL routes (ENABLED with debugging)
 app.use(isLocalhost);
 
 // Custom security middleware
