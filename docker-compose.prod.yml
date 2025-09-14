@@ -10,7 +10,7 @@ services:
       - ./react-frontend/.env
     environment:
       - NODE_ENV=production
-      - VITE_API_BASE_URL=http://enciclopedia.iea.usp.br/api  # Via nginx
+      - VITE_API_BASE_URL=https://enciclopedia.iea.usp.br/api  # Via nginx
     networks:
       - transitos-network
 
@@ -25,7 +25,7 @@ services:
       - ./backend/.env
     environment:
       - NODE_ENV=production
-      - CORS_ORIGIN=http://enciclopedia.iea.usp.br  # Via nginx
+      - CORS_ORIGIN=https://enciclopedia.iea.usp.br  # Via nginx
     networks:
       - transitos-network
 
