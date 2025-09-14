@@ -205,38 +205,10 @@ class SubmissionService {
 
             const submission = submissionResult.rows[0];
 
-            // Buscar anexos
-            const attachments = await db.query(
-                'SELECT id, filename, url, file_type, size FROM submission_attachments WHERE submission_id = $1',
-                [submission.id]
-            );
-
-            // Buscar versões se solicitado
-            let versions = [];
-            if (includeVersions) {
-                const versionsResult = await db.query(
-                    'SELECT * FROM submission_versions WHERE submission_id = $1 ORDER BY version_number DESC',
-                    [submission.id]
-                );
-                versions = versionsResult.rows;
-            }
-
-            // Buscar feedback mais recente
-            const feedback = await db.query(`
-                SELECT f.*, a.name as admin_name
-                FROM feedback f
-                         JOIN admins a ON f.admin_id = a.id
-                WHERE f.submission_id = $1
-                ORDER BY f.created_at DESC
-            `, [submission.id]);
-
             const result = {
                 found: true,
                 submission: {
                     ...submission,
-                    attachments: attachments.rows,
-                    feedback: feedback.rows,
-                    versions: versions
                 }
             };
 
@@ -682,9 +654,6 @@ class SubmissionService {
         try {
             const stats = await db.query(`
                 SELECT s.*,
-                       (SELECT COUNT(*) FROM submission_versions WHERE submission_id = s.id)    as version_count,
-                       (SELECT COUNT(*) FROM submission_attachments WHERE submission_id = s.id) as attachment_count,
-                       (SELECT COUNT(*) FROM feedback WHERE submission_id = s.id)               as feedback_count,
                        EXTRACT(days FROM NOW() - s.created_at)                                  as days_since_creation,
                        EXTRACT(days FROM s.expires_at - NOW())                                  as days_to_expiry
                 FROM submissions s
@@ -1085,13 +1054,13 @@ class SubmissionService {
     async listSubmissionsWithFuzzy(searchTerm: string, threshold = 0.15, pagination = {
         top: 10,
         skip: 0
-    }): Promise<ListSubmissionsResult & { 
-        metadata: { 
-            exactCount: number; 
-            fuzzyCount: number; 
+    }): Promise<ListSubmissionsResult & {
+        metadata: {
+            exactCount: number;
+            fuzzyCount: number;
             avgRelevance: number;
             searchType: 'fuzzy';
-        } 
+        }
     }> {
         try {
             if (!searchTerm || !searchTerm.trim()) {
@@ -1103,27 +1072,25 @@ class SubmissionService {
             // Hybrid search: exact matches first, fuzzy matches second
             const hybridQuery = `
                 WITH exact_matches AS (
-                    SELECT 
+                    SELECT
                         id, title, summary, status, category, author_name, author_email,
                         created_at, updated_at, expires_at, metadata, keywords,
-                        1.0 as relevance_score, 
-                        'exact' as match_type,
-                        (SELECT COUNT(*) FROM feedback WHERE submission_id = s.id) as feedback_count
+                        1.0 as relevance_score,
+                        'exact' as match_type
                     FROM submissions s
                     WHERE to_tsvector('portuguese', title || ' ' || COALESCE(summary, '') || ' ' || COALESCE(content, ''))
                           @@ plainto_tsquery('portuguese', $1)
                     AND status = 'PUBLISHED'
                 ),
                 fuzzy_matches AS (
-                    SELECT 
+                    SELECT
                         id, title, summary, status, category, author_name, author_email,
                         created_at, updated_at, expires_at, metadata, keywords,
                         GREATEST(
-                            similarity(title, $1), 
+                            similarity(title, $1),
                             similarity(author_name, $1)
                         ) as relevance_score,
-                        'fuzzy' as match_type,
-                        (SELECT COUNT(*) FROM feedback WHERE submission_id = s.id) as feedback_count
+                        'fuzzy' as match_type
                     FROM submissions s
                     WHERE (similarity(title, $1) > $2 OR similarity(author_name, $1) > $2)
                     AND id NOT IN (SELECT id FROM exact_matches)
@@ -1155,7 +1122,7 @@ class SubmissionService {
                     AND id NOT IN (SELECT id FROM exact_matches)
                     AND status = 'PUBLISHED'
                 )
-                SELECT 
+                SELECT
                     (SELECT COUNT(*) FROM exact_matches) as exact_count,
                     (SELECT COUNT(*) FROM fuzzy_matches) as fuzzy_count,
                     (SELECT COUNT(*) FROM exact_matches) + (SELECT COUNT(*) FROM fuzzy_matches) as total_count
@@ -1167,8 +1134,8 @@ class SubmissionService {
                 db.query(countQuery, [cleanSearchTerm, threshold])
             ]);
 
-            const submissions = resultQuery.rows as (SubmissionSummary & { 
-                relevance_score: number; 
+            const submissions = resultQuery.rows as (SubmissionSummary & {
+                relevance_score: number;
                 match_type: 'exact' | 'fuzzy';
                 result_source: string;
             })[];
@@ -1179,7 +1146,7 @@ class SubmissionService {
             const fuzzyCount = parseInt(counts.fuzzy_count);
 
             // Calculate average relevance
-            const avgRelevance = submissions.length > 0 
+            const avgRelevance = submissions.length > 0
                 ? submissions.reduce((sum, sub) => sum + sub.relevance_score, 0) / submissions.length
                 : 0;
 
@@ -1262,8 +1229,7 @@ class SubmissionService {
                        updated_at,
                        expires_at,
                        metadata,
-                       keywords,
-                       (SELECT COUNT(*) FROM feedback WHERE submission_id = s.id) as feedback_count
+                       keywords
                 FROM submissions s
                 WHERE 1 = 1
             `;
