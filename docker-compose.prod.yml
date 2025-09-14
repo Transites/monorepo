@@ -4,8 +4,7 @@ services:
       context: ./react-frontend
       target: 'base'
     ports:
-      - '127.0.0.1:8080:8080'  # Para nginx
-      - '8080:8080'            # Para redirecionamento público
+      - '127.0.0.1:8080:8080'  # APENAS localhost
     command: sh -c "npm run build && npm run preview"
     env_file:
       - ./react-frontend/.env
