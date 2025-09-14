@@ -1,26 +1,26 @@
-# for production deployment
 services:
   frontend:
     build:
       context: ./react-frontend
       target: 'base'
     ports:
-    - '8080:8080'
+      - '127.0.0.1:8080:8080'  # APENAS localhost
     command: sh -c "npm run build && npm run preview"
     env_file:
-    - ./react-frontend/.env
+      - ./react-frontend/.env
     environment:
-    - NODE_ENV=production
-    - VITE_API_BASE_URL=http://enciclopedia.iea.usp.br:1337/api
+      - NODE_ENV=production
+      - VITE_API_BASE_URL=http://enciclopedia.iea.usp.br/api  # Via nginx
+
   backend:
     build:
       context: ./backend
       target: 'base'
     ports:
-    - '1337:1337'
+      - '127.0.0.1:1337:1337'  # APENAS localhost
     command: npm run start
     env_file:
-    - ./backend/.env
+      - ./backend/.env
     environment:
-    - NODE_ENV=production
-    - CORS_ORIGIN=http://enciclopedia.iea.usp.br:8080
+      - NODE_ENV=production
+      - CORS_ORIGIN=http://enciclopedia.iea.usp.br  # Via nginx
