@@ -2,7 +2,7 @@
   "hero": {
     "title": "Enciclopédia Digital das Relações Brasil-França",
     "period": "(1880-1990)",
-    "description": "Explore séculos de relações culturais, artísticas e intelectuais entre o Brasil e a França. Uma plataforma acadêmica dedicada aos trânsitos, trocas e influências mútuas que moldaram nossa história."
+    "description": "Explore um século de relações culturais, artísticas e intelectuais entre o Brasil e a França. Uma plataforma acadêmica dedicada aos trânsitos, trocas e influências mútuas que moldaram nossa história."
   },
   "categories": {
     "title": "Explore por categoria",
@@ -44,8 +44,8 @@
     }
   },
   "about": {
-    "title": "Sobre o projeto Trânsitos",
-    "intro": "Trânsitos | Circulations é uma enciclopédia digital, interativa e bilíngue que se destina a mapear, sistematizar e fomentar pesquisas sobre as relações franco-brasileiras, com enfoque em pessoas, obras, instituições, empresas, agrupamentos, eventos e conceitos, no período de 1880 a 1990.",
+    "title": "Sobre o projeto Trânsitos | Circulations",
+    "intro": "Trânsitos | <em>Circulations</em> é uma enciclopédia digital, interativa e bilíngue que se destina a mapear, sistematizar e fomentar pesquisas sobre as relações franco-brasileiras, com enfoque em pessoas, obras, instituições, empresas, agrupamentos, eventos e conceitos, no período de 1880 a 1990.",
     "expanded": "Pessoas, grupos e obras circularam nos dois sentidos do Atlântico. São os trânsitos que buscamos recuperar e os movimentos que entendemos redesenhar, em diferentes esferas da sociedade, desde as cooperações intelectuais, científicas e artísticas até, ou principalmente, as migrações motivadas por questões econômicas, políticas ou religiosas. A Enciclopédia tem duplo propósito: a) desenvolver trabalhos inéditos, a partir de uma abordagem transdisciplinar; b) refletir sobre os usos da tecnologia para a pesquisa, mas também desenvolver ferramentas próprias que potencializam as bases de dados e a interação com os leitores."
   },
   "team": {
@@ -53,6 +53,6 @@
     "coordinators": "Coordenadores",
     "teamMembers": "Equipe", 
     "development": "Desenvolvimento",
-    "developmentText": "O site foi desenvolvido pelos alunos do curso de Matemática Aplicada Gyovanna Marques Kwasinei e Gustavo Araújo, sob a orientação de Alfredo Goldman (USP)."
+    "developmentText": "O site foi desenvolvido pelo aluno do curso de Matemática Aplicada Gustavo Araújo, sob a orientação de Alfredo Goldman (USP)."
   }
 }

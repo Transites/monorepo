@@ -58,7 +58,7 @@ const Header = () => {
               alt="Trânsitos Logo" 
               className="h-8 w-8 mr-3"
             />
-            <h1 className="text-2xl font-bold text-primary">Trânsitos | Circulations</h1>
+            <h1 className="text-2xl font-bold text-primary">Trânsitos | <span className="italic">Circulations</span></h1>
           </a>
 
           {/* Desktop Navigation */}

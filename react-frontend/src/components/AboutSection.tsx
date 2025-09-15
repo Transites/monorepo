@@ -48,7 +48,16 @@ export default function AboutSection() {
           {/* Preview text */}
           <div className="text-lg leading-relaxed text-center mb-8">
             <p>
-              {t("content:about.intro")}
+              {t("content:about.intro").split('<em>').map((part, index) => {
+                if (index === 0) return part;
+                const [italicText, ...rest] = part.split('</em>');
+                return (
+                  <span key={index}>
+                    <em>{italicText}</em>
+                    {rest.join('</em>')}
+                  </span>
+                );
+              })}
             </p>
           </div>
 

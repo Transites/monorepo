@@ -30,11 +30,11 @@ export default function TableOfContents({ article, className }: TableOfContentsP
 
   // Define fixed navigation structure based on visual reference
   const navigationSections = useMemo((): NavigationSection[] => [
-    {
-      id: 'resumo',
-      title: 'Resumo',
-      available: !!(article?.summary),
-    },
+    // {
+    //   id: 'resumo',
+    //   title: 'Resumo',
+    //   available: !!(article?.summary),
+    // },
     {
       id: 'biografia',
       title: 'Biografia',

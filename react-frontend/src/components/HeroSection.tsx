@@ -57,7 +57,7 @@ const HeroSection = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           {/* New branding text above title */}
-          <div className="text-red-500 text-2xl sm:text-3xl font-bold mb-4 italic">
+          <div className="text-red-500 text-2xl sm:text-3xl font-bold mb-4">
             Trânsitos | Circulations
           </div>
           
@@ -65,7 +65,7 @@ const HeroSection = () => {
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-4">
             {t("content:hero.title")}
           </h1>
-          <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-darkyellow mb-6">
+          <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-red-500 mb-6">
             {t("content:hero.period")}
           </div>
 

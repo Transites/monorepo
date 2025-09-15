@@ -1,8 +1,8 @@
 {
   "hero": {
-    "title": "Encyclopédie Numérique des Relations Brésil-France",
+    "title": "Encyclopédie Numérique des Relations France-Brésil",
     "period": "(1880-1990)",
-    "description": "Explorez des siècles de relations culturelles, artistiques et intellectuelles entre le Brésil et la France. Une plateforme académique dédiée aux transits, échanges et influences mutuelles qui ont façonné notre histoire."
+    "description": "Explorez un siècle de relations culturelles, artistiques et intellectuelles entre la France et le Brésil. Une plateforme académique dédiée aux transits, échanges et influences mutuelles qui ont façonné notre histoire."
   },
   "categories": {
     "title": "Explorer par catégorie",
@@ -25,7 +25,7 @@
     "empresas": {
       "title": "Entreprises",
       "description": "Entreprises impliquées dans les échanges commerciaux",
-      "examples": "Maisons d'édition, galeries, importateurs, consultants"
+      "examples": "Les échanges commerciaux et industriels"
     },
     "agrupamentos": {
       "title": "Groupements",
@@ -40,12 +40,12 @@
     "conceitos": {
       "title": "Concepts",
       "description": "Idées et concepts centraux des échanges",
-      "examples": "Modernisme, cosmopolitisme, identité, circulation"
+      "examples": "Modernisme, cosmopolitaine, identité, circulation, transferts culturels"
     }
   },
   "about": {
-    "title": "À propos du projet Trânsitos",
-    "intro": "Trânsitos | Circulations est une encyclopédie numérique, interactive et bilingue qui vise à cartographier, systématiser et encourager les recherches sur les relations franco-brésiliennes, avec un focus sur les personnes, œuvres, institutions, entreprises, groupements, événements et concepts, de 1880 à 1990.",
+    "title": "À propos du projet Trânsitos | Circulations",
+    "intro": "Trânsitos | <em>Circulations</em> est une encyclopédie numérique, interactive et bilingue qui vise à cartographier, systématiser et encourager les recherches sur les relations franco-brésiliennes, avec un focus sur les personnes, œuvres, institutions, entreprises, groupements, événements et concepts, de 1880 à 1990.",
     "expanded": "Des personnes, groupes et œuvres ont circulé dans les deux sens de l'Atlantique. Ce sont ces transits que nous cherchons à récupérer et les mouvements que nous entendons redessiner, dans différentes sphères de la société, depuis les coopérations intellectuelles, scientifiques et artistiques jusqu'aux, ou principalement, les migrations motivées par des questions économiques, politiques ou religieuses. L'Encyclopédie a un double objectif : a) développer des travaux inédits, à partir d'une approche transdisciplinaire ; b) réfléchir sur les usages de la technologie pour la recherche, mais aussi développer des outils propres qui potentialisent les bases de données et l'interaction avec les lecteurs."
   },
   "team": {
@@ -53,6 +53,6 @@
     "coordinators": "Coordinateurs",
     "teamMembers": "Équipe",
     "development": "Développement",
-    "developmentText": "Le site a été développé par les étudiants du cours de Mathématiques Appliquées Gyovanna Marques Kwasinei et Gustavo Araújo, sous la direction d'Alfredo Goldman (USP)."
+    "developmentText": "Le site a été développé par l'étudiant du cours de Mathématiques Appliquées Gustavo Araújo, sous la direction d'Alfredo Goldman (USP)."
   }
 }

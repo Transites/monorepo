@@ -221,16 +221,16 @@ export default function ArticleContent({ article }: ArticleContentProps) {
 
       </header>
 
-      {/* Resumo Section */}
-      {article.summary && (
-        <section id="resumo" className="space-y-4">
-          <Separator />
-          <h2 className="text-2xl font-bold text-foreground">Resumo</h2>
-          <p className="text-lg text-foreground leading-relaxed">
-            {article.summary}
-          </p>
-        </section>
-      )}
+      {/*/!* Resumo Section *!/*/}
+      {/*{article.summary && (*/}
+      {/*  <section id="resumo" className="space-y-4">*/}
+      {/*    <Separator />*/}
+      {/*    <h2 className="text-2xl font-bold text-foreground">Resumo</h2>*/}
+      {/*    <p className="text-lg text-foreground leading-relaxed">*/}
+      {/*      {article.summary}*/}
+      {/*    </p>*/}
+      {/*  </section>*/}
+      {/*)}*/}
 
       {/* Biografia Section (Main Content) */}
       {sanitizedContent && (
