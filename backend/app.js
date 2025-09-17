@@ -1,0 +1,169 @@
+const express = require('express');
+const helmet = require('helmet');
+const cors = require('cors');
+const compression = require('compression');
+const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
+require('dotenv').config();
+
+const config = require('./config/services');
+const logger = require('./middleware/logging');
+const errorHandler = require('./middleware/errors');
+const securityMiddleware = require('./middleware/security');
+const routes = require('./routes');
+
+// Create Express app
+const app = express();
+
+// Security headers
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "https://res.cloudinary.com"],
+            scriptSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            upgradeInsecureRequests: [],
+        },
+    },
+    crossOriginEmbedderPolicy: false
+}));
+
+// CORS configuration
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'development'
+        ? ['http://localhost:8080', 'http://127.0.0.1:8080', 'http://localhost:8081', 'http://127.0.0.1:8081'] // Only allow Vite dev server
+        : (config.core.corsOrigin ? config.core.corsOrigin.split(',') : ['http://enciclopedia.iea.usp.br:8080']),
+    credentials: true,
+    optionsSuccessStatus: 200,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+};
+app.use(cors(corsOptions));
+
+// General middleware
+app.use(compression());
+app.use(express.json({limit: '10mb'}));
+app.use(express.urlencoded({extended: true, limit: '10mb'}));
+
+// HTTP request logging - disabled in test environment
+if (process.env.NODE_ENV !== 'development') {
+    app.use(morgan('combined', {
+        stream: {write: message => logger.info(message.trim())}
+    }));
+}
+
+// General rate limiting - disabled in test environment
+if (process.env.NODE_ENV !== 'development') {
+    const generalLimiter = rateLimit({
+        windowMs: config.core.rateLimitWindow || 15 * 60 * 1000, // 15 minutes
+        max: config.core.rateLimitMax || 100,
+        message: {
+            error: 'Muitas tentativas, tente novamente em 15 minutos',
+            retryAfter: Math.ceil((config.core.rateLimitWindow || 900000) / 1000)
+        },
+        standardHeaders: true,
+        legacyHeaders: false,
+    });
+    app.use(generalLimiter);
+}
+
+// MAXIMUM SECURITY: IP filtering middleware - BLOCK ALL EXCEPT LOCALHOST
+const isLocalhost = (req, res, next) => {
+    // SECURITY: Use ONLY direct socket connection IP (no headers, no trust proxy)
+    const clientIP = req.socket.remoteAddress || req.connection.remoteAddress;
+    
+    // DEBUG: Log IPs temporariamente para diagnóstico
+    console.log(`[DEBUG] Client IP: ${clientIP}, User-Agent: ${req.headers['user-agent']?.substring(0, 50)}`);
+
+    // SECURITY: Strict localhost IPs only (no hostname resolution)
+    const allowedIPs = [
+        '127.0.0.1',       // IPv4 localhost
+        '::1',             // IPv6 localhost
+        '::ffff:127.0.0.1' // IPv6-mapped IPv4 localhost
+    ];
+    
+    // DOCKER: Allow internal Docker network (192.168.x.x, 172.x.x.x, 10.x.x.x)
+    const isDockerNetwork = clientIP && (
+        clientIP.startsWith('192.168.') ||
+        clientIP.startsWith('172.') ||
+        clientIP.startsWith('10.')
+    );
+
+    // SECURITY: Block EVERYTHING except localhost or Docker internal
+    if (!allowedIPs.includes(clientIP) && !isDockerNetwork) {
+        // SECURITY: No information disclosure in error
+        return res.status(403).send('Acesso proibido');
+    }
+
+    // EXTRA SECURITY: Block suspicious User-Agents (curl, wget, automated tools)
+    const userAgent = req.headers['user-agent'] || '';
+    const suspiciousAgents = ['curl', 'wget', 'python-requests', 'postman', 'insomnia'];
+    const isBrowser = userAgent.includes('Mozilla') || userAgent.includes('Chrome') || userAgent.includes('Safari');
+    
+    // Block automated tools but allow browsers (frontend needs this)
+    if (!isBrowser && suspiciousAgents.some(agent => userAgent.toLowerCase().includes(agent))) {
+        return res.status(403).send('Acesso proibido');
+    }
+
+    next();
+};
+
+// IP filtering DISABLED - frontend requests come from external IPs
+// app.use(isLocalhost);
+
+// Custom security middleware
+app.use(securityMiddleware.requestLogger);
+app.use(securityMiddleware.sanitizeInput);
+
+// Health check (antes de outros middlewares)
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        version: process.env.npm_package_version || '1.0.0',
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
+// Main routes
+app.use('/api', routes);
+
+// 404 handler
+app.use('*', (req, res) => {
+    res.status(404).json({
+        error: 'Endpoint não encontrado',
+        path: req.originalUrl,
+        method: req.method
+    });
+});
+
+// Error handling
+app.use(errorHandler.notFound);
+app.use(errorHandler.general);
+
+if (process.env.NODE_ENV !== 'development') {
+    try {
+        const communicationService = require('./services/communicationService');
+        const tokenCleanupJob = require('./jobs/tokenCleanup'); // assumindo que existe
+
+        communicationService.initializeCronJobs();
+        tokenCleanupJob.start();
+
+        logger.info('Background jobs initialized successfully', {
+            environment: process.env.NODE_ENV,
+            jobs: ['communicationService', 'tokenCleanupJob']
+        });
+
+    } catch (error) {
+        logger.error('Failed to initialize background jobs', {
+            error: error.message,
+            stack: error.stack
+        });
+        // process.exit(1); // Descomentar se quiser forçar a parada da aplicação caso os jobs falhem na inicialização
+    }
+}
+
+module.exports = app;

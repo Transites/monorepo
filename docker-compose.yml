@@ -3,14 +3,16 @@ version: '3.10'
 services:
   frontend:
     build:
-      context: ./frontend
+      context: ./react-frontend
       target: 'base'
     ports:
     - '8080:8080'
     volumes:
-    - './frontend:/app'
+    - './react-frontend:/app'
     - '/app/node_modules'
     command: npm run dev
+    environment:
+    - NODE_ENV=development
   backend:
     build:
       context: ./backend
@@ -21,3 +23,5 @@ services:
     - './backend:/app'
     - '/app/node_modules'
     command: npm run dev
+    environment:
+    - NODE_ENV=development
