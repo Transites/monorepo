@@ -2,9 +2,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getCategoryColor } from "@/lib/categoryColors";
 import { useFeaturedContent } from "@/hooks/use-featured-content";
+import { useNavigate } from "react-router-dom";
 
 const MediaSection = () => {
   const { data: featuredContent, isLoading, error } = useFeaturedContent();
+  const navigate = useNavigate();
 
   // Loading state
   if (isLoading) {
@@ -46,7 +48,11 @@ const MediaSection = () => {
           {featuredContent.map((item) => {
             const categoryColor = getCategoryColor(item.category);
             return (
-              <Card key={item.id} className="group cursor-pointer hover:shadow-lg transition-all duration-300 overflow-hidden">
+              <Card
+                key={item.id}
+                className="group cursor-pointer hover:shadow-lg transition-all duration-300 overflow-hidden"
+                onClick={() => navigate(`/article/${item.id}`)}
+              >
                 <div className="aspect-video bg-muted relative overflow-hidden">
                   <img 
                     src={item.metadata?.image?.url || '/placeholder.svg'} 
