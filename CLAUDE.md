@@ -89,9 +89,6 @@ npm run preview         # Preview build
 
 # Code Quality  
 npm run lint            # ESLint
-
-# Testing
-# Frontend testing is done via visual testing (see visual-test.js)
 ```
 
 ### Root Level
@@ -142,8 +139,7 @@ monorepo/
 │   │   ├── lib/         # Utilities and helpers (api.ts, categoryColors.ts, etc.)
 │   │   └── types/       # TypeScript definitions
 │   ├── public/          # Static assets
-│   ├── test-results/    # Visual testing results
-│   └── visual-test.js   # Visual testing configuration
+│   └── test-results/    # Visual testing results
 └── docker-compose.yml   # Development environment
 ```
 

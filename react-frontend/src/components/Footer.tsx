@@ -75,7 +75,7 @@ const Footer = () => {
             <div className="space-y-2 text-sm">
               <div className="flex items-center text-primary-foreground/80">
                 <Mail className="h-4 w-4 mr-2" />
-                contato@transitos.org
+                  enciclopedia.iea.usp@gmail.com
               </div>
               <p className="text-primary-foreground/60 text-xs mt-4">
                 Uma iniciativa acadêmica dedicada à preservação da memória cultural Brasil-França
