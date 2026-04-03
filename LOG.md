@@ -29,6 +29,7 @@ Overview das atividades de cada semana :
     - criação de serviço para a página de "catálogo" de artigoa para usuários indecisos
     - presentes: Naili
     - duração: 2h
+  
 **Semana 30/03 - 05/04:**
   - 02/04 (quinta):
     - Update dos metadados inconsistentes no banco de dados (Adição de imagens e refatoração das legendas)
