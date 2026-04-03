@@ -20,7 +20,7 @@ Overview das atividades de cada semana :
     - presentes: João e Vinicius
     - duração: 3h
 
-**Semana 23/03 - 29/04**
+**Semana 23/03 - 29/04:**
   - 25/03 (quarta):
     - progressão na implementação do opensearch: craido script de ingestão em massa de dados (Supabase -> Opensearch) -- Falta consertar bugs
     - presentes: João e Vinicius
@@ -29,3 +29,8 @@ Overview das atividades de cada semana :
     - criação de serviço para a página de "catálogo" de artigoa para usuários indecisos
     - presentes: Naili
     - duração: 2h
+**Semana 30/03 - 05/04:**
+  - 02/04 (quinta):
+    - Update dos metadados inconsistentes no banco de dados (Adição de imagens e refatoração das legendas)
+    - presentes: Naili
+    - duração: 4h
