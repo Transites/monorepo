@@ -35,3 +35,8 @@ Overview das atividades de cada semana :
     - Update dos metadados inconsistentes no banco de dados (Adição de imagens e refatoração das legendas)
     - presentes: Naili
     - duração: 4h
+  - 03/04 (sexta):
+    - Terminado script de ingestão de dados, separação dos métodos em classe e serviços, feita a ingestão dos dados corretamente (funciona!)
+    - presetnes: João
+    - duração: 3h
+    - Próximos passos: Atualizar as funções de submissions.ts para funcionarem paralelamente com o OpenSearch
