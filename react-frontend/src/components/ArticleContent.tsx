@@ -54,6 +54,11 @@ export default function ArticleContent({ article }: ArticleContentProps) {
 
   // In the component, add this before the return statement
   const { orientation, isLoading } = useImageOrientation(article.metadata?.image?.url);
+  
+  // Debugging logs
+  console.log("ARTICLE DEBUG:", article);
+  console.log("VIDEO DEBUG:", article.metadata?.video);
+  console.log("VIDEO URL DEBUG:", article.metadata?.video?.url);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return null;
