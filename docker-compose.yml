@@ -39,6 +39,8 @@ services:
   opensearch-node1:
     image: opensearchproject/opensearch:latest
     container_name: opensearch-node1
+    env_file:
+      - './backend/.env'
     environment:
       - cluster.name=opensearch-cluster
       - node.name=opensearch-node1
@@ -64,6 +66,8 @@ services:
   opensearch-node2:
     image: opensearchproject/opensearch:latest
     container_name: opensearch-node2
+    env_file:
+      - './backend/.env'
     environment:
       - cluster.name=opensearch-cluster
       - node.name=opensearch-node2

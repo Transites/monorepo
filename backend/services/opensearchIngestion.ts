@@ -5,7 +5,6 @@ import * as dotenv from 'dotenv';
 import * as path from 'path';
 import https from 'https';
 
-
 dotenv.config({ path: path.resolve(__dirname, '../opensearch-cluster/.env') });
 const OPENSEARCH_PASSWORD = process.env.OPENSEARCH_INITIAL_ADMIN_PASSWORD || '';
 
@@ -107,6 +106,56 @@ class openserachIngestion {
             })
             .join("\n") + "\n";
     }
+
+    parse_article(data: RawArticle): Article {
+        return {
+            id: String(data.id),
+            status: String(data.status),
+            author_name: String(data.author_name),
+            author_institution: String(data.author_institution),
+            title: String(data.title),
+            summary: String(data.summary),
+            content: String(data.content),
+
+            keywords: Array.isArray(data.keywords)
+            ? data.keywords.map((k: any) => String(k))
+            : [],
+        };
+    }
+
+    async uploadArticle(indexName: string, articleData: any) {
+        try {
+            const { Client } = require('@opensearch-project/opensearch');
+            
+            const client = new Client({
+                node: 'https://opensearch-node1:9200', 
+                auth: {
+                    username: 'admin',
+                    password: process.env.OPENSEARCH_INITIAL_ADMIN_PASSWORD || '#Transitos01@',
+                },
+                ssl: {
+                    rejectUnauthorized: false,
+                },
+            });
+
+            const formatted_article = this.parse_article(articleData);
+            const { id, ...article_body } = formatted_article;
+
+            const response = await client.index({
+                index: indexName,
+                id: id,
+                body: article_body,
+                refresh: true,
+            });
+
+            return response.body;
+        } catch (error) {
+            if (error.meta && error.meta.body) {
+                console.error('OpenSearch Error Body:', JSON.stringify(error.meta.body, null, 2));
+            }
+            throw error;
+        }
+    } 
 }
 
 export default new openserachIngestion();
