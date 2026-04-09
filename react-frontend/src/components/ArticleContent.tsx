@@ -219,6 +219,37 @@ export default function ArticleContent({ article }: ArticleContentProps) {
           </section>
         )}
 
+        {/* Article Video */}
+        {article.metadata?.video && (
+          <section className="space-y-4">
+            <div className="relative">
+              <div className="flex justify-center">
+                <video
+                  src={article.metadata.video.url}
+                  controls
+                  className="rounded-lg shadow-lg w-full h-auto max-h-[600px]"
+                />
+              </div>
+              
+              {/* Video Caption */}
+              {article.metadata.video.caption && (
+                <div className="mt-3 space-y-1">
+                  <p className="text-sm text-muted-foreground italic leading-relaxed">
+                    {article.metadata.video.caption}
+                  </p>
+                  
+                  {/* Video Credit */}
+                  {article.metadata.video.credit && (
+                    <p className="text-xs text-muted-foreground">
+                      Crédito: {article.metadata.video.credit}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
       </header>
 
       {/*/!* Resumo Section *!/*/}
