@@ -39,6 +39,12 @@ export interface Submission {
       credit?: string;
       alternativeText?: string;
     };
+    video?: {
+      url: string;
+      caption?: string;
+      credit?: string;
+      alternativeText?: string;
+    };
     birth?: {
       date: string;
       place?: string;
@@ -88,7 +94,7 @@ export interface PaginationInfo {
   total: number;
   totalPages: number;
   hasNext: boolean;
-  hasPrev: boolean;
+  hasPrevious: boolean;
 }
 
 export interface SearchMetadata {
@@ -309,5 +315,71 @@ export async function getFeaturedContent(): Promise<FeaturedContentResponse> {
     throw error;
   }
 }
+
+// Essa interface descreve o formato de um artigo no catálogo.
+export interface ArticleSummary {
+  id: string;
+  title: string;
+  summary?: string;
+  author_name?: string;
+  author_institution?: string;
+  category?: string;
+  keywords?: string[];
+  published_at?: string;
+  created_at: string;
+  metadata?: {
+    image?: {
+      url: string;
+      alternativeText?: string;
+    };
+    featured?: boolean;
+  };
+}
+
+// O que a API devolve quando pedimos a lista de artigos
+export interface CatalogResult {
+  articles: ArticleSummary[];
+  categories: string[];          
+  pagination: PaginationInfo;   
+}
+
+export interface FetchArticlesOptions {
+  search?:   string;
+  category?: string;
+  page?:     number;
+  limit?:    number;
+}
+
+/**
+ * Busca artigos publicados para o catálogo.
+ * Chama GET /api/articles com filtros opcionais.
+ */
+export async function fetchArticles(
+  options: FetchArticlesOptions = {}
+): Promise<CatalogResult> {
+  // URLSearchParams monta a query string automaticamente.
+  // Ex: { search: "arte", page: 2 } → "?search=arte&page=2"
+  const params = new URLSearchParams();
+
+  if (options.search?.trim()) {
+    params.append('search', options.search.trim());
+  }
+  if (options.category) {
+    params.append('category', options.category);
+  }
+  if (options.page) {
+    params.append('page', options.page.toString());
+  }
+  if (options.limit) {
+    params.append('limit', options.limit.toString());
+  }
+
+  const endpoint = `/articles?${params.toString()}`;
+
+  // apiRequest já existe no arquivo — cuida de erros, headers, etc.
+  const response = await apiRequest<CatalogResult>(endpoint);
+  return response.data;
+}
+
 
 export { ApiError };
