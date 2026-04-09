@@ -40,3 +40,9 @@ Overview das atividades de cada semana :
     - presetnes: João
     - duração: 3h
     - Próximos passos: Atualizar as funções de submissions.ts para funcionarem paralelamente com o OpenSearch
+
+**Semana 06/04 - 12/04:**
+  - 08/04 (quarta):
+    - Integração do Opensearch nas funções pré-existentes de busca. Melhoria do sistema de busca completa!
+    - presetnes: João
+    - duração: 4h
