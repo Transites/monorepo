@@ -50,7 +50,7 @@ jobs:
             cd ~/Enciclopedia/monorepo
             
             echo "Atualizando código..."
-            git pull origin main
+            git pull origin master
 
             echo "Subindo containers..."
             sudo docker compose -f docker-compose.prod.yml up --build -d
