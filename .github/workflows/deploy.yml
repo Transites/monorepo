@@ -1,0 +1,61 @@
+name: CI/CD Enciclopedia
+
+on:
+  push:
+    branches: ["master"]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: |
+           monorepo/backend/package-lock.json
+           monorepo/react-frontend/package-lock.json
+
+      # BACKEND
+      - name: Install & Test Backend
+        working-directory: monorepo/backend
+        run: |
+          npm ci # 
+          npm test
+
+      # FRONTEND
+      - name: Install & Build Frontend
+        working-directory: monorepo/react-frontend
+        run: |
+          npm ci
+          npm run build
+
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+         
+          command_timeout: 20m 
+          script: |
+            cd ~/Enciclopedia/monorepo
+            
+            echo "Atualizando código..."
+            git pull origin main
+
+            echo "Subindo containers..."
+            sudo docker compose -f docker-compose.prod.yml up --build -d
+
+            echo "Limpando imagens antigas..."
+            sudo docker image prune -f
+
+            echo "Deploy finalizado com sucesso!"
