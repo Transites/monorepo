@@ -17,8 +17,8 @@ jobs:
           node-version: 20
           cache: 'npm'
           cache-dependency-path: |
-           monorepo/backend/package-lock.json
-           monorepo/react-frontend/package-lock.json
+           backend/package-lock.json
+           react-frontend/package-lock.json
 
       # BACKEND
       - name: Install & Test Backend
