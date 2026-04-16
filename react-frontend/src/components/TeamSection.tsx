@@ -32,8 +32,8 @@ export default function TeamSection() {
               Ana Fernandes (UFBA), Antonio Augusto Passos Videira (UERJ), Antonio Dimas (USP), Antonio Mota (
               Unifesp), Camila Gui Rosatti (EHESS), Carolina Queiroz (UFRB), Eduardo Paschoal de Sousa (USP), Elisabeth Azevedo (USP),
               Fabiana Marchetti (Unesp), François-Michel Le Tourneau (CNRS), Fernanda Azeredo de Moraes (EHESS),
-              Gilberto Hochman (Fiocruz), Hervé Théry (CNRS), Hugo Quinta (USP), Luciana Vieira Souza da Silva (MAST), Magali Sá (
-              Fiocruz), Márcia Aguiar (Unifesp), Patrick Petitjean (Université Paris Cité), Regina Campos (USP), Rodrigo Nabuco de
+              Gilberto Hochman (Fiocruz), Hervé Théry (CNRS), Hugo Quinta (USP), Luciana Vieira Souza da Silva (MAST), Magali Sá (Fiocruz),
+              Márcia Aguiar (Unifesp), Patrick Petitjean (Université Paris Cité), Regina Campos (USP), Rodrigo Nabuco de
               Araújo (Université Paris 1 Panthéon-Sorbonne), Taísa Palhares (Unicamp), Tânia de Luca (Unesp)
             </p>
           </div>
