@@ -3,7 +3,10 @@ name: CI/CD Enciclopedia
 on:
   push:
     branches: ["master"]
-
+    paths:
+      - 'backend/**'
+      - 'react-frontend/**'
+      
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -22,20 +25,19 @@ jobs:
 
       # BACKEND
       - name: Install & Test Backend
-        working-directory: monorepo/backend
+        working-directory: backend
         run: |
           npm ci # 
           npm test
 
       # FRONTEND
       - name: Install & Build Frontend
-        working-directory: monorepo/react-frontend
+        working-directory: react-frontend
         run: |
           npm ci
           npm run build
 
   deploy:
-    needs: ci
     runs-on: ubuntu-latest
     steps:
       - name: Deploy via SSH
@@ -44,13 +46,16 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
-         
+          port: 2212
           command_timeout: 20m 
           script: |
-            cd ~/Enciclopedia/monorepo
+            cd ~
             
             echo "Atualizando código..."
             git pull origin master
+
+            echo "Derrubando containers"
+            sudo docker compose down
 
             echo "Subindo containers..."
             sudo docker compose -f docker-compose.prod.yml up --build -d
