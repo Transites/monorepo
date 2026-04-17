@@ -8,6 +8,7 @@ import { LoadingScreen } from "@/components/LoadingScreen";
 const Index = lazy(() => import("./pages/Index"));
 const Article = lazy(() => import("./pages/Article"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Catalog = lazy(() => import("./pages/Catalog"));
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/article/:id" element={<Article />} />
+            <Route path="/catalog" element={<Catalog />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
