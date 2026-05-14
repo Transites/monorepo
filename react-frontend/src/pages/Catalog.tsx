@@ -1,6 +1,6 @@
 import { useCatalog }       from '../hooks/use-catalog';
 import { CatalogCard }      from '../components/CatalogCard';
-import { CatalogFilters }   from '../components/CatalogFilters';
+//import { CatalogFilters }   from '../components/CatalogFilters';
 import { Skeleton }         from '../components/ui/skeleton';
 import { Button }           from '../components/ui/button';
 import Header               from '../components/Header';
@@ -11,6 +11,16 @@ import { BookOpen, AlertCircle } from 'lucide-react';
 // Array.from({ length: 12 }) cria [ undefined × 12 ]
 // O segundo argumento é uma função que recebe (_, index) → retorna o index
 const SKELETON_ITEMS = Array.from({ length: 12 }, (_, i) => i);
+
+const CATEGORY_TITLES: Record<string, string> = {
+  'pessoa':      'Pessoas',
+  'evento':      'Eventos',
+  'instituicao': 'Instituições',
+  'tema':        'Conceitos',
+  'obra':        'Obras',
+  'agrupamento': 'Agrupamentos',
+  'empresa': 'Empresas',
+};
 
 export default function Catalog() {
   // Tudo que precisamos vem de um único hook — a página fica limpa
@@ -39,7 +49,7 @@ export default function Catalog() {
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
             <BookOpen className="text-primary" size={24} />
-            <h1 className="text-3xl font-bold">Catálogo de Artigos</h1>
+            <h1 className="text-3xl font-bold">{CATEGORY_TITLES[category] ?? 'Todos os Artigos'}</h1>
           </div>
           <p className="text-muted-foreground">
             Explore todos os artigos publicados na Enciclopédia Trânsitos
@@ -55,19 +65,9 @@ export default function Catalog() {
         {/* Layout: filtros na lateral (desktop) ou em cima (mobile) */}
         {/* grid-cols-1: 1 coluna no mobile */}
         {/* lg:grid-cols-[280px_1fr]: 2 colunas no desktop */}
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
+        <div>
 
-          {/* Coluna esquerda: filtros */}
-          {/* lg:sticky: fica fixo enquanto você rola — top-24 = abaixo do header */}
-          <aside className="lg:sticky lg:top-24 lg:self-start">
-            <CatalogFilters
-              search={search}
-              category={category}
-              categories={categories}
-              onSearch={setSearch}
-              onCategory={setCategory}
-            />
-          </aside>
+
 
           {/* Coluna direita: grid de artigos */}
           <section>
@@ -86,18 +86,19 @@ export default function Catalog() {
             {/* Estado de carregando — exibe skeletons no lugar dos cards */}
             {isLoading && !error && (
               // grid-cols-1 no mobile, 2 no tablet, 3 no desktop
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {SKELETON_ITEMS.map(i => (
-                  // Skeleton imita o formato do CatalogCard
-                  <div key={i} className="flex flex-col gap-3 p-4 border rounded-lg">
-                    <Skeleton className="h-40 w-full rounded-md" />
-                    <Skeleton className="h-4 w-1/3" />
-                    <Skeleton className="h-5 w-full" />
-                    <Skeleton className="h-5 w-4/5" />
-                    <Skeleton className="h-4 w-2/3" />
-                  </div>
-                ))}
-              </div>
+                <div className="flex flex-col">
+                  {SKELETON_ITEMS.map(i => (
+                    <div key={i} className="flex items-start gap-4 py-4 border-b border-border px-2">
+                      <Skeleton className="shrink-0 w-20 h-20 rounded-md" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-3 w-1/4" />
+                        <Skeleton className="h-5 w-3/4" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-2/3" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
             )}
 
             {/* Lista de artigos — só renderiza se não estiver carregando e sem erro */}
@@ -113,10 +114,8 @@ export default function Catalog() {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {/* articles.map: transforma cada objeto em um componente visual */}
+                  <div className="flex flex-col">
                     {articles.map(article => (
-                      // key é obrigatório — usa o id único de cada artigo
                       <CatalogCard key={article.id} article={article} />
                     ))}
                   </div>

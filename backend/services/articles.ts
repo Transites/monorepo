@@ -24,7 +24,7 @@ class ArticlesService {
 
             if(category && category.trim()){
                   params.push(category.trim());
-                  whereClause += ` AND s.category = $${params.length}`;
+                  whereClause += ` AND s.category ILIKE $${params.length}`;
             }
 
 
@@ -36,6 +36,7 @@ class ArticlesService {
                         s.author_name,
                         s.category,
                         s.keywords,
+                        s.metadata,
                         s.status,
                         s.created_at
                   FROM submissions s

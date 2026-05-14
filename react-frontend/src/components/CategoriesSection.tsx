@@ -1,19 +1,33 @@
-import { User, BookOpen, Calendar, Building2, Briefcase, Users, Lightbulb } from "lucide-react";
+import { User, BookOpen, Calendar, Building2, Briefcase, Users, Lightbulb, Library } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCategoryColor } from "@/lib/categoryColors";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 const CategoriesSection = () => {
   const { t } = useTranslation(["content"]);
+
+  const navigate = useNavigate();
   
   const categories = [
+
+    {
+      id: 'todos',
+      title: 'Todos os Artigos',
+      description: 'Explore toda a coleção da Enciclopédia Trânsitos',
+      icon: Library,
+      color: 'primary',
+      examples: 'Pessoas, obras, eventos, conceitos e mais',
+      categoryParam: '',
+    },
     {
       id: 'pessoas',
       title: t('content:categories.pessoas.title'),
       description: t('content:categories.pessoas.description'),
       icon: User,
       color: getCategoryColor('pessoas'),
-      examples: t('content:categories.pessoas.examples')
+      examples: t('content:categories.pessoas.examples'),
+      categoryParam: 'pessoa',
     },
     {
       id: 'obras',
@@ -21,7 +35,8 @@ const CategoriesSection = () => {
       description: t('content:categories.obras.description'),
       icon: BookOpen,
       color: getCategoryColor('obras'),
-      examples: t('content:categories.obras.examples')
+      examples: t('content:categories.obras.examples'),
+      categoryParam: 'obra',
     },
     {
       id: 'instituicoes',
@@ -29,7 +44,8 @@ const CategoriesSection = () => {
       description: t('content:categories.instituicoes.description'),
       icon: Building2,
       color: getCategoryColor('instituições'),
-      examples: t('content:categories.instituicoes.examples')
+      examples: t('content:categories.instituicoes.examples'),
+      categoryParam: 'instituicao'
     },
     {
       id: 'empresas',
@@ -37,7 +53,8 @@ const CategoriesSection = () => {
       description: t('content:categories.empresas.description'),
       icon: Briefcase,
       color: getCategoryColor('empresas'),
-      examples: t('content:categories.empresas.examples')
+      examples: t('content:categories.empresas.examples'),
+      categoryParam: 'empresa'
     },
     {
       id: 'agrupamentos',
@@ -45,7 +62,8 @@ const CategoriesSection = () => {
       description: t('content:categories.agrupamentos.description'),
       icon: Users,
       color: getCategoryColor('agrupamentos'),
-      examples: t('content:categories.agrupamentos.examples')
+      examples: t('content:categories.agrupamentos.examples'),
+      categoryParam: 'agrupamento'
     },
     {
       id: 'eventos',
@@ -53,7 +71,8 @@ const CategoriesSection = () => {
       description: t('content:categories.eventos.description'),
       icon: Calendar,
       color: getCategoryColor('eventos'),
-      examples: t('content:categories.eventos.examples')
+      examples: t('content:categories.eventos.examples'),
+      categoryParam: 'evento'
     },
     {
       id: 'conceitos',
@@ -61,9 +80,20 @@ const CategoriesSection = () => {
       description: t('content:categories.conceitos.description'),
       icon: Lightbulb,
       color: getCategoryColor('conceitos'),
-      examples: t('content:categories.conceitos.examples')
+      examples: t('content:categories.conceitos.examples'),
+      categoryParam: 'tema'
     }
   ];
+
+  // Navegar pelo catalogo
+  const handleCategoryClick = (categoryParam: string) => {
+    if(categoryParam) {
+      navigate(`/catalog?category=${encodeURIComponent(categoryParam)}`)
+    } else{
+      navigate(`/catalog`);
+    }
+  };
+
   return (
     <section id="categorias" className="py-20 bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -87,6 +117,7 @@ const CategoriesSection = () => {
                 style={{
                   boxShadow: `inset 4px 0 0 hsl(var(--${category.color}))`,
                 }}
+                onClick={() => handleCategoryClick(category.categoryParam)}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = `inset 8px 0 0 hsl(var(--${category.color}))`;
                 }}

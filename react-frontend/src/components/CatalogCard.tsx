@@ -1,14 +1,6 @@
-// Importamos só o que vamos usar do lucide-react
-// (já está instalado no projeto)
-import { User, BookOpen, Tag } from 'lucide-react';
-
-// Os componentes ui/ já existem no projeto (shadcn/ui)
-import { Badge }                    from '@/components/ui/badge';
-import { Card, CardContent }        from '@/components/ui/card';
-import { ArticleSummary }           from '@/lib/api';
-
-// useNavigate: hook do React Router pra navegar entre páginas
-// sem recarregar o browser (SPA navigation)
+import { User, BookOpen } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ArticleSummary } from '@/lib/api';
 import { useNavigate } from 'react-router-dom';
 
 interface CatalogCardProps {
@@ -18,89 +10,80 @@ interface CatalogCardProps {
 export function CatalogCard({ article }: CatalogCardProps) {
   const navigate = useNavigate();
 
-  // Navega para /article/:id — rota que já existe no App.tsx
-  const handleClick = () => {
-    navigate(`/article/${article.id}`);
-  };
-
-  // Pega as 3 primeiras keywords para exibir (evita card enorme)
-  const keywords = article.keywords?.slice(0, 3) ?? [];
-
   return (
-    // group: classe do Tailwind que permite estilizar filhos no hover do pai
-    // cursor-pointer: cursor de mãozinha para indicar que é clicável
-    <Card
-      onClick={handleClick}
-      className="group cursor-pointer hover:shadow-lg transition-all duration-200 hover:-translate-y-1 flex flex-col h-full"
+    // Em vez de Card vertical, usamos um div horizontal
+    // items-start: alinha thumbnail e texto pelo topo
+    // gap-4: espaço entre a thumbnail e o texto
+    // py-4 + border-b: separa cada item com uma linha embaixo (igual Google)
+    <div
+      onClick={() => navigate(`/article/${article.id}`)}
+      className="flex items-start gap-4 py-4 border-b border-border cursor-pointer group hover:bg-muted/30 transition-colors px-2 rounded-sm"
     >
-      {/* Imagem de capa — só renderiza se existir */}
+      {/* Thumbnail — pequena, quadrada, só aparece se tiver imagem */}
       {article.metadata?.image?.url && (
-        <div className="relative overflow-hidden rounded-t-lg h-40">
+        // shrink-0: impede a imagem de encolher quando o texto é longo
+        <div className="shrink-0 w-20 h-20 rounded-full overflow-hidden">
           <img
             src={article.metadata.image.url}
             alt={article.metadata.image.alternativeText ?? article.title}
-            // object-cover: preenche o espaço sem distorcer
-            // group-hover:scale-105: zoom suave no hover do Card pai
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            // object-cover: preenche o quadrado sem distorcer
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
           />
         </div>
       )}
 
-      <CardContent className="flex flex-col gap-3 p-4 flex-1">
-        {/* Categoria — Badge já tem estilo definido */}
+      {/* Conteúdo textual — ocupa todo o espaço restante */}
+      {/* min-w-0: permite que o texto quebre linha corretamente em flex */}
+      <div className="flex-1 min-w-0 space-y-1">
+
+        {/* Categoria — pequena, acima do título, igual URL verde do Google */}
         {article.category && (
-          <Badge variant="secondary" className="w-fit text-xs">
+          <p className="text-xs text-muted-foreground">
             {article.category}
-          </Badge>
+          </p>
         )}
 
-        {/* Título */}
-        {/* line-clamp-2: corta em 2 linhas com "..." — evita cards desiguais */}
-        <h3 className="font-semibold text-base leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+        {/* Título — azul clicável, igual Google */}
+        <h3 className="text-base font-semibold text-primary leading-snug group-hover:underline line-clamp-1">
           {article.title}
         </h3>
 
-        {/* Resumo */}
+        {/* Resumo — linha-clamp-2 mostra só 2 linhas, igual Google */}
         {article.summary && (
-          <p className="text-sm text-muted-foreground line-clamp-3">
+          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
             {article.summary}
           </p>
         )}
 
-        {/* Empurra o rodapé pro fundo do card — mt-auto = margin-top: auto */}
-        <div className="mt-auto flex flex-col gap-2">
-          {/* Autor */}
+        {/* Rodapé: autor e instituição numa linha só */}
+        <div className="flex items-center gap-3 pt-1">
           {article.author_name && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              {/* Ícone do lucide-react — size controla width e height */}
-              <User size={12} />
-              <span className="truncate">{article.author_name}</span>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <User size={11} />
+              <span>{article.author_name}</span>
             </div>
           )}
-
-          {/* Instituição */}
           {article.author_institution && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <BookOpen size={12} />
-              <span className="truncate">{article.author_institution}</span>
-            </div>
-          )}
-
-          {/* Keywords */}
-          {keywords.length > 0 && (
-            <div className="flex items-center gap-1 flex-wrap">
-              <Tag size={10} className="text-muted-foreground" />
-              {keywords.map(kw => (
-                // key é obrigatório quando renderizamos uma lista com .map()
-                // React usa ela pra identificar qual item mudou
-                <span key={kw} className="text-xs text-muted-foreground">
-                  {kw}{keywords.indexOf(kw) < keywords.length - 1 ? ',' : ''}
-                </span>
-              ))}
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <BookOpen size={11} />
+              {/* truncate: corta com "..." se o nome for muito longo */}
+              <span className="truncate max-w-[200px]">{article.author_institution}</span>
             </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Badge de keywords — só no desktop, lado direito */}
+      {/* hidden sm:flex: some no mobile, aparece no desktop */}
+      {article.keywords && article.keywords.length > 0 && (
+        <div className="hidden sm:flex flex-col gap-1 shrink-0">
+          {article.keywords.slice(0, 2).map(kw => (
+            <Badge key={kw} variant="outline" className="text-xs whitespace-nowrap">
+              {kw}
+            </Badge>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

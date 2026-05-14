@@ -1,4 +1,5 @@
 import {useState, useEffect, useCallback} from 'react';
+import {useSearchParams} from 'react-router-dom';
 import {fetchArticles, ArticleSummary, PaginationInfo} from '../lib/api';
 
 interface CatalogState {
@@ -20,9 +21,13 @@ export interface UseCatalogReturn extends CatalogState {
 }
 
 export function useCatalog(): UseCatalogReturn {
+
+  const [searchParams] = useSearchParams();
+
   // ── Filtros (o que o usuário selecionou) ──────────────────
   const [search,   setSearch]   = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState(
+    searchParams.get('category') ?? '');
   const [page,     setPage]     = useState(1);
 
   // ── Dados vindos da API ───────────────────────────────────
@@ -45,7 +50,7 @@ export function useCatalog(): UseCatalogReturn {
         search:   search   || undefined,   // não envia se vazio
         category: category || undefined,
         page,
-        limit: 12,
+        limit: 20,
       });
 
       setState({
