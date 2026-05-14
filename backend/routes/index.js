@@ -9,7 +9,7 @@ const submissionRoutes = require('./submission');
 const authorRoutes = require('./author');
 const uploadRoutes = require('./upload');
 const featuredContentRoutes = require('./featuredContent');
-
+const articleRoutes = require('./articles');
 // API information
 router.get('/', (req, res) => {
     res.json({
@@ -34,5 +34,5 @@ router.use('/submissions', submissionRoutes);
 router.use('/author', authorRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/featured-content', featuredContentRoutes);
-
+router.use('/articles', articleRoutes );
 module.exports = router;
