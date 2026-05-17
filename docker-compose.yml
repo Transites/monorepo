@@ -1,27 +1,107 @@
-# for local development
 version: '3.10'
+
 services:
+  # App Services
   frontend:
     build:
       context: ./react-frontend
       target: 'base'
     ports:
-    - '8080:8080'
+      - '8080:8080'
     volumes:
-    - './react-frontend:/app'
-    - '/app/node_modules'
+      - './react-frontend:/app'
+      - '/app/node_modules'
     command: npm run dev
     environment:
-    - NODE_ENV=development
+      - NODE_ENV=development
+    networks:
+      - app-network
+
   backend:
     build:
       context: ./backend
       target: 'base'
     ports:
-    - '1337:1337'
+      - '1337:1337'
     volumes:
-    - './backend:/app'
-    - '/app/node_modules'
+      - './backend:/app'
+      - '/app/node_modules'
     command: npm run dev
     environment:
-    - NODE_ENV=development
+      - NODE_ENV=development
+      - OPENSEARCH_URL=https://opensearch-node1:9200
+    depends_on:
+      - opensearch-node1
+    networks:
+      - app-network
+
+  # OpenSearch Cluster
+  opensearch-node1:
+    image: opensearchproject/opensearch:latest
+    container_name: opensearch-node1
+    env_file:
+      - './backend/.env'
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node1
+      - discovery.seed_hosts=opensearch-node1,opensearch-node2
+      - cluster.initial_cluster_manager_nodes=opensearch-node1,opensearch-node2
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch-data1:/usr/share/opensearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - app-network
+
+  opensearch-node2:
+    image: opensearchproject/opensearch:latest
+    container_name: opensearch-node2
+    env_file:
+      - './backend/.env'
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node2
+      - discovery.seed_hosts=opensearch-node1,opensearch-node2
+      - cluster.initial_cluster_manager_nodes=opensearch-node1,opensearch-node2
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch-data2:/usr/share/opensearch/data
+    networks:
+      - app-network
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:latest
+    container_name: opensearch-dashboards
+    ports:
+      - 5601:5601
+    environment:
+      OPENSEARCH_HOSTS: '["https://opensearch-node1:9200","https://opensearch-node2:9200"]'
+    networks:
+      - app-network
+
+volumes:
+  opensearch-data1:
+  opensearch-data2:
+
+networks:
+  app-network:
+    driver: bridge
