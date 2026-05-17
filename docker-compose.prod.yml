@@ -37,7 +37,7 @@ services:
 
   # OpenSearch Cluster
   opensearch-node1:
-    image: opensearchproject/opensearch:latest
+    image: opensearchproject/opensearch:3.6.0
     container_name: opensearch-node1-prod
     env_file:
       - ./backend/.env
@@ -57,14 +57,14 @@ services:
         soft: 65536
         hard: 65536
     volumes:
-      - opensearch-prod-data1:/usr/share/opensearch/data
+      - /work/opensearch/node1:/usr/share/opensearch/data
     ports:
       - '127.0.0.1:9200:9200'  # Protegido! Apenas local ou via proxy se necessário externamente
     networks:
       - transitos-network
 
   opensearch-node2:
-    image: opensearchproject/opensearch:latest
+    image: opensearchproject/opensearch:3.6.0
     container_name: opensearch-node2-prod
     env_file:
       - ./backend/.env
@@ -84,7 +84,7 @@ services:
         soft: 65536
         hard: 65536
     volumes:
-      - opensearch-prod-data2:/usr/share/opensearch/data
+      - /work/opensearch/node2:/usr/share/opensearch/data
     networks:
       - transitos-network
 
@@ -98,10 +98,6 @@ services:
       OPENSEARCH_HOSTS: '["https://opensearch-node1:9200","https://opensearch-node2:9200"]'
     networks:
       - transitos-network
-
-volumes:
-  opensearch-prod-data1:
-  opensearch-prod-data2:
 
 networks:
   transitos-network:
