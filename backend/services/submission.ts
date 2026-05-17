@@ -19,6 +19,11 @@ import {
 import untypedLogger from '../middleware/logging';
 import {LoggerWithAudit} from "../types/migration";
 
+import * as https from 'https';
+import * as fs from 'fs';
+import path from 'path';
+import { Agent } from 'undici';
+
 const logger = untypedLogger as unknown as LoggerWithAudit;
 
 export interface SubmissionSummary {
@@ -393,7 +398,7 @@ class SubmissionService {
                 `, updateValues);
 
                 const updatedSubmission = result.rows[0];
-                opensearchIngestion.uploadArticle("articles", newSubmission);
+                opensearchIngestion.uploadArticle("articles", updatedSubmission);
 
                 // Criar nova versão se houve mudanças significativas
                 if (hasSignificantChanges) {
@@ -1059,32 +1064,77 @@ class SubmissionService {
     }): Promise<any> {
         try {
             if (!searchTerm || !searchTerm.trim()) {
-                throw new ValidationException('Search term is required for fuzzy search');
+                throw new ValidationException('Search term is required for search');
             }
 
             const cleanSearchTerm = searchTerm.trim();
 
             const osQuery = {
+                size: pagination.top,
+                from: pagination.skip,
                 query: {
-                    multi_match: {
-                        query: cleanSearchTerm,
-                        fields: ['title', 'content', 'summary', 'keywords', 'author_name', 'author_institution']
+                    bool: {
+                        must: [
+                            {
+                                multi_match: {
+                                    query: cleanSearchTerm,
+                                    fields: ["title^15", "keywords^8"],
+                                    type: "best_fields",
+                                    operator: "and",
+                                    boost: 6
+                                }
+                            }
+                        ],
+                        should: [
+                            {
+                                multi_match: {
+                                    query: cleanSearchTerm,
+                                    fields: ["title^12", "keywords^6"],
+                                    fuzziness: 1,
+                                    prefix_length: 2,
+                                    max_expansions: 15,
+                                    boost: 2
+                                }
+                            },
+                            {
+                                multi_match: {
+                                    query: cleanSearchTerm,
+                                    fields: ["title^25", "summary^12"],
+                                    type: "phrase",
+                                    slop: 2,
+                                    boost: 3
+                                }
+                            },
+                            {
+                                multi_match: {
+                                    query: cleanSearchTerm,
+                                    fields: ["summary^8"],
+                                    type: "best_fields",
+                                    boost: 1
+                                }
+                            }
+                        ],
+                        minimum_should_match: 1
                     }
                 },
-                size: pagination.top,
-                from: pagination.skip
+                min_score: 8.0
             };
 
             process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-            
-            const osResponse = await fetch('https://opensearch-node1:9200/articles/_search', {
-                method: 'POST',
-                headers: {
-                    'Authorization': 'Basic ' + Buffer.from('admin:#Transitos01@').toString('base64'),
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(osQuery)
-            });
+
+            const osResponse = await fetch(
+                'https://opensearch-node1:9200/articles/_search',
+                {
+                    method: 'POST',
+                    headers: {
+                        Authorization:
+                            'Basic ' +
+                            Buffer.from('admin:#Transitos01@').toString('base64'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(osQuery)
+                }
+            );
 
             if (!osResponse.ok) {
                 const errorBody = await osResponse.text();
@@ -1092,14 +1142,12 @@ class SubmissionService {
             }
 
             const searchData = await osResponse.json();
-            
             const orderedIds = searchData.hits?.hits?.map((hit: any) => hit._source.id) || [];
-
             let finalSubmissions = [];
 
             if (orderedIds.length > 0) {
                 const dbResult = await db.query(
-                    'SELECT * FROM submissions WHERE id = ANY($1)', 
+                    'SELECT * FROM submissions WHERE id = ANY($1)',
                     [orderedIds]
                 );
 
@@ -1138,7 +1186,6 @@ class SubmissionService {
                     searchType: 'fuzzy'
                 }
             };
-
         } catch (error: any) {
             logger.error('Error in fuzzy search', {
                 searchTerm,
