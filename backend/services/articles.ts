@@ -41,7 +41,7 @@ class ArticlesService {
                         s.created_at
                   FROM submissions s
                   ${whereClause}
-                  ORDER BY s.title ASC
+                  ORDER BY LOWER(s.title) ASC
                   LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
 
             const countQuery = `
