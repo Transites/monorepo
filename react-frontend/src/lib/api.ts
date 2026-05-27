@@ -382,4 +382,42 @@ export async function fetchArticles(
 }
 
 
+/** Payload for creating a new article submission (POST /submissions). */
+export interface CreateArticleSubmissionPayload {
+  author_name: string;
+  author_email: string;
+  author_institution?: string;
+  title: string;
+  summary: string;
+  content: string;
+  keywords: string[];
+  category: string;
+  metadata?: {
+    sections?: Array<{ title: string; content: string }>;
+    [key: string]: unknown;
+  };
+}
+
+export interface CreateArticleSubmissionResponse {
+  submission: Submission;
+  accessUrl?: string;
+}
+
+/**
+ * Submits a new article for editorial review.
+ * Backend: POST /api/submissions (to be wired when endpoint is active).
+ */
+export async function createArticleSubmission(
+  payload: CreateArticleSubmissionPayload
+): Promise<CreateArticleSubmissionResponse> {
+  const response = await apiRequest<CreateArticleSubmissionResponse>(
+    '/submissions',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }
+  );
+  return response.data;
+}
+
 export { ApiError };
