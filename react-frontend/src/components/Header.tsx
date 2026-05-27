@@ -91,6 +91,12 @@ const Header = () => {
             >
               Contato
             </a>
+            <Link
+              to="/submissao/nova"
+              className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+            >
+              Submeter
+            </Link>
             <LanguageToggle />
           </nav>
 
@@ -131,6 +137,13 @@ const Header = () => {
                 >
                   Contato
                 </a>
+                <Link
+                  to="/submissao/nova"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-lg font-medium text-foreground hover:text-primary transition-colors"
+                >
+                  Submeter
+                </Link>
                 <div className="border-t pt-6 mt-6">
                   <LanguageToggle />
                 </div>
