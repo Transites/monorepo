@@ -14,4 +14,9 @@ router.get(
       errorHandler.asyncHandler(articlesController.getArticleById)
 );
 
+router.patch(
+  '/:id',
+  errorHandler.asyncHandler(articlesController.updateArticle)
+);
+
 module.exports = router;

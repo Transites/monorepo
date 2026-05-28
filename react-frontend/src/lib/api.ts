@@ -421,3 +421,34 @@ export async function createArticleSubmission(
 }
 
 export { ApiError };
+
+// Campos que podem ser editados pelo admin
+export interface ArticleUpdateData {
+  title?:              string;
+  summary?:            string;
+  content?:            string;
+  content_html?:       string;
+  keywords?:           string[];
+  category?:           string;
+  author_name?:        string;
+  author_institution?: string;
+  metadata?:           Record<string, any>;
+}
+
+/**
+ * Atualiza um artigo pelo ID.
+ * Chama PATCH /api/articles/:id com os campos alterados.
+ */
+export async function updateArticle(
+  id: string,
+  data: ArticleUpdateData
+): Promise<Submission> {
+  const response = await apiRequest<{ submission: Submission }>(
+    `/articles/${id}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }
+  );
+  return response.data.submission;
+}

@@ -38,7 +38,7 @@ const corsOptions = {
         : (config.core.corsOrigin ? config.core.corsOrigin.split(',') : ['http://enciclopedia.iea.usp.br:8080']),
     credentials: true,
     optionsSuccessStatus: 200,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 };
 app.use(cors(corsOptions));

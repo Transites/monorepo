@@ -98,6 +98,49 @@ class ArticlesService {
 
       }
 
+      async updateArticle(id: string, data: any) {
+      // Campos permitidos — evita que alguém atualize status ou token
+      const allowed = [
+      'title', 'summary', 'content', 'content_html',
+      'keywords', 'category', 'author_name',
+      'author_institution', 'metadata'
+      ];
+
+      // Monta o SET dinamicamente só com os campos enviados
+      const fields: string[] = [];
+      const values: any[]    = [];
+      let   i = 1;
+
+      allowed.forEach(field => {
+      if (data[field] !== undefined) {
+            fields.push(`${field} = $${i}`);
+            values.push(data[field]);
+            i++;
+      }
+      });
+
+      if (fields.length === 0) {
+      throw new Error('Nenhum campo para atualizar');
+      }
+
+      fields.push(`updated_at = $${i}`);
+      values.push(new Date());
+      i++;
+
+      values.push(id); // WHERE id = $i
+
+      const result = await db.query(
+      `UPDATE submissions SET ${fields.join(', ')} WHERE id = $${i} RETURNING *`,
+      values
+      );
+
+      if (result.rows.length === 0) {
+      throw new Error('Artigo não encontrado');
+      }
+
+      return result.rows[0];
+      }
+
 }
 
 export default new ArticlesService();
