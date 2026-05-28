@@ -1,21 +1,22 @@
 /**
  * Testes para UploadController
+ * DEPRECATED - Este arquivo foi movido para test/deprecated/upload/
  */
 import { Request, Response, NextFunction } from 'express';
-import uploadController from '../../controllers/upload';
-import uploadService from '../../services/upload';
-import responses from '../../utils/responses';
-import { FileUpload, BulkUploadResult } from '../../types/upload';
+import uploadController from '../../../controllers/upload';
+import uploadService from '../../../services/upload';
+import responses from '../../../utils/responses';
+import { FileUpload, BulkUploadResult } from '../../../types/upload';
 import { validationResult } from 'express-validator';
-import untypedLogger from '../../middleware/logging';
-import { LoggerWithAudit } from "../../types/migration";
+import untypedLogger from '../../../middleware/logging';
+import { LoggerWithAudit } from "../../../types/migration";
 
 const logger = untypedLogger as unknown as LoggerWithAudit;
 
 // Mock dependencies
-jest.mock('../../services/upload');
-jest.mock('../../utils/responses');
-jest.mock('../../middleware/logging');
+jest.mock('../../../services/upload');
+jest.mock('../../../utils/responses');
+jest.mock('../../../middleware/logging');
 jest.mock('express-validator', () => ({
     validationResult: jest.fn()
 }));

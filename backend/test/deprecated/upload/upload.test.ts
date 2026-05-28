@@ -1,8 +1,10 @@
 // @ts-nocheck
-import uploadService from '../../services/upload';
-import db from '../../database/client';
+// DEPRECATED - Este arquivo foi movido para test/deprecated/upload/
+// Imports ajustados para o novo local
+import uploadService from '../../../services/upload';
+import db from '../../../database/client';
 import { v2 as cloudinary } from 'cloudinary';
-import logger from '../../middleware/logging';
+import logger from '../../../middleware/logging';
 
 // Mock dependencies
 jest.mock('cloudinary');

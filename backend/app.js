@@ -32,10 +32,32 @@ app.use(helmet({
 }));
 
 // CORS configuration
+// Handle corsOrigin that might be string, array, or undefined
+const getCorsOrigin = () => {
+    if (process.env.NODE_ENV === 'development') {
+        return ['http://localhost:8080', 'http://127.0.0.1:8080', 'http://localhost:8081', 'http://127.0.0.1:8081'];
+    }
+    
+    if (!config.core.corsOrigin) {
+        return ['http://enciclopedia.iea.usp.br:8080'];
+    }
+    
+    // If it's already an array, return as-is
+    if (Array.isArray(config.core.corsOrigin)) {
+        return config.core.corsOrigin;
+    }
+    
+    // If it's a string, split by comma
+    if (typeof config.core.corsOrigin === 'string') {
+        return config.core.corsOrigin.split(',').map(url => url.trim());
+    }
+    
+    // Fallback
+    return ['http://enciclopedia.iea.usp.br:8080'];
+};
+
 const corsOptions = {
-    origin: process.env.NODE_ENV === 'development'
-        ? ['http://localhost:8080', 'http://127.0.0.1:8080', 'http://localhost:8081', 'http://127.0.0.1:8081'] // Only allow Vite dev server
-        : (config.core.corsOrigin ? config.core.corsOrigin.split(',') : ['http://enciclopedia.iea.usp.br:8080']),
+    origin: getCorsOrigin(),
     credentials: true,
     optionsSuccessStatus: 200,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

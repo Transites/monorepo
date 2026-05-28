@@ -1,11 +1,13 @@
-const tokenMiddleware = require('../../middleware/tokens');
-const tokenService = require('../../services/tokens');
-const responses = require('../../utils/responses');
-const logger = require('../../middleware/logging');
+// DEPRECATED - Este arquivo foi movido para test/deprecated/tokens/
+// Imports ajustados para o novo local
+const tokenMiddleware = require('../../../middleware/tokens');
+const tokenService = require('../../../services/tokens');
+const responses = require('../../../utils/responses');
+const logger = require('../../../middleware/logging');
 
-jest.mock('../../services/tokens');
-jest.mock('../../utils/responses');
-jest.mock('../../middleware/logging');
+jest.mock('../../../services/tokens');
+jest.mock('../../../utils/responses');
+jest.mock('../../../middleware/logging');
 
 describe('TokenMiddleware', () => {
     let req, res, next;

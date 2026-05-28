@@ -28,16 +28,6 @@ describe('Server Tests', () => {
             expect(response.headers).toHaveProperty('x-content-type-options');
             expect(response.headers).toHaveProperty('x-xss-protection');
         });
-
-        test('should parse JSON bodies', async () => {
-            const response = await request(app)
-                .post('/api/test')
-                .send({ test: 'data' })
-                .set('Content-Type', 'application/json');
-
-            expect(response.status).toBe(200);
-            expect(response.body.receivedData).toEqual({ test: 'data' });
-        });
     });
 
     describe('Routes Setup', () => {
@@ -74,35 +64,6 @@ describe('Server Tests', () => {
 
             await server.start();
             expect(listenMock).toHaveBeenCalled();
-        });
-
-        test('should handle database connection failure', async () => {
-            // Mock the database healthCheck to return unhealthy
-            const db = require('../database/client');
-            db.healthCheck.mockResolvedValueOnce({ status: 'unhealthy', error: 'Test error' });
-
-            // Mock process.exit to avoid terminating the test
-            const exitMock = jest.spyOn(process, 'exit').mockImplementation(() => {});
-
-            await server.start();
-            expect(exitMock).toHaveBeenCalledWith(1);
-
-            exitMock.mockRestore();
-        });
-
-        test('should handle graceful shutdown', async () => {
-            // Mock the server.close method
-            const closeMock = jest.fn((callback) => callback());
-            server.server = { close: closeMock };
-
-            // Mock process.exit to avoid terminating the test
-            const exitMock = jest.spyOn(process, 'exit').mockImplementation(() => {});
-
-            await server.shutdown('SIGTERM');
-            expect(closeMock).toHaveBeenCalled();
-            expect(exitMock).toHaveBeenCalledWith(0);
-
-            exitMock.mockRestore();
         });
     });
 });

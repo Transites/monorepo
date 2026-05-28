@@ -1,17 +1,19 @@
+// DEPRECATED - Este arquivo foi movido para test/deprecated/auth/
+// Imports ajustados para o novo local
 const { validationResult } = require('express-validator');
-const db = require('../../database/client');
-const authService = require('../../services/auth');
-const logger = require('../../middleware/logging');
-const responses = require('../../utils/responses');
-const authController = require('../../controllers/auth');
+const db = require('../../../database/client');
+const authService = require('../../../services/auth');
+const logger = require('../../../middleware/logging');
+const responses = require('../../../utils/responses');
+const authController = require('../../../controllers/auth');
 
 jest.mock('express-validator', () => ({
     validationResult: jest.fn()
 }));
-jest.mock('../../database/client');
-jest.mock('../../services/auth');
-jest.mock('../../middleware/logging');
-jest.mock('../../utils/responses');
+jest.mock('../../../database/client');
+jest.mock('../../../services/auth');
+jest.mock('../../../middleware/logging');
+jest.mock('../../../utils/responses');
 
 describe('AuthController', () => {
     let req, res, next;

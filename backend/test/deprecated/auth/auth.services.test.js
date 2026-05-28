@@ -1,12 +1,13 @@
 /**
  * Testes para AuthService
+ * DEPRECATED - Este arquivo foi movido para test/deprecated/auth/
  */
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const logger = require('../../middleware/logging');
+const logger = require('../../../middleware/logging');
 
 jest.mock('jsonwebtoken');
-jest.mock('../../middleware/logging');
+jest.mock('../../../middleware/logging');
 
 describe('AuthService', () => {
     let authService;
@@ -22,7 +23,7 @@ describe('AuthService', () => {
         };
 
         jest.resetModules();
-        authService = require('../../services/auth');
+        authService = require('../../../services/auth');
         logger.error = jest.fn();
     });
 
@@ -45,7 +46,7 @@ describe('AuthService', () => {
             process.env.BCRYPT_ROUNDS = '6';
 
             jest.resetModules();
-            const freshAuthService = require('../../services/auth');
+            const freshAuthService = require('../../../services/auth');
 
             const password = 'password123';
             const hash = await freshAuthService.hashPassword(password);

@@ -1,9 +1,11 @@
-const tokenService = require('../../services/tokens');
-const db = require('../../database/client');
-const constants = require('../../utils/constants');
+// DEPRECATED - Este arquivo foi movido para test/deprecated/tokens/
+// Imports ajustados para o novo local
+const tokenService = require('../../../services/tokens');
+const db = require('../../../database/client');
+const constants = require('../../../utils/constants');
 
-jest.mock('../../database/client');
-jest.mock('../../middleware/logging');
+jest.mock('../../../database/client');
+jest.mock('../../../middleware/logging');
 
 describe('TokenService', () => {
     const sixtyFourCharacterToken = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';

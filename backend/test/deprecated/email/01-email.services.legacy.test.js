@@ -191,15 +191,18 @@ describe('EmailService', () => {
                 created_at: new Date()
             };
             const adminEmails = ['admin1@example.com', 'admin2@example.com'];
-            const testError = new Error('Test error');
 
-            // Mock sendEmail to throw error
-            jest.spyOn(emailService, 'sendEmail').mockRejectedValue(testError);
+            // Mock sendEmail to return failure (serviço retorna {success: false}, não throws)
+            jest.spyOn(emailService, 'sendEmail').mockResolvedValue({
+                success: false,
+                errorMessage: 'Test error',
+                statusCode: 500
+            });
 
             // Execute & Verify
-            await expect(emailService.notifyAdminNewSubmission(submission, adminEmails))
-                .rejects.toThrow(testError);
+            const result = await emailService.notifyAdminNewSubmission(submission, adminEmails);
 
+            expect(result).toEqual({ success: false });
             expect(logger.error).toHaveBeenCalledWith('Failed to send admin notification', expect.any(Object));
         });
     });
@@ -255,13 +258,12 @@ describe('EmailService', () => {
             const adminName = 'Admin User';
             const testError = new Error('Test error');
 
-            // Mock sendEmail to throw error
-            jest.spyOn(emailService, 'sendEmail').mockRejectedValue(testError);
+            // Mock sendEmail to return failure
+            jest.spyOn(emailService, 'sendEmail').mockResolvedValue({ success: false, errorMessage: 'Test error' });
 
             // Execute & Verify
-            await expect(emailService.sendFeedbackToAuthor(submission, feedback, adminName))
-                .rejects.toThrow(testError);
-
+            const result = await emailService.sendFeedbackToAuthor(submission, feedback, adminName);
+            expect(result).toEqual({ success: false });
             expect(logger.error).toHaveBeenCalledWith('Failed to send feedback email', expect.any(Object));
         });
     });
@@ -305,13 +307,12 @@ describe('EmailService', () => {
             const articleUrl = 'https://example.com/article/123';
             const testError = new Error('Test error');
 
-            // Mock sendEmail to throw error
-            jest.spyOn(emailService, 'sendEmail').mockRejectedValue(testError);
+            // Mock sendEmail to return failure
+            jest.spyOn(emailService, 'sendEmail').mockResolvedValue({ success: false, errorMessage: 'Test error' });
 
             // Execute & Verify
-            await expect(emailService.notifyAuthorApproval(submission, articleUrl))
-                .rejects.toThrow(testError);
-
+            const result = await emailService.notifyAuthorApproval(submission, articleUrl);
+            expect(result).toEqual({ success: false });
             expect(logger.error).toHaveBeenCalledWith('Failed to send approval notification', expect.any(Object));
         });
     });
@@ -359,13 +360,12 @@ describe('EmailService', () => {
             const daysRemaining = 1;
             const testError = new Error('Test error');
 
-            // Mock sendEmail to throw error
-            jest.spyOn(emailService, 'sendEmail').mockRejectedValue(testError);
+            // Mock sendEmail to return failure
+            jest.spyOn(emailService, 'sendEmail').mockResolvedValue({ success: false, errorMessage: 'Test error' });
 
             // Execute & Verify
-            await expect(emailService.sendExpirationWarning(submission, daysRemaining))
-                .rejects.toThrow(testError);
-
+            const result = await emailService.sendExpirationWarning(submission, daysRemaining);
+            expect(result).toEqual({ success: false });
             expect(logger.error).toHaveBeenCalledWith('Failed to send expiration warning', expect.any(Object));
         });
     });
@@ -407,13 +407,12 @@ describe('EmailService', () => {
             };
             const testError = new Error('Test error');
 
-            // Mock sendEmail to throw error
-            jest.spyOn(emailService, 'sendEmail').mockRejectedValue(testError);
+            // Mock sendEmail to return failure
+            jest.spyOn(emailService, 'sendEmail').mockResolvedValue({ success: false, errorMessage: 'Test error' });
 
             // Execute & Verify
-            await expect(emailService.notifyTokenExpired(submission))
-                .rejects.toThrow(testError);
-
+            const result = await emailService.notifyTokenExpired(submission);
+            expect(result).toEqual({ success: false });
             expect(logger.error).toHaveBeenCalledWith('Failed to send token expired notification', expect.any(Object));
         });
     });
@@ -455,13 +454,12 @@ describe('EmailService', () => {
             const adminEmails = ['admin1@example.com', 'admin2@example.com'];
             const testError = new Error('Test error');
 
-            // Mock sendEmail to throw error
-            jest.spyOn(emailService, 'sendEmail').mockRejectedValue(testError);
+            // Mock sendEmail to return failure
+            jest.spyOn(emailService, 'sendEmail').mockResolvedValue({ success: false, errorMessage: 'Test error' });
 
             // Execute & Verify
-            await expect(emailService.alertAdminSuspiciousActivity(activityData, adminEmails))
-                .rejects.toThrow(testError);
-
+            const result = await emailService.alertAdminSuspiciousActivity(activityData, adminEmails);
+            expect(result).toEqual({ success: false });
             expect(logger.error).toHaveBeenCalledWith('Failed to send security alert', expect.any(Object));
         });
     });
@@ -505,13 +503,12 @@ describe('EmailService', () => {
             const adminEmails = ['admin1@example.com', 'admin2@example.com'];
             const testError = new Error('Test error');
 
-            // Mock sendEmail to throw error
-            jest.spyOn(emailService, 'sendEmail').mockRejectedValue(testError);
+            // Mock sendEmail to return failure
+            jest.spyOn(emailService, 'sendEmail').mockResolvedValue({ success: false, errorMessage: 'Test error' });
 
             // Execute & Verify
-            await expect(emailService.sendDailySummary(summaryData, adminEmails))
-                .rejects.toThrow(testError);
-
+            const result = await emailService.sendDailySummary(summaryData, adminEmails);
+            expect(result).toEqual({ success: false });
             expect(logger.error).toHaveBeenCalledWith('Failed to send daily summary', expect.any(Object));
         });
     });

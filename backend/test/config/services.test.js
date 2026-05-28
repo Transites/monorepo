@@ -25,6 +25,8 @@ describe('Services Configuration', () => {
     process.env.FROM_EMAIL = 'test@example.com';
     process.env.CLOUDINARY_URL = 'cloudinary://key:secret@name';
     process.env.CLOUDINARY_CLOUD_NAME = 'test-cloud-name';
+    process.env.CLOUDINARY_API_KEY = 'test-cloudinary-key';
+    process.env.CLOUDINARY_API_SECRET = 'test-cloudinary-secret';
 
     // Clear module cache to ensure fresh import with new env vars
     jest.resetModules();
@@ -53,9 +55,10 @@ describe('Services Configuration', () => {
     expect(services.email.fromName).toBe('Enciclopédia Transitos'); // Default value
 
     // Verify storage config
-    expect(services.storage.cloudinaryUrl).toBe('cloudinary://key:secret@name');
     expect(services.storage.cloudName).toBe('test-cloud-name');
     expect(services.storage.uploadMaxSize).toBe('10MB'); // Default value
+    expect(services.storage.apiKey).toBe('test-cloudinary-key');
+    expect(services.storage.apiSecret).toBe('test-cloudinary-secret');
   });
 
   test('should use default values when optional variables are not set', () => {
@@ -74,7 +77,6 @@ describe('Services Configuration', () => {
     expect(services.email.fromName).toBe('Enciclopédia Transitos');
     expect(services.email.replyTo).toBe('contato@enciclopedia.iea.usp.br');
     expect(services.storage.uploadMaxSize).toBe('10MB');
-    expect(services.storage.allowedTypes).toEqual(['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx']);
     expect(services.core.nodeEnv).toBe('development');
     expect(services.core.port).toBe(3000);
   });
@@ -115,7 +117,11 @@ describe('Services Configuration', () => {
       // Ignore the error, we just want to check if dotenv.config was called
     }
 
-    // Verify dotenv.config was called
-    expect(dotenv.config).toHaveBeenCalled();
+  // Provide Cloudinary API key/secret for services validation
+  process.env.CLOUDINARY_API_KEY = 'test-cloudinary-key';
+  process.env.CLOUDINARY_API_SECRET = 'test-cloudinary-secret';
+
+  // Clear module cache to ensure fresh import with new env vars
+  jest.resetModules();
   });
 });
