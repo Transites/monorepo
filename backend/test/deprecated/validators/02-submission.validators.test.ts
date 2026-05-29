@@ -3,8 +3,8 @@
  */
 import request from 'supertest';
 import express from 'express';
-import submissionValidators from '../../validators/submission';
-import constants from '../../utils/constants';
+import submissionValidators from '../../../validators/submission';
+import constants from '../../../utils/constants';
 
 // Mock dependencies
 jest.mock('../../utils/responses');
