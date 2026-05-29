@@ -17,10 +17,6 @@ interface SubmissionRequest extends Request {
 
 class SubmissionController {
     /**
-     * @deprecated NOT USED by React frontend - submission creation not implemented in UI
-     * @status UNTESTED - May not work as expected, part of unused submission workflow
-     * @warning DO NOT MODIFY without implementing submission form UI first
-     * 
      * POST /api/submissions
      * Criar nova submissão
      */

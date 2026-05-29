@@ -31,9 +31,9 @@ const addDeprecationHeader = (req: express.Request, res: express.Response, next:
  */
 // POST /api/submissions
 // Criar nova submissão
-// DEPRECATED - Legacy submission system
+// Em teste
 router.post('/',
-    addDeprecationHeader,
+    //addDeprecationHeader,
     submissionRateLimit,
     submissionValidators.sanitizeSubmissionData,
     submissionValidators.validateCreateSubmission,

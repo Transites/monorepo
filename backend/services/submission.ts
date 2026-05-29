@@ -119,12 +119,13 @@ class SubmissionService {
             return await db.transaction(async (client: any) => {
                 // Criar submissão
                 const submission = await client.query(`
-                    INSERT INTO submissions (token, author_name, author_email, author_institution,
+                    INSERT INTO submissions (token, status, author_name, author_email, author_institution,
                                              title, summary, content, keywords, category, metadata)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                     RETURNING *
                 `, [
                     await tokenService.generateSecureToken(),
+                    constants.SUBMISSION_STATUS.DRAFT,
                     submissionData.author_name,
                     submissionData.author_email,
                     submissionData.author_institution || null,

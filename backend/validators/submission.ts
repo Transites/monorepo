@@ -30,10 +30,11 @@ class SubmissionValidators {
             .withMessage(`Título deve ter entre 5 e ${constants.LIMITS.TITLE_MAX} caracteres`),
 
         body('summary')
-            .optional()
             .trim()
-            .isLength({ max: constants.LIMITS.SUMMARY_MAX })
-            .withMessage(`Resumo muito longo (máx. ${constants.LIMITS.SUMMARY_MAX} caracteres)`),
+            .notEmpty()
+            .withMessage('Resumo é obrigatório')
+            .isLength({ min: 50, max: constants.LIMITS.SUMMARY_MAX })
+            .withMessage(`Resumo deve ter entre 50 e ${constants.LIMITS.SUMMARY_MAX} caracteres`),
 
         body('content')
             .optional()
@@ -53,11 +54,11 @@ class SubmissionValidators {
             .withMessage('Cada palavra-chave deve ter entre 1 e 50 caracteres'),
 
         body('category')
-            .if((_value, { req }) => req.body.category)
-            .optional()
+            .notEmpty()
+            .withMessage('Categoria é obrigatória')
             .isIn(constants.CATEGORIES)
-            .withMessage(`Categoria deve ser uma das: ${constants.CATEGORIES.join(', ')}`),
-
+            .withMessage(`Categoria deve ser uma das: ${constants.CATEGORIES.join(', ')}`), 
+            
         body('metadata')
             .optional()
             .isObject()
