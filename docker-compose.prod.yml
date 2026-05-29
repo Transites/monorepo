@@ -29,6 +29,53 @@ services:
     networks:
       - transitos-network
 
+  # OpenSearch Cluster
+  opensearch-node1:
+    image: opensearchproject/opensearch:latest
+    container_name: opensearch-node1-prod
+    env_file:
+      - ./backend/.env
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node1
+      - discovery.seed_hosts=opensearch-node1,opensearch-node2
+      - cluster.initial_cluster_manager_nodes=opensearch-node1,opensearch-node2
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"  # Aumentado para produção se o servidor permitir
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - OPENSEARCH_TMPDIR=/usr/share/opensearch/data/tmp
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch-prod-data1:/usr/share/opensearch/data
+    ports:
+      - '127.0.0.1:9200:9200'  # Protegido! Apenas local ou via proxy se necessário externamente
+    networks:
+      - transitos-network
+
+  # Dashboards (Opcional em produção — veja as notas de segurança abaixo)
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:latest
+    container_name: opensearch-dashboards-prod
+    ports:
+      - '127.0.0.1:5601:5601'  # Apenas acessível via SSH tunnel ou se exposto explicitamente no Nginx
+    environment:
+      OPENSEARCH_HOSTS: '["https://opensearch-node1:9200","https://opensearch-node2:9200"]'
+    networks:
+      - transitos-network
+
+volumes:
+  opensearch-prod-data1:
+  opensearch-prod-data2:
+
+
 networks:
   transitos-network:
     driver: bridge
+
+
