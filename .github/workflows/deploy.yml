@@ -49,6 +49,7 @@ jobs:
           npm run build
 
   deploy:
+    needs: ci   
     runs-on: ubuntu-latest
     steps:
       - name: Deploy via SSH
@@ -60,6 +61,8 @@ jobs:
           port: 2212
           command_timeout: 20m 
           script: |
+            set -e
+
             cd ~
             
             echo "Atualizando código..."
