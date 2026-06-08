@@ -42,6 +42,7 @@ const Register = () => {
       setRegisteredEmail(values.email);
       setIsSuccess(true); 
     } catch (error: any) {
+      console.error("ERRO DO SUPABASE:", error);
       setAuthError("Ocorreu um erro ao criar sua conta.");
     } finally {
       setIsSubmitting(false);
