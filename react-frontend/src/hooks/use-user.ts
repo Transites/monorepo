@@ -32,6 +32,9 @@ export const useAuth = () => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password: pass,
+      options: {
+        redirectTo: 'https://enciclopedia.iea.usp.br',
+      }
     });
 
     if (error) throw error;
