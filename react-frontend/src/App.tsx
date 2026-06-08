@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import { LoadingScreen } from "@/components/LoadingScreen";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Lazy load route components for code splitting
 const Index = lazy(() => import("./pages/Index"));
@@ -10,6 +11,8 @@ const Article = lazy(() => import("./pages/Article"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Catalog = lazy(() => import("./pages/Catalog"));
 const SubmitArticle = lazy(() => import("./pages/SubmitArticle"));
+const Register = lazy(() => import("./pages/Register")); 
+const Login = lazy(() => import("./pages/Login")); 
 
 const queryClient = new QueryClient();
 
@@ -22,7 +25,9 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/article/:id" element={<Article />} />
              <Route path="/catalog" element={<Catalog />} />
-            <Route path="/submissao/nova" element={<SubmitArticle />} />
+            <Route path="/submissao/nova" element={<ProtectedRoute> <SubmitArticle /> </ProtectedRoute>} />
+            <Route path="/registro" element={<Register/>} /> 
+            <Route path="/login" element={<Login/>} /> 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
