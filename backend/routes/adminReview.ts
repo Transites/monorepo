@@ -44,6 +44,18 @@ router.put('/submissions/:id/review',
     errorHandler.asyncHandler(adminReviewController.reviewSubmission)
 );
 
+// POST /api/admin/review/submissions/:id/assign - Tornar-se responsável
+router.post('/submissions/:id/assign',
+    authMiddleware.logAdminAction('assign_submission'),
+    errorHandler.asyncHandler(adminReviewController.assignSubmission)
+);
+
+// POST /api/admin/review/submissions/:id/unassign - Devolver à fila
+router.post('/submissions/:id/unassign',
+    authMiddleware.logAdminAction('unassign_submission'),
+    errorHandler.asyncHandler(adminReviewController.unassignSubmission)
+);
+
 // POST /api/admin/submissions/:id/feedback - Enviar feedback para autor
 router.post('/submissions/:id/feedback',
     AdminReviewValidators.sanitizeFeedbackData,

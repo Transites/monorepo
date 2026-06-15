@@ -112,7 +112,6 @@ class AdminReviewValidators {
                 const statusArray = Array.isArray(value) ? value : value.split(',');
                 return statusArray.every((status: string) => validStatuses.includes(status));
             })
-            .isArray()
             .withMessage('Status inválido fornecido'),
 
         query('category')

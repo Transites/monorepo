@@ -35,6 +35,7 @@ export interface Submission {
     metadata?: Record<string, any>;
     attachments?: string[];
     reviewedBy?: string;
+    assignedTo?: string;
     reviewNotes?: string;
     rejectionReason?: string;
     createdAt: Date;
@@ -133,6 +134,8 @@ export interface SubmissionFilters {
     category?: string[];
     authorEmail?: string;
     adminId?: string;
+    assignedTo?: string;
+    unassigned?: boolean;
     dateFrom?: Date;
     dateTo?: Date;
     search?: string;

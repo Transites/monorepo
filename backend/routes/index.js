@@ -1,3 +1,4 @@
+console.log("==== LENDO O ARQUIVO INDEX DE ROTAS ====");
 const express = require('express');
 const router = express.Router();
 

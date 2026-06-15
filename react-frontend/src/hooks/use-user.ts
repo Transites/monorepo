@@ -21,6 +21,8 @@ export const useAuth = () => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      console.log('ACCESS TOKEN:', session?.access_token);
     });
 
     return () => subscription.unsubscribe();

@@ -1,3 +1,4 @@
+const jwt = require('jsonwebtoken');
 const db = require('../database/client');
 const authService = require('../services/auth');
 const logger = require('./logging');
@@ -17,17 +18,20 @@ class AuthMiddleware {
 
             const token = authHeader.substring(7); // Remove 'Bearer '
 
-            // Verificar e decodificar token
-            const decoded = authService.verifyJWT(token);
-            if (!decoded || decoded.type === 'refresh') {
+            // Verificar e decodificar token (emitido pelo Supabase Auth)
+            const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET);
+
+            if (!decoded || !decoded.email) {
                 return responses.unauthorized(res, 'Token inválido');
             }
 
-            // Buscar admin no banco para verificar se ainda existe e está ativo
-            const admin = await db.findById('admins', decoded.id);
+            // Buscar admin no banco pelo email do token, verificar se existe e está ativo
+            const result = await db.query('SELECT * FROM admins WHERE email = $1', [decoded.email]);
+            const admin = result.rows[0];
+
             if (!admin) {
                 logger.security('JWT token used with non-existent admin', {
-                    tokenAdminId: decoded.id,
+                    tokenEmail: decoded.email,
                     ip: req.ip
                 });
                 return responses.unauthorized(res, 'Usuário não encontrado');

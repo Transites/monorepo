@@ -452,3 +452,135 @@ export async function updateArticle(
   );
   return response.data.submission;
 }
+
+// Admin Review Queue 
+import { supabase } from './supabase';
+
+export interface AdminSubmission {
+  id: string;
+  token: string;
+  status: string;
+  authorName: string;
+  authorEmail: string;
+  authorInstitution?: string;
+  title: string;
+  summary: string;
+  content: string;
+  keywords: string[];
+  category?: string;
+  metadata?: Record<string, unknown>;
+  reviewedBy?: string;
+  assignedTo?: string;
+  reviewNotes?: string;
+  rejectionReason?: string;
+  createdAt: string;
+  updatedAt: string;
+  expiresAt: string;
+  submittedAt?: string;
+  reviewedAt?: string;
+  daysUntilExpiry: number;
+  canBePublished: boolean;
+  lastActivity: string;
+}
+
+export interface AdminPagination {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+export interface AdminSubmissionsResult {
+  submissions: AdminSubmission[];
+  pagination: AdminPagination;
+}
+
+/**
+ * Faz uma requisição autenticada para o backend, anexando o JWT do Supabase.
+ */
+async function adminRequest<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<APIResponse<T>> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+
+  if (!token) {
+    throw new ApiError('Sessão expirada. Faça login novamente.', 401);
+  }
+
+  return apiRequest<T>(endpoint, {
+    ...options,
+    headers: {
+      ...options.headers,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+/**
+ * Lista submissões enviadas para revisão e ainda sem responsável (fila geral).
+ */
+export async function getReviewQueue(
+  options: { page?: number; limit?: number } = {}
+): Promise<AdminSubmissionsResult> {
+  const params = new URLSearchParams();
+  params.append('status', 'DRAFT');
+  params.append('unassigned', 'true');
+  params.append('sortBy', 'updated_at');
+  params.append('sortOrder', 'asc');
+
+  if (options.page) params.append('page', options.page.toString());
+  if (options.limit) params.append('limit', options.limit.toString());
+
+  const response = await adminRequest<AdminSubmissionsResult>(
+    `/admin/review/submissions?${params.toString()}`
+  );
+  return response.data;
+}
+
+/**
+ * Lista submissões atribuídas ao admin autenticado.
+ */
+export async function getMyReviews(
+  adminId: string,
+  options: { page?: number; limit?: number } = {}
+): Promise<AdminSubmissionsResult> {
+  const params = new URLSearchParams();
+ // params.append('status', 'DRAFT');
+  //console.log("IDDDDDDDDDDDDDDDDD: ", adminId );
+  params.append('assignedTo', 'ME');
+  params.append('sortOrder', 'asc');
+
+  if (options.page) params.append('page', options.page.toString());
+  if (options.limit) params.append('limit', options.limit.toString());
+
+  const response = await adminRequest<AdminSubmissionsResult>(
+    `/admin/review/submissions?${params.toString()}`
+  );
+  return response.data;
+}
+
+/**
+ * Torna o admin autenticado responsável pela revisão da submissão.
+ */
+export async function assignSubmission(submissionId: string): Promise<AdminSubmission> {
+  const response = await adminRequest<{ submission: AdminSubmission }>(
+    `/admin/review/submissions/${submissionId}/assign`,
+    { method: 'POST' }
+  );
+  return response.data.submission;
+}
+
+/**
+ * Devolve a submissão para a fila geral (remove o responsável).
+ */
+export async function unassignSubmission(submissionId: string): Promise<AdminSubmission> {
+  const response = await adminRequest<{ submission: AdminSubmission }>(
+    `/admin/review/submissions/${submissionId}/unassign`,
+    { method: 'POST' }
+  );
+  return response.data.submission;
+}

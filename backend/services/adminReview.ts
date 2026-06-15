@@ -129,6 +129,62 @@ class AdminReviewService {
             throw error;
         }
     }
+    /**
+    * Atribuir submissão a um admin (curador "torna-se responsável")
+    */
+    public async assignSubmission(submissionId: string, adminId: string): Promise<Submission> {
+        const submission = await this.getSubmissionById(submissionId);
+        if (!submission) {
+            throw new Error('Submissão não encontrada');
+        }
+
+        if (submission.assigned_to) {
+            throw new Error('Submissão já possui um responsável');
+        }
+
+        const result = await this.db.query(
+            `UPDATE submissions SET assigned_to = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
+            [adminId, submissionId]
+        );
+        
+        // atualiza a tabela de versões
+        await this.db.query(
+                    `UPDATE submission_versions SET assigned_to = $1 WHERE submission_id = $2`,
+                    [adminId, submissionId]
+        );
+
+        await this.logAdminAction(adminId, 'assign_submission', 'submission', submissionId, {
+            previousStatus: submission.status
+        });
+
+        this.logger.audit('Submission assigned', { submissionId, adminId });
+
+        return result.rows[0];
+    }
+
+    /**
+     * Remover atribuição (devolver à fila geral)
+     */
+    public async unassignSubmission(submissionId: string, adminId: string): Promise<Submission> {
+        const result = await this.db.query(
+            `UPDATE submissions SET assigned_to = NULL, updated_at = NOW() WHERE id = $1 AND assigned_to = $2 RETURNING *`,
+            [submissionId, adminId]
+        );
+
+        if (result.rows.length === 0) {
+            throw new Error('Submissão não encontrada ou você não é o responsável');
+        }
+        
+        // atualiza a tabela de versões
+        await this.db.query(
+                    `UPDATE submission_versions SET assigned_to = NULL WHERE submission_id = $1`,
+                    [submissionId]
+        );
+
+        await this.logAdminAction(adminId, 'unassign_submission', 'submission', submissionId, {});
+
+        return result.rows[0];
+    }
 
     /**
      * Revisar submissão (aprovar/rejeitar/solicitar mudanças)
@@ -802,14 +858,13 @@ class AdminReviewService {
         let query = `
             SELECT s.*,
                    a.name                                                   as admin_name,
-                   COUNT(fu.id)                                             as file_count,
-                   COALESCE(SUM(fu.size), 0)                                as total_size,
+                   0                                            as file_count,
+                   0                               as total_size,
                    EXTRACT(EPOCH FROM (s.expires_at - NOW())) / 86400       as days_until_expiry,
                    CASE WHEN s.status = 'APPROVED' THEN true ELSE false END as can_be_published,
                    GREATEST(s.created_at, s.updated_at)                     as last_activity
             FROM submissions s
                      LEFT JOIN admins a ON s.reviewed_by = a.id
-                     LEFT JOIN file_uploads fu ON s.id = fu.submission_id
             WHERE 1 = 1
         `;
 
@@ -855,18 +910,19 @@ class AdminReviewService {
             query += ` AND s.expires_at <= NOW() + INTERVAL '1 day' * $${params.length}`;
         }
 
+        if (filters.assignedTo) {
+            params.push(filters.assignedTo);
+            query += ` AND s.assigned_to = $${params.length}`;
+        }
+
+        if (filters.unassigned) {
+            query += ` AND s.assigned_to IS NULL`;
+        }
+
         query += ` GROUP BY s.id, s.token, s.status, s.author_name, s.author_email, s.author_institution,
                        s.title, s.summary, s.content, s.keywords, s.category, s.metadata, s.attachments,
-                       s.reviewed_by, s.review_notes, s.rejection_reason, s.created_at, s.updated_at,
+                       s.reviewed_by, s.assigned_to, s.review_notes, s.rejection_reason, s.created_at, s.updated_at,
                        s.expires_at, s.submitted_at, s.reviewed_at, a.name`;
-
-        if (filters.hasFiles !== undefined) {
-            if (filters.hasFiles) {
-                query += ` HAVING COUNT(fu.id) > 0`;
-            } else {
-                query += ` HAVING COUNT(fu.id) = 0`;
-            }
-        }
 
         const allowedSortFields = ['created_at', 'updated_at', 'title', 'author_name', 'status'];
         const safeSortBy = allowedSortFields.includes(filters.sortBy) ? filters.sortBy : 'updated_at';
@@ -887,18 +943,11 @@ class AdminReviewService {
                      LEFT JOIN admins a ON s.reviewed_by = a.id
         `;
 
-        if (filters.hasFiles === undefined) {
-            query += ` LEFT JOIN file_uploads fu ON s.id = fu.submission_id`;
-        }
 
         query += ` WHERE 1 = 1`;
 
         const params: any[] = [];
 
-        if (filters.status && filters.status.length > 0) {
-            params.push(filters.status);
-            query += ` AND s.status = ANY($${params.length}::submission_status[])`;
-        }
 
         if (filters.category && filters.category.length > 0) {
             params.push(filters.category);
@@ -935,14 +984,15 @@ class AdminReviewService {
             query += ` AND s.expires_at <= NOW() + INTERVAL '1 day' * $${params.length}`;
         }
 
-        if (filters.hasFiles !== undefined) {
-            if (filters.hasFiles) {
-                query += ` AND EXISTS (SELECT 1 FROM file_uploads fu WHERE fu.submission_id = s.id)`;
-            } else {
-                query += ` AND NOT EXISTS (SELECT 1 FROM file_uploads fu WHERE fu.submission_id = s.id)`;
-            }
+        if (filters.assignedTo) {
+            params.push(filters.assignedTo);
+            query += ` AND s.assigned_to = $${params.length}`;
         }
 
+        if (filters.unassigned) {
+            query += ` AND s.assigned_to IS NULL`;
+        }
+        
         return { query, params };
     }
     private mapSubmissionWithReview(row: any): SubmissionWithReview {
@@ -962,6 +1012,7 @@ class AdminReviewService {
             metadata: row.metadata,
             attachments: row.attachments,
             reviewedBy: row.reviewed_by,
+            assignedTo: row.assigned_to,
             reviewNotes: row.review_notes,
             rejectionReason: row.rejection_reason,
             createdAt: new Date(row.created_at),

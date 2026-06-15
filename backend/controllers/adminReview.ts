@@ -54,11 +54,23 @@ class AdminReviewController {
 			}
 
 			const adminId = req.user!.id.toString();
+
+			let assignedToFilter = req.query.assignedTo as string;
+			if (assignedToFilter === 'ME') {
+				assignedToFilter = adminId;
+			}
+
 			const filters: SubmissionFilters = {
-				status: req.query.status as SubmissionStatus[],
-				category: req.query.category as string[],
+				status: req.query.status
+				? (Array.isArray(req.query.status) ? req.query.status : (req.query.status as string).split(',')) as SubmissionStatus[]
+				: undefined,
+				category: req.query.category
+				? (Array.isArray(req.query.category) ? req.query.category : (req.query.category as string).split(',')) as string[]
+				: undefined,
 				authorEmail: req.query.authorEmail as string,
 				adminId: req.query.adminId as string,
+				assignedTo: assignedToFilter,
+				unassigned: req.query.unassigned ? req.query.unassigned === 'true' : undefined,
 				dateFrom: req.query.dateFrom ? new Date(req.query.dateFrom as string) : undefined,
 				dateTo: req.query.dateTo ? new Date(req.query.dateTo as string) : undefined,
 				search: req.query.search as string,
@@ -83,7 +95,68 @@ class AdminReviewController {
 			next(error);
 		}
 	};
+/**
+ * POST /api/admin/review/submissions/:id/assign
+ * Tornar-se responsável pela revisão
+ */
+public assignSubmission = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+        const { id: submissionId } = req.params;
+        const adminId = req.user!.id.toString();
 
+        const submission = await this.adminReviewService.assignSubmission(submissionId, adminId);
+
+        this.logger.audit('Submission assigned via API', {
+            submissionId,
+            adminId
+        });
+
+        this.responses.success(res, {
+            submission,
+            message: 'Você agora é responsável por esta submissão'
+        }, 'Submissão atribuída com sucesso');
+
+    } catch (error) {
+        this.logger.error('Error assigning submission', {
+            submissionId: req.params.id,
+            adminId: req.user?.id,
+            error: error instanceof Error ? error.message : String(error)
+        });
+        next(error);
+    }
+};
+
+	/**
+	 * POST /api/admin/review/submissions/:id/unassign
+	 * Devolver submissão à fila geral
+	 */
+	public unassignSubmission = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+	try {
+		const { id: submissionId } = req.params;
+		const adminId = req.user!.id.toString();
+
+		const submission = await this.adminReviewService.unassignSubmission(submissionId, adminId);
+
+		this.logger.audit('Submission unassigned via API', {
+			submissionId,
+			adminId
+		});
+
+		this.responses.success(res, {
+			submission,
+			message: 'Submissão devolvida à fila geral'
+		}, 'Atribuição removida com sucesso');
+
+	} catch (error) {
+		this.logger.error('Error unassigning submission', {
+			submissionId: req.params.id,
+			adminId: req.user?.id,
+			error: error instanceof Error ? error.message : String(error)
+		});
+		next(error);
+	}
+	};
+	
 	/**
 	 * PUT /api/admin/review/submissions/:id/review
 	 * Revisar submissão

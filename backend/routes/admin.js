@@ -13,6 +13,10 @@ const router = express.Router();
 const authMiddleware = require('../middleware/auth');
 const emailRoutes = require('./email');
 const adminReviewRoutes = require('./adminReview');
+
+// 2. ADICIONE ESTAS DUAS LINHAS:
+console.log('=== DEBUG ADMIN ROUTES ===');
+console.log('Conteúdo de adminReviewRoutes:', adminReviewRoutes);
 const communicationsRoutes = require('./communication');
 const tokenValidators = require("../validators/tokens");
 const errorHandler = require("../middleware/errors");
@@ -31,7 +35,7 @@ const addDeprecationHeader = (req, res, next) => {
  * Sub-routes: /email, /review, /communications
  */
 router.use('/email', addDeprecationHeader, emailRoutes);
-router.use('/review', addDeprecationHeader, adminReviewRoutes);
+router.use('/review', adminReviewRoutes);
 router.use('/communications', addDeprecationHeader, communicationsRoutes);
 
 /**
