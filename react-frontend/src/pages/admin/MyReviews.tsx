@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, AlertCircle, Inbox, UserMinus, Clock } from 'lucide-react';
 import Header from '@/components/Header';
@@ -39,8 +40,15 @@ function SubmissionCard({
   onUnassign: (id: string) => void;
   isUnassigning: boolean;
 }) {
+  const navigate = useNavigate();
+
+  const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    navigate(`/admin/revisar/${submission.id}`);
+  };
+
   return (
-    <Card>
+    <Card onClick={handleCardClick} className="cursor-pointer hover:border-primary/50 transition-colors">
       <CardHeader>
         <div className="flex items-start justify-between gap-4">
           <div>

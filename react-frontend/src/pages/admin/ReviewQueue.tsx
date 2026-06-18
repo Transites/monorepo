@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, AlertCircle, Inbox, UserPlus, Clock } from 'lucide-react';
@@ -38,8 +39,20 @@ function SubmissionCard({
   onAssign: (id: string) => void;
   isAssigning: boolean;
 }) {
+  const navigate = useNavigate();
+
+  // Função que navega pro detalhe, mas evita disparar quando clica no botão
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Se o clique foi no botão "Tornar-se responsável", não navega
+    if ((e.target as HTMLElement).closest('button')) return;
+    navigate(`/admin/revisar/${submission.id}`);
+  };
+
   return (
-    <Card>
+    <Card
+      onClick={handleCardClick}
+      className="cursor-pointer hover:border-primary/50 transition-colors"
+    >
       <CardHeader>
         <div className="flex items-start justify-between gap-4">
           <div>

@@ -16,6 +16,7 @@ const Login = lazy(() => import("./pages/Login"));
 const queryClient = new QueryClient();
 const ReviewQueue = lazy(() => import("./pages/admin/ReviewQueue"));
 const MyReviews = lazy(() => import("./pages/admin/MyReviews"));
+const ReviewArticle = lazy(() => import("./pages/admin/ReviewArticle"));
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/login" element={<Login/>} /> 
             <Route path="/admin/fila-de-revisao" element={<ProtectedRoute><ReviewQueue /></ProtectedRoute>} />
             <Route path="/admin/minhas-revisoes" element={<ProtectedRoute><MyReviews /></ProtectedRoute>} />
+            <Route path="/admin/revisar/:id" element={<ProtectedRoute><ReviewArticle /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

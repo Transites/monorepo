@@ -11,6 +11,9 @@ import AdminReviewController from '../controllers/adminReview';
 import logger from '../middleware/logging';
 import ResponseHelpers from '../utils/responses';
 import { TokenService } from '../services/tokens';
+import SubmissionSuggestionsService from '../services/submissionSuggestions';
+import SubmissionSuggestionsController from '../controllers/submissionSuggestions';
+
 
 // For CommonJS modules that don't support ES imports
 const EmailService = require('../services/email');
@@ -54,6 +57,17 @@ export function registerDependencies(): void {
 
 		return new AdminReviewController(adminReviewService, logger, responseHelpers);
 	});
+
+	container.registerSingleton('SubmissionSuggestionsService', () => {
+		const db = require('../database/client');
+		return new SubmissionSuggestionsService(db);
+	});
+	
+	container.registerSingleton('SubmissionSuggestionsController', () => {
+		const suggestionsService = container.resolve<SubmissionSuggestionsService>('SubmissionSuggestionsService');
+		return new SubmissionSuggestionsController(suggestionsService);
+	});
+
 }
 
 /**

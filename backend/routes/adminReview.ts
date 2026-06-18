@@ -4,10 +4,12 @@ import { resolve } from '../di';
 import AdminReviewController from '../controllers/adminReview';
 import { AuthMiddleware } from '../middleware/auth';
 import { ErrorHandler } from '../middleware/errors';
+import SubmissionSuggestionsController from '../controllers/submissionSuggestions'
 
 const router = Router();
 
 const adminReviewController = resolve<AdminReviewController>('AdminReviewController');
+const suggestionsController = resolve<SubmissionSuggestionsController>('SubmissionSuggestionsController');
 const authMiddleware = resolve<AuthMiddleware>('AuthMiddleware');
 const errorHandler = resolve<ErrorHandler>('ErrorHandler');
 
@@ -56,6 +58,26 @@ router.post('/submissions/:id/unassign',
     errorHandler.asyncHandler(adminReviewController.unassignSubmission)
 );
 
+// GET /api/admin/review/submissions/:id/review-detail
+// Buscar submissão completa + sugestão pendente para página de revisão
+router.get('/submissions/:id/review-detail',
+    authMiddleware.logAdminAction('view_submission_detail'),
+    errorHandler.asyncHandler(suggestionsController.getSubmissionForReview)
+);
+ 
+// GET /api/admin/review/submissions/:id/suggestions
+// Listar sugestões de uma submissão
+router.get('/submissions/:id/suggestions',
+    errorHandler.asyncHandler(suggestionsController.getSuggestions)
+);
+ 
+// POST /api/admin/review/submissions/:id/suggestions
+// Criar sugestão de revisão
+router.post('/submissions/:id/suggestions',
+    authMiddleware.logAdminAction('create_suggestion'),
+    errorHandler.asyncHandler(suggestionsController.createSuggestion)
+);
+
 // POST /api/admin/submissions/:id/feedback - Enviar feedback para autor
 router.post('/submissions/:id/feedback',
     AdminReviewValidators.sanitizeFeedbackData,
@@ -85,5 +107,7 @@ router.get('/activity-log',
     authMiddleware.logAdminAction('view_activity_log'),
     errorHandler.asyncHandler(adminReviewController.getActivityLog)
 );
+
+
 
 module.exports = router; // For CommonJS compatibility
