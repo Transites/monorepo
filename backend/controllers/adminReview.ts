@@ -438,6 +438,56 @@ class AdminReviewController {
 		}
 	};
 
+	/**
+	 * PUT /api/admin/review/submissions/:id/status
+	 * Atualizar status de uma submissão (aprovar/rejeitar)
+	 */
+	public updateSubmissionStatus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+		try {
+			const errors = validationResult(req);
+			if (!errors.isEmpty()) {
+				this.responses.badRequest(res, 'Dados inválidos', errors.array());
+				return;
+			}
+
+			const { id: submissionId } = req.params;
+			const { status } = req.body;
+			const adminId = req.user!.id.toString();
+
+			// Validar status
+			if (!['approved', 'rejected'].includes(status)) {
+				this.responses.badRequest(res, 'Status inválido. Use "approved" ou "rejected".');
+				return;
+			}
+
+			const updatedSubmission = await this.adminReviewService.updateSubmissionStatus(
+				submissionId,
+				adminId,
+				status
+			);
+
+			this.logger.audit('Submission status updated via API', {
+				submissionId,
+				adminId,
+				newStatus: status
+			});
+
+			this.responses.success(res, {
+				submission: updatedSubmission,
+				message: `Submissão ${status === 'approved' ? 'aprovada' : 'rejeitada'} com sucesso`
+			}, `Submissão ${status === 'approved' ? 'aprovada' : 'rejeitada'} com sucesso`);
+
+		} catch (error) {
+			this.logger.error('Error updating submission status', {
+				submissionId: req.params.id,
+				adminId: req.user?.id,
+				newStatus: req.body.status,
+				error: error instanceof Error ? error.message : String(error)
+			});
+			next(error);
+		}
+	};
+
 	// =============================================================================
 	// MÉTODOS PRIVADOS
 	// =============================================================================

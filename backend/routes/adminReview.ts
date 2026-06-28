@@ -78,6 +78,13 @@ router.post('/submissions/:id/suggestions',
     errorHandler.asyncHandler(suggestionsController.createSuggestion)
 );
 
+// PUT /api/admin/review/submissions/:id/status
+// Atualizar status de submissão (aprovar/rejeitar)
+router.put('/submissions/:id/status',
+    authMiddleware.logAdminAction('update_submission_status'),
+    errorHandler.asyncHandler(adminReviewController.updateSubmissionStatus)
+);
+
 // POST /api/admin/submissions/:id/feedback - Enviar feedback para autor
 router.post('/submissions/:id/feedback',
     AdminReviewValidators.sanitizeFeedbackData,

@@ -374,7 +374,7 @@ class AdminReviewService {
             const slug = generateSlug(submission.title);
             const submissionUrl = generateArticleUrl(slug);
 
-            // Atualizar status da submissão
+            // Atualizar status da submissão (talvez adicionar aqui o submitted_at para a data da primeira publicação?)
             await this.db.query(
                 'UPDATE submissions SET status = $1, updated_at = NOW() WHERE id = $2',
                 ['PUBLISHED', submissionId]
@@ -445,6 +445,7 @@ class AdminReviewService {
             const searchQuery = `
                 SELECT s.*,
                        a.name                                             as admin_name,
+                       aa.name                                            as assigned_admin_name,
                        COUNT(fu.id)                                       as file_count,
                        COALESCE(SUM(fu.size), 0)                          as total_size,
                        EXTRACT(EPOCH FROM (s.expires_at - NOW())) / 86400 as days_until_expiry,
@@ -462,6 +463,7 @@ class AdminReviewService {
                        )                                                  as search_rank
                 FROM submissions s
                          LEFT JOIN admins a ON s.reviewed_by = a.id
+                         LEFT JOIN admins aa ON s.assigned_to = aa.id
                          LEFT JOIN file_uploads fu ON s.id = fu.submission_id
                 WHERE (
                           -- Usa os índices GIN para busca textual
@@ -855,16 +857,18 @@ class AdminReviewService {
 
     private buildFilterQuery(filters: SubmissionFilters, limit: number, offset: number) {
         // noinspection SqlShouldBeInGroupBy,SqlConstantExpression
-        let query = `
-            SELECT s.*,
-                   a.name                                                   as admin_name,
-                   0                                            as file_count,
-                   0                               as total_size,
+         let query = `
+             SELECT s.*,
+                 a.name                                                   as admin_name,
+                 aa.name                                                  as assigned_admin_name,
+                 0                                            as file_count,
+                 0                               as total_size,
                    EXTRACT(EPOCH FROM (s.expires_at - NOW())) / 86400       as days_until_expiry,
                    CASE WHEN s.status = 'APPROVED' THEN true ELSE false END as can_be_published,
                    GREATEST(s.created_at, s.updated_at)                     as last_activity
             FROM submissions s
                      LEFT JOIN admins a ON s.reviewed_by = a.id
+                     LEFT JOIN admins aa ON s.assigned_to = aa.id
             WHERE 1 = 1
         `;
 
@@ -920,9 +924,9 @@ class AdminReviewService {
         }
 
         query += ` GROUP BY s.id, s.token, s.status, s.author_name, s.author_email, s.author_institution,
-                       s.title, s.summary, s.content, s.keywords, s.category, s.metadata, s.attachments,
-                       s.reviewed_by, s.assigned_to, s.review_notes, s.rejection_reason, s.created_at, s.updated_at,
-                       s.expires_at, s.submitted_at, s.reviewed_at, a.name`;
+                   s.title, s.summary, s.content, s.keywords, s.category, s.metadata, s.attachments,
+                   s.reviewed_by, s.assigned_to, s.review_notes, s.rejection_reason, s.created_at, s.updated_at,
+                   s.expires_at, s.submitted_at, s.reviewed_at, a.name, aa.name`;
 
         const allowedSortFields = ['created_at', 'updated_at', 'title', 'author_name', 'status'];
         const safeSortBy = allowedSortFields.includes(filters.sortBy) ? filters.sortBy : 'updated_at';
@@ -1013,6 +1017,7 @@ class AdminReviewService {
             attachments: row.attachments,
             reviewedBy: row.reviewed_by,
             assignedTo: row.assigned_to,
+            assignedToName: row.assigned_admin_name,
             reviewNotes: row.review_notes,
             rejectionReason: row.rejection_reason,
             createdAt: new Date(row.created_at),
@@ -1155,6 +1160,97 @@ class AdminReviewService {
             INSERT INTO admin_action_logs (admin_id, action, target_type, target_id, details, timestamp)
             VALUES ($1, $2, $3, $4, $5, NOW())
         `, [adminId, action, targetType, targetId, JSON.stringify(details)]);
+    }
+
+    /**
+     * Atualizar status de uma submissão diretamente (aprovado/rejeitado)
+     */
+    public async updateSubmissionStatus(
+        submissionId: string,
+        adminId: string,
+        newStatus: 'approved' | 'rejected'
+    ): Promise<Submission> {
+        try {
+            // Validar status
+            if (!['approved', 'rejected'].includes(newStatus)) {
+                throw new InvalidStatusException(`Status inválido: ${newStatus}`);
+            }
+
+            // Converter para uppercase (enum do banco)
+            const dbStatus = newStatus.toUpperCase();
+
+            // Buscar submissão
+            const submissionResult = await this.db.query(
+                'SELECT * FROM submissions WHERE id = $1',
+                [submissionId]
+            );
+
+            if (submissionResult.rows.length === 0) {
+                throw new Error('Submissão não encontrada');
+            }
+
+            const submission = submissionResult.rows[0];
+
+            // Atualizar status
+            const updateResult = await this.db.query(`
+                UPDATE submissions 
+                SET status = $1::submission_status, reviewed_at = NOW(), reviewed_by = $2
+                WHERE id = $3
+                RETURNING *
+            `, [dbStatus, adminId, submissionId]);
+
+            const updatedSubmission = updateResult.rows[0];
+
+            // Registrar ação
+            await this.logAdminAction(
+                adminId,
+                `submission_${newStatus}`,
+                'submission',
+                submissionId,
+                { previousStatus: submission.status, newStatus: dbStatus }
+            );
+
+            // Enviar notificação por email
+            try {
+                const adminResult = await this.db.query(
+                    'SELECT name FROM admins WHERE id = $1',
+                    [adminId]
+                );
+                const adminName = adminResult.rows[0]?.name || 'Curador';
+
+                if (newStatus === 'approved') {
+                    await this.emailService.sendApprovalNotification(submission, adminName);
+                } else if (newStatus === 'rejected') {
+                    await this.emailService.sendRejectionNotification(submission, adminName);
+                }
+            } catch (error) {
+                this.logger.error('Error sending status notification email', {
+                    submissionId,
+                    newStatus,
+                    error: error instanceof Error ? error.message : String(error)
+                });
+                // Não falhar a operação por erro no email
+            }
+
+            this.logger.audit('Submission status updated', {
+                submissionId,
+                adminId,
+                previousStatus: submission.status,
+                newStatus: dbStatus,
+                timestamp: new Date()
+            });
+
+            return updatedSubmission;
+
+        } catch (error) {
+            this.logger.error('Error updating submission status', {
+                submissionId,
+                adminId,
+                newStatus,
+                error: error instanceof Error ? error.message : String(error)
+            });
+            throw error;
+        }
     }
 }
 

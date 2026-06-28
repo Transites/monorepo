@@ -471,6 +471,7 @@ export interface AdminSubmission {
   metadata?: Record<string, unknown>;
   reviewedBy?: string;
   assignedTo?: string;
+  assignedToName?: string;
   reviewNotes?: string;
   rejectionReason?: string;
   createdAt: string;
@@ -497,6 +498,15 @@ export interface AdminSubmissionsResult {
   pagination: AdminPagination;
 }
 
+export interface GetReviewQueueOptions {
+  page?: number;
+  limit?: number;
+  status?: string[];
+  unassigned?: boolean;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
 /**
  * Faz uma requisição autenticada para o backend, anexando o JWT do Supabase.
  */
@@ -521,19 +531,33 @@ async function adminRequest<T>(
 }
 
 /**
- * Lista submissões enviadas para revisão e ainda sem responsável (fila geral).
+ * Lista submissões enviadas para revisão com filtros no backend
  */
+
 export async function getReviewQueue(
-  options: { page?: number; limit?: number } = {}
+  options: GetReviewQueueOptions = {}
 ): Promise<AdminSubmissionsResult> {
   const params = new URLSearchParams();
-  params.append('status', 'DRAFT');
-  params.append('unassigned', 'true');
-  params.append('sortBy', 'updated_at');
-  params.append('sortOrder', 'asc');
+
+  // Se a tela mandou status (ex: ["UNDER_REVIEW", "CHANGES_REQUESTED"]), junta tudo com vírgula
+  if (options.status && options.status.length > 0) {
+    params.append('status', options.status.join(','));
+  }
+
+  // Filtro extra para a aba "Sem revisão"
+  if (options.unassigned) {
+    params.append('unassigned', 'true');
+  }
+
+  params.append('sortBy', options.sortBy || 'updated_at');
+  params.append('sortOrder', options.sortOrder || 'desc');
 
   if (options.page) params.append('page', options.page.toString());
   if (options.limit) params.append('limit', options.limit.toString());
+
+  const endpoint = `/admin/review/submissions?${params.toString()}`;
+
+  console.log(endpoint);
 
   const response = await adminRequest<AdminSubmissionsResult>(
     `/admin/review/submissions?${params.toString()}`

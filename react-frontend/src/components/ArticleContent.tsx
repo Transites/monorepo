@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
-import { Calendar, User, Tag, Building2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, User, Tag, Building2, Briefcase, Users, Lightbulb, BookOpen } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { addHeadingIds, enhanceContentParagraphs } from '@/lib/content-utils';
 import { Submission } from '@/lib/api';
+import { getCategoryColor, CATEGORY_COLORS, LEGACY_CATEGORY_MAPPING } from '@/lib/categoryColors';
 import DOMPurify from 'dompurify';
 import { useImageOrientation } from '@/hooks/use-image-orientation';
 
@@ -30,11 +32,47 @@ const getImageClasses = (orientation: ImageOrientation, isLoading: boolean) => {
   }
 };
 
+// Mapear categorias para ícones
+const CATEGORY_ICONS: Record<string, React.ComponentType<any>> = {
+  'pessoa': User,
+  'pessoas': User,
+  'obra': BookOpen,
+  'obras': BookOpen,
+  'evento': Calendar,
+  'eventos': Calendar,
+  'instituicao': Building2,
+  'instituicoes': Building2,
+  'instituições': Building2,
+  'empresa': Briefcase,
+  'empresas': Briefcase,
+  'agrupamento': Users,
+  'agrupamentos': Users,
+  'conceito': Lightbulb,
+  'conceitos': Lightbulb,
+  'tema': Lightbulb,
+} as const;
+
+// Helper para obter ícone da categoria
+const getCategoryIcon = (category: string) => {
+  const normalizedCategory = category.toLowerCase();
+  const mappedCategory = LEGACY_CATEGORY_MAPPING[normalizedCategory as keyof typeof LEGACY_CATEGORY_MAPPING] || normalizedCategory;
+  return CATEGORY_ICONS[mappedCategory] || User;
+};
+
+// Helper para obter cor da categoria
+const getCategoryColorHSL = (category: string): string => {
+  const normalized = category.toLowerCase();
+  const mapped = LEGACY_CATEGORY_MAPPING[normalized as keyof typeof LEGACY_CATEGORY_MAPPING] || normalized;
+  return CATEGORY_COLORS[mapped as keyof typeof CATEGORY_COLORS]?.hsl || '0 0% 50%';
+};
+
 interface ArticleContentProps {
   article: Submission;
 }
 
 export default function ArticleContent({ article }: ArticleContentProps) {
+  const navigate = useNavigate();
+  
   const sanitizedContent = useMemo(() => {
     if (!article?.content_html) return '';
     
@@ -272,7 +310,28 @@ export default function ArticleContent({ article }: ArticleContentProps) {
       {sanitizedContent && (
         <section id="biografia" className="space-y-6">
           <Separator />
-          <h2 className="text-2xl font-bold text-foreground">Biografia</h2>
+          {article.category && (
+            <button
+              onClick={() => navigate(`/catalog?category=${article.category.toLowerCase()}`)}
+              className="group flex items-center gap-3 hover:opacity-80 transition-opacity"
+            >
+              <div 
+                className="p-2 rounded-lg"
+                style={{
+                  backgroundColor: `hsl(${getCategoryColorHSL(article.category)} / 0.15)`,
+                  color: `hsl(${getCategoryColorHSL(article.category)})`
+                }}
+              >
+                {(() => {
+                  const Icon = getCategoryIcon(article.category);
+                  return <Icon className="h-6 w-6" />;
+                })()}
+              </div>
+              <h2 className="text-2xl font-bold text-foreground transition-colors">
+                {article.category.charAt(0).toUpperCase() + article.category.slice(1)}
+              </h2>
+            </button>
+          )}
           <div 
             className="prose prose-gray dark:prose-invert max-w-none
                        prose-headings:text-foreground prose-headings:font-semibold

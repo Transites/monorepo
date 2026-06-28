@@ -93,6 +93,12 @@ export default function ReviewArticle() {
   const [activeTab, setActiveTab] = useState<'original' | 'editing'>('original');
   const [formReady, setFormReady] = useState(false);
 
+  // confirmação de ação
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    action: 'approved' | 'rejected' | null;
+  }>({ open: false, action: null });
+
   // campos editáveis
   const [title, setTitle] = useState('');
   const [summary, setSummary] = useState('');
@@ -163,6 +169,18 @@ export default function ReviewArticle() {
         body: JSON.stringify(payload),
       });
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'review-detail', id] });
+    },
+  });
+
+  // ── atualizar status (aprovar/rejeitar) ────────────────────
+  const statusMutation = useMutation({
+    mutationFn: (newStatus: 'approved' | 'rejected') =>
+      adminFetch(`/admin/review/submissions/${id}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: newStatus }),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'review-detail', id] });
     },
@@ -273,6 +291,44 @@ export default function ReviewArticle() {
                 />
               </CardContent>
             </Card>
+
+            {/* Botões de ação */}
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="destructive"
+                onClick={() => setConfirmDialog({ open: true, action: 'rejected' })}
+                disabled={statusMutation.isPending}
+              >
+                {statusMutation.isPending && statusMutation.variables === 'rejected' ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Rejeitando…</>
+                ) : (
+                  'Rejeitar'
+                )}
+              </Button>
+              <Button
+                onClick={() => setConfirmDialog({ open: true, action: 'approved' })}
+                disabled={statusMutation.isPending}
+              >
+                {statusMutation.isPending && statusMutation.variables === 'approved' ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Aprovando…</>
+                ) : (
+                  'Aprovar'
+                )}
+              </Button>
+            </div>
+
+            {/* Feedback de status */}
+            {statusMutation.isError && (
+              <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+                <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                <p>{statusMutation.error instanceof ApiError ? statusMutation.error.message : 'Erro ao atualizar status.'}</p>
+              </div>
+            )}
+            {statusMutation.isSuccess && (
+              <div className="rounded-lg border border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950 p-3 text-sm text-green-800 dark:text-green-200">
+                Status atualizado com sucesso!
+              </div>
+            )}
           </div>
         )}
 
@@ -477,6 +533,45 @@ export default function ReviewArticle() {
                   <><Save className="h-4 w-4 mr-2" />{hasPending ? 'Atualizar sugestão' : 'Enviar sugestão'}</>
                 )}
               </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Diálogo de confirmação */}
+        {confirmDialog.open && confirmDialog.action && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-card text-card-foreground w-full max-w-md rounded-lg border shadow-lg p-6 relative">
+              <button 
+                onClick={() => setConfirmDialog({ open: false, action: null })}
+                className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              
+              <h2 className="text-lg font-semibold tracking-tight mb-2">
+                {confirmDialog.action === 'approved' ? 'Aprovar submissão?' : 'Rejeitar submissão?'}
+              </h2>
+              
+              <div className="text-sm text-muted-foreground mb-6">
+                {confirmDialog.action === 'approved'
+                  ? 'Tem certeza que deseja aprovar esta submissão? O autor será notificado.'
+                  : 'Tem certeza que deseja rejeitar esta submissão? O autor será notificado.'}
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setConfirmDialog({ open: false, action: null })}>
+                  Cancelar
+                </Button>
+                <Button 
+                  variant={confirmDialog.action === 'rejected' ? 'destructive' : 'default'}
+                  onClick={() => {
+                    statusMutation.mutate(confirmDialog.action!);
+                    setConfirmDialog({ open: false, action: null });
+                  }}
+                >
+                  {confirmDialog.action === 'approved' ? 'Aprovar' : 'Rejeitar'}
+                </Button>
+              </div>
             </div>
           </div>
         )}
