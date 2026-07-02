@@ -116,10 +116,12 @@ export interface SearchResult {
 
 export interface APIResponse<T> {
   success: boolean;
-  message: string;
+  message?: string;
+  error?: string;
   timestamp: string;
   data: T;
   errors?: string[];
+  details?: unknown;
 }
 
 class ApiError extends Error {
@@ -131,6 +133,34 @@ class ApiError extends Error {
     super(message);
     this.name = 'ApiError';
   }
+}
+
+function parseApiErrors(data: APIResponse<unknown>): string[] | undefined {
+  if (Array.isArray(data.errors) && data.errors.length > 0) {
+    return data.errors;
+  }
+
+  if (Array.isArray(data.details)) {
+    return data.details
+      .map((item) => {
+        if (typeof item === 'string') return item;
+        if (item && typeof item === 'object' && 'msg' in item) {
+          return String((item as { msg?: string }).msg ?? '');
+        }
+        return '';
+      })
+      .filter(Boolean);
+  }
+
+  if (data.details && typeof data.details === 'object' && !Array.isArray(data.details)) {
+    const details = data.details as { errors?: string[]; missingFields?: string[] };
+    if (details.errors?.length) return details.errors;
+    if (details.missingFields?.length) {
+      return details.missingFields.map((field) => `Campo obrigatório: ${field}`);
+    }
+  }
+
+  return undefined;
 }
 
 /**
@@ -151,18 +181,16 @@ async function apiRequest<T>(
       ...options,
     });
 
-    const data: APIResponse<T> = await response.json();
+    const data = (await response.json()) as APIResponse<T>;
+    const message = data.message || data.error || `HTTP ${response.status}`;
+    const errors = parseApiErrors(data);
 
     if (!response.ok) {
-      throw new ApiError(
-        data.message || `HTTP ${response.status}`,
-        response.status,
-        data.errors
-      );
+      throw new ApiError(message, response.status, errors);
     }
 
     if (!data.success) {
-      throw new ApiError(data.message, undefined, data.errors);
+      throw new ApiError(message, undefined, errors);
     }
 
     return data;
@@ -382,6 +410,15 @@ export async function fetchArticles(
 }
 
 
+/** Bibliography item — same shape as ArticleEditor metadata.bibliography[]. */
+export interface BibliographyItem {
+  year: string;
+  title: string;
+  author: string;
+  location?: string;
+  publisher?: string;
+}
+
 /** Payload for creating a new article submission (POST /submissions). */
 export interface CreateArticleSubmissionPayload {
   author_name: string;
@@ -393,9 +430,10 @@ export interface CreateArticleSubmissionPayload {
   keywords: string[];
   category: string;
   metadata?: {
-    sections?: Array<{ title: string; content: string }>;
+    bibliography?: BibliographyItem[];
     [key: string]: unknown;
   };
+  submit_for_review?: boolean;
 }
 
 export interface CreateArticleSubmissionResponse {
@@ -414,7 +452,10 @@ export async function createArticleSubmission(
     '/submissions',
     {
       method: 'POST',
-      body: JSON.stringify(payload),
+      body: JSON.stringify({
+        ...payload,
+        submit_for_review: payload.submit_for_review ?? true,
+      }),
     }
   );
   return response.data;

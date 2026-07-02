@@ -1,5 +1,5 @@
 module.exports = {
-    // Submission statuses
+    // Statuses de submissão
     SUBMISSION_STATUS: {
         DRAFT: 'DRAFT',
         UNDER_REVIEW: 'UNDER_REVIEW',
@@ -10,26 +10,20 @@ module.exports = {
         EXPIRED: 'EXPIRED'
     },
 
-    // Feedback statuses
+    // Statuses de feedback
     FEEDBACK_STATUS: {
         PENDING: 'PENDING',
         ADDRESSED: 'ADDRESSED',
         RESOLVED: 'RESOLVED'
     },
 
-    // Categories
-    CATEGORIES: [
-        'História',
-        'Filosofia',
-        'Literatura',
-        'Arte',
-        'Política',
-        'Economia',
-        'Sociologia',
-        'Antropologia',
-        'Relações Internacionais',
-        'Educação',
-        'Outros'
+    // Categorias de entidade — mesmos valores que ArticleEditor / artigos do catálogo
+    ENTITY_CATEGORIES: [
+        'pessoa',
+        'evento',
+        'instituicao',
+        'tema',
+        'obra',
     ],
 
     ALLOWED_FILE_TYPES: [

@@ -9,33 +9,31 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { createArticleSubmission, ApiError } from '@/lib/api';
-
-// Interface idêntica à do ArticleEditor para a bibliografia
-interface BibItem {
-  year: string;
-  title: string;
-  author: string;
-  location?: string;
-  publisher?: string;
-}
+import { createArticleSubmission, ApiError, type BibliographyItem } from '@/lib/api';
+import {
+  ARTICLE_EDITOR_CATEGORIES,
+  ARTICLE_EDITOR_CATEGORY_LABELS,
+  buildSubmissionPayload,
+  validateSubmissionForm,
+} from '@/lib/article-form';
+import { useAuth } from '@/hooks/use-user';
 
 export default function SubmitArticle() {
+  const { user } = useAuth();
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
-  // Cada campo do formulário gerenciado por estados separados como no ArticleEditor
+  // Mesmos campos que ArticleEditor (+ e-mail de contato para submissão)
   const [title, setTitle] = useState('');
   const [summary, setSummary] = useState('');
   const [category, setCategory] = useState('tema');
   const [authorName, setAuthorName] = useState('');
-  const [authorEmail, setAuthorEmail] = useState('');
+  const [authorEmail, setAuthorEmail] = useState(user?.email ?? '');
   const [authorInst, setAuthorInst] = useState('');
   const [content, setContent] = useState('');
-
-  // Estados locais para Keywords e Bibliografia
   const [keywords, setKeywords] = useState<string[]>([]);
   const [newKeyword, setNewKeyword] = useState('');
-  const [bibliography, setBibliography] = useState<BibItem[]>([]);
+  const [bibliography, setBibliography] = useState<BibliographyItem[]>([]);
 
   // Lógica de Mutação adaptada para os estados manuais
   const mutation = useMutation({
@@ -76,7 +74,7 @@ export default function SubmitArticle() {
     ]);
   };
 
-  const updateBibItem = (index: number, field: keyof BibItem, value: string) => {
+  const updateBibItem = (index: number, field: keyof BibliographyItem, value: string) => {
     const updated = bibliography.map((item, i) =>
       i === index ? { ...item, [field]: value } : item
     );
@@ -91,9 +89,9 @@ export default function SubmitArticle() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitSuccess(false);
+    setValidationErrors([]);
 
-    // Monta o payload no formato esperado pelo backend
-    const payload = {
+    const formFields = {
       title,
       summary,
       category,
@@ -102,12 +100,16 @@ export default function SubmitArticle() {
       author_institution: authorInst,
       content,
       keywords,
-      metadata: {
-        bibliography,
-      },
+      bibliography,
     };
 
-    mutation.mutate(payload);
+    const errors = validateSubmissionForm(formFields);
+    if (errors.length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+
+    mutation.mutate(buildSubmissionPayload(formFields));
   };
 
   const apiErrors = mutation.error instanceof ApiError ? mutation.error.errors : undefined;
@@ -140,6 +142,17 @@ export default function SubmitArticle() {
           </div>
         )}
 
+        {validationErrors.length > 0 && (
+          <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+            <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+            <ul className="text-sm list-disc list-inside">
+              {validationErrors.map((err) => (
+                <li key={err}>{err}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {mutation.isError && (
           <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
             <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
@@ -163,44 +176,21 @@ export default function SubmitArticle() {
 
         {/* Formulário com a exata estilização do Editor */}
         <form onSubmit={handleSubmit} className="space-y-6">
-          
-          {/* ── Seção: Autor ───────────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="submit-author-name">Nome completo *</Label>
-              <Input
-                id="submit-author-name"
-                value={authorName}
-                onChange={(e) => setAuthorName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="submit-author-email">E-mail de contato *</Label>
-              <Input
-                id="submit-author-email"
-                type="email"
-                value={authorEmail}
-                onChange={(e) => setAuthorEmail(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
+          {/* E-mail de contato — único campo extra em relação ao ArticleEditor */}
           <div className="space-y-2">
-            <Label htmlFor="submit-institution">Instituição do autor</Label>
+            <Label htmlFor="submit-author-email">E-mail de contato *</Label>
             <Input
-              id="submit-institution"
-              value={authorInst}
-              onChange={(e) => setAuthorInst(e.target.value)}
-              placeholder="Universidade, centro de pesquisa…"
+              id="submit-author-email"
+              type="email"
+              value={authorEmail}
+              onChange={(e) => setAuthorEmail(e.target.value)}
+              required
             />
           </div>
 
           <Separator />
 
-          {/* ── Campos Básicos do Verbete ──────────────────── */}
+          {/* ── Campos básicos (mesma ordem do ArticleEditor) ── */}
           <div className="space-y-2">
             <Label htmlFor="submit-title">Título *</Label>
             <Input
@@ -219,25 +209,46 @@ export default function SubmitArticle() {
               onChange={(e) => setSummary(e.target.value)}
               rows={4}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
-              placeholder="Síntese do verbete em poucas linhas (50 a 500 caracteres)..."
               required
             />
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="submit-category">Categoria *</Label>
+              <select
+                id="submit-category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                required
+              >
+                {ARTICLE_EDITOR_CATEGORIES.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {ARTICLE_EDITOR_CATEGORY_LABELS[cat]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="submit-author-name">Autor *</Label>
+              <Input
+                id="submit-author-name"
+                value={authorName}
+                onChange={(e) => setAuthorName(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="submit-category">Categoria *</Label>
-            <select
-              id="submit-category"
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="pessoa">Pessoa</option>
-              <option value="evento">Evento</option>
-              <option value="instituicao">Instituição</option>
-              <option value="tema">Tema</option>
-              <option value="obra">Obra</option>
-            </select>
+            <Label htmlFor="submit-institution">Instituição do autor</Label>
+            <Input
+              id="submit-institution"
+              value={authorInst}
+              onChange={(e) => setAuthorInst(e.target.value)}
+            />
           </div>
 
           <Separator />
@@ -281,15 +292,15 @@ export default function SubmitArticle() {
 
           {/* ── Conteúdo (HTML/Texto Bruto) ────────────────── */}
           <div className="space-y-2">
-            <Label htmlFor="submit-content">Conteúdo principal *</Label>
+            <Label htmlFor="submit-content">Conteúdo (texto puro) *</Label>
             <p className="text-xs text-muted-foreground">
-              Este é o corpo principal do verbete. Digite ou cole o texto puro.
+              Este é o texto da biografia. Edite o conteúdo diretamente.
             </p>
             <textarea
               id="submit-content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              rows={18}
+              rows={20}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
               placeholder="Desenvolva o texto completo do seu verbete aqui..."
               required
@@ -329,7 +340,7 @@ export default function SubmitArticle() {
                     <Input
                       value={item.year}
                       onChange={(e) => updateBibItem(index, 'year', e.target.value)}
-                      placeholder="2026"
+                      placeholder="2024"
                     />
                   </div>
                   <div className="space-y-1 col-span-2 sm:col-span-1">

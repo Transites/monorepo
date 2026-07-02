@@ -99,7 +99,7 @@ class SubmissionService {
     private maxAttachments: number;
 
     constructor() {
-        this.allowedCategories = constants.CATEGORIES;
+        this.allowedCategories = constants.ENTITY_CATEGORIES;
         this.maxKeywords = constants.LIMITS.KEYWORDS_MAX;
         this.maxAttachments = 5;
     }
@@ -466,25 +466,26 @@ class SubmissionService {
                 );
             }
 
+            const renewalDate = new Date();
+            renewalDate.setDate(renewalDate.getDate() + 30);
+
             return await db.transaction(async (client: any) => {
-                // Atualizar status e timestamp
                 const result = await client.query(`
                     UPDATE submissions
                     SET status       = $1,
                         submitted_at = $2,
-                        updated_at   = $2
-                    WHERE id = $3
+                        updated_at   = $2,
+                        expires_at   = $3
+                    WHERE id = $4
                     RETURNING *
                 `, [
                     constants.SUBMISSION_STATUS.UNDER_REVIEW,
                     new Date(),
+                    renewalDate,
                     submissionId
                 ]);
 
                 const updatedSubmission = result.rows[0];
-
-                // Renovar token automaticamente (30 dias adicionais)
-                await tokenService.renewToken(submissionId, 30);
 
                 // Criar snapshot da versão submetida
                 await this.createVersionSnapshot(submissionId, {

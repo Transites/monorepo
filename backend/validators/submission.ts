@@ -8,8 +8,8 @@ class SubmissionValidators {
             .trim()
             .isLength({ min: 2, max: 255 })
             .withMessage('Nome do autor deve ter entre 2 e 255 caracteres')
-            .matches(/^[a-zA-ZÀ-ÿ\s.]+$/)
-            .withMessage('Nome deve conter apenas letras, espaços e pontos'),
+            .matches(/^[a-zA-ZÀ-ÿ\s.'-]+$/)
+            .withMessage('Nome deve conter apenas letras, espaços, pontos, hífens e apóstrofos'),
 
         body('author_email')
             .isEmail()
@@ -37,15 +37,20 @@ class SubmissionValidators {
             .withMessage(`Resumo deve ter entre 50 e ${constants.LIMITS.SUMMARY_MAX} caracteres`),
 
         body('content')
-            .optional()
             .trim()
-            .isLength({ max: constants.LIMITS.CONTENT_MAX })
-            .withMessage(`Conteúdo muito longo (máx. ${constants.LIMITS.CONTENT_MAX} caracteres)`),
+            .notEmpty()
+            .withMessage('Conteúdo é obrigatório')
+            .isLength({
+                min: constants.LIMITS.CONTENT_MIN,
+                max: constants.LIMITS.CONTENT_MAX,
+            })
+            .withMessage(
+                `Conteúdo deve ter entre ${constants.LIMITS.CONTENT_MIN} e ${constants.LIMITS.CONTENT_MAX} caracteres`
+            ),
 
         body('keywords')
-            .optional()
-            .isArray({ max: constants.LIMITS.KEYWORDS_MAX })
-            .withMessage(`Máximo ${constants.LIMITS.KEYWORDS_MAX} palavras-chave permitidas`),
+            .isArray({ min: 1, max: constants.LIMITS.KEYWORDS_MAX })
+            .withMessage(`Informe entre 1 e ${constants.LIMITS.KEYWORDS_MAX} palavras-chave`),
 
         body('keywords.*')
             .if(body('keywords').exists())
@@ -56,13 +61,18 @@ class SubmissionValidators {
         body('category')
             .notEmpty()
             .withMessage('Categoria é obrigatória')
-            .isIn(constants.CATEGORIES)
-            .withMessage(`Categoria deve ser uma das: ${constants.CATEGORIES.join(', ')}`), 
-            
+            .isIn(constants.ENTITY_CATEGORIES)
+            .withMessage(`Categoria deve ser uma das: ${constants.ENTITY_CATEGORIES.join(', ')}`),
+
         body('metadata')
             .optional()
             .isObject()
-            .withMessage('Metadados devem ser um objeto válido')
+            .withMessage('Metadados devem ser um objeto válido'),
+
+        body('submit_for_review')
+            .optional()
+            .isBoolean()
+            .withMessage('submit_for_review deve ser booleano'),
     ];
 
     // Validação de atualização de submissão
@@ -97,8 +107,8 @@ class SubmissionValidators {
 
         body('category')
             .optional()
-            .isIn(constants.CATEGORIES)
-            .withMessage(`Categoria deve ser uma das: ${constants.CATEGORIES.join(', ')}`),
+            .isIn(constants.ENTITY_CATEGORIES)
+            .withMessage(`Categoria deve ser uma das: ${constants.ENTITY_CATEGORIES.join(', ')}`),
 
         body('author_institution')
             .optional()

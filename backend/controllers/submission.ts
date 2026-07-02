@@ -27,31 +27,46 @@ class SubmissionController {
                 return responses.badRequest(res, 'Dados inválidos', errors.array());
             }
 
-            const submissionData = req.body;
+            const submissionData = { ...req.body };
+            const submitForReview = submissionData.submit_for_review !== false;
+            delete submissionData.submit_for_review;
 
-            // Criar submissão
             const submission = await submissionService.createSubmission(submissionData);
 
+            let finalSubmission = submission;
+            if (submitForReview) {
+                finalSubmission = await submissionService.submitForReview(
+                    submission.id,
+                    submission.author_email
+                );
+            }
+
             logger.audit('New submission created', {
-                submissionId: submission.id,
-                authorEmail: submission.author_email,
-                title: submission.title,
+                submissionId: finalSubmission.id,
+                authorEmail: finalSubmission.author_email,
+                title: finalSubmission.title,
+                status: finalSubmission.status,
                 ip: req.ip
             });
 
             return responses.created(res, {
                 submission: {
-                    id: submission.id,
-                    token: submission.token,
-                    title: submission.title,
-                    status: submission.status,
-                    author_name: submission.author_name,
-                    created_at: submission.created_at,
-                    expires_at: submission.expires_at
+                    id: finalSubmission.id,
+                    token: finalSubmission.token,
+                    title: finalSubmission.title,
+                    status: finalSubmission.status,
+                    author_name: finalSubmission.author_name,
+                    created_at: finalSubmission.created_at,
+                    submitted_at: finalSubmission.submitted_at,
+                    expires_at: finalSubmission.expires_at
                 },
-                accessUrl: `${process.env.FRONTEND_URL}/submissao/editar/${submission.token}`,
-                instructions: 'Token de acesso enviado por email. Salve este link para acessar sua submissão.'
-            }, 'Submissão criada com sucesso');
+                accessUrl: `${process.env.FRONTEND_URL || 'http://localhost:8080'}/submissao/editar/${finalSubmission.token}`,
+                instructions: submitForReview
+                    ? 'Submissão enviada para revisão editorial.'
+                    : 'Rascunho salvo. Use o link de acesso para continuar editando.'
+            }, submitForReview
+                ? 'Submissão enviada para revisão com sucesso'
+                : 'Submissão criada com sucesso');
 
         } catch (error: any) {
             return handleControllerError(error, res, next, {
