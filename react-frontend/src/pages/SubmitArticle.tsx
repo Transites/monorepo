@@ -1,139 +1,147 @@
 import { useState } from 'react';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Plus, Trash2, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Save, X, Plus, Trash2, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { RichTextEditor } from '@/components/RichTextEditor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import { createArticleSubmission, ApiError } from '@/lib/api';
-import { SUBMISSION_CATEGORIES } from '@/lib/submission-constants';
-import {
-  articleSubmissionSchema,
-  type ArticleSubmissionFormValues,
-  formValuesToPayload,
-  stripHtml,
-} from '@/lib/submission-schema';
-import { cn } from '@/lib/utils';
 
-const defaultValues: ArticleSubmissionFormValues = {
-  author_name: '',
-  author_email: '',
-  author_institution: '',
-  title: '',
-  category: 'História',
-  keywords: '',
-  summary: '',
-  content: '',
-  sections: [],
-};
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null;
-  return <p className="text-sm text-destructive mt-1">{message}</p>;
-}
-
-function CharCount({
-  current,
-  max,
-  min,
-}: {
-  current: number;
-  max: number;
-  min?: number;
-}) {
-  const belowMin = min !== undefined && current < min;
-  return (
-    <p
-      className={cn(
-        'text-xs mt-1 text-right',
-        belowMin ? 'text-muted-foreground' : 'text-muted-foreground'
-      )}
-    >
-      {current}
-      {min !== undefined && ` / mín. ${min}`} · máx. {max}
-    </p>
-  );
+// Interface idêntica à do ArticleEditor para a bibliografia
+interface BibItem {
+  year: string;
+  title: string;
+  author: string;
+  location?: string;
+  publisher?: string;
 }
 
 export default function SubmitArticle() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  const {
-    register,
-    control,
-    handleSubmit,
-    watch,
-    formState: { errors },
-  } = useForm<ArticleSubmissionFormValues>({
-    resolver: zodResolver(articleSubmissionSchema),
-    defaultValues,
-  });
+  // Cada campo do formulário gerenciado por estados separados como no ArticleEditor
+  const [title, setTitle] = useState('');
+  const [summary, setSummary] = useState('');
+  const [category, setCategory] = useState('tema');
+  const [authorName, setAuthorName] = useState('');
+  const [authorEmail, setAuthorEmail] = useState('');
+  const [authorInst, setAuthorInst] = useState('');
+  const [content, setContent] = useState('');
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'sections',
-  });
+  // Estados locais para Keywords e Bibliografia
+  const [keywords, setKeywords] = useState<string[]>([]);
+  const [newKeyword, setNewKeyword] = useState('');
+  const [bibliography, setBibliography] = useState<BibItem[]>([]);
 
-  const summaryValue = watch('summary') ?? '';
-  const contentValue = watch('content') ?? '';
-
+  // Lógica de Mutação adaptada para os estados manuais
   const mutation = useMutation({
     mutationFn: createArticleSubmission,
     onSuccess: () => {
       setSubmitSuccess(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Limpar formulário após sucesso
+      setTitle('');
+      setSummary('');
+      setAuthorName('');
+      setAuthorEmail('');
+      setAuthorInst('');
+      setContent('');
+      setKeywords([]);
+      setBibliography([]);
     },
   });
 
-  const onSubmit = handleSubmit((values) => {
-    setSubmitSuccess(false);
-    mutation.mutate(formValuesToPayload(values));
-  });
+  // ── Funções de Keywords ────────────────────────────────────
+  const addKeyword = () => {
+    const kw = newKeyword.trim();
+    if (kw && !keywords.includes(kw)) {
+      setKeywords([...keywords, kw]);
+    }
+    setNewKeyword('');
+  };
 
-  const apiErrors =
-    mutation.error instanceof ApiError ? mutation.error.errors : undefined;
+  const removeKeyword = (kw: string) => {
+    setKeywords(keywords.filter((k) => k !== kw));
+  };
+
+  // ── Funções de Bibliografia ────────────────────────────────
+  const addBibItem = () => {
+    setBibliography([
+      ...bibliography,
+      { year: '', title: '', author: '', location: '', publisher: '' },
+    ]);
+  };
+
+  const updateBibItem = (index: number, field: keyof BibItem, value: string) => {
+    const updated = bibliography.map((item, i) =>
+      i === index ? { ...item, [field]: value } : item
+    );
+    setBibliography(updated);
+  };
+
+  const removeBibItem = (index: number) => {
+    setBibliography(bibliography.filter((_, i) => i !== index));
+  };
+
+  // ── Enviar Submissão ───────────────────────────────────────
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitSuccess(false);
+
+    // Monta o payload no formato esperado pelo backend
+    const payload = {
+      title,
+      summary,
+      category,
+      author_name: authorName,
+      author_email: authorEmail,
+      author_institution: authorInst,
+      content,
+      keywords,
+      metadata: {
+        bibliography,
+      },
+    };
+
+    mutation.mutate(payload);
+  };
+
+  const apiErrors = mutation.error instanceof ApiError ? mutation.error.errors : undefined;
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="container mx-auto px-4 py-10 max-w-3xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">Submeter artigo</h1>
-          <p className="text-muted-foreground mt-2">
-            Preencha as seções do verbete. Use a barra de ferramentas para formatar
-            títulos, listas e ênfases no texto principal e nas seções adicionais.
-          </p>
+      <main className="max-w-3xl mx-auto px-4 py-10 space-y-8">
+        {/* Cabeçalho da Página */}
+        <div className="flex items-center justify-between border-b pb-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Submeter artigo</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Preencha os campos abaixo para enviar seu verbete para a revisão editorial.
+            </p>
+          </div>
         </div>
 
+        {/* Alertas de Feedback */}
         {submitSuccess && (
-          <div
-            className="mb-6 flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-4 text-green-900 dark:border-green-900 dark:bg-green-950 dark:text-green-100"
-            role="status"
-          >
+          <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 p-4 text-green-900 dark:border-green-900 dark:bg-green-950 dark:text-green-100">
             <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" />
             <div>
-              <p className="font-medium">Submissão enviada</p>
+              <p className="font-medium">Submissão enviada com sucesso!</p>
               <p className="text-sm mt-1 opacity-90">
-                Recebemos seu artigo. A equipe editorial entrará em contato pelo
-                e-mail informado após a revisão.
+                Recebemos seu artigo. A equipe editorial entrará em contato pelo e-mail informado.
               </p>
             </div>
           </div>
         )}
 
         {mutation.isError && (
-          <div
-            className="mb-6 flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive"
-            role="alert"
-          >
+          <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
             <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
             <div>
               <p className="font-medium">Não foi possível enviar</p>
@@ -153,234 +161,241 @@ export default function SubmitArticle() {
           </div>
         )}
 
-        <form onSubmit={onSubmit} className="space-y-8" noValidate>
-          <Card>
-            <CardHeader>
-              <CardTitle>Autor</CardTitle>
-              <CardDescription>Quem está enviando este verbete.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="author_name">Nome completo *</Label>
-                <Input
-                  id="author_name"
-                  autoComplete="name"
-                  className="mt-1.5"
-                  {...register('author_name')}
-                />
-                <FieldError message={errors.author_name?.message} />
-              </div>
-              <div>
-                <Label htmlFor="author_email">E-mail *</Label>
-                <Input
-                  id="author_email"
-                  type="email"
-                  autoComplete="email"
-                  className="mt-1.5"
-                  {...register('author_email')}
-                />
-                <FieldError message={errors.author_email?.message} />
-              </div>
-              <div>
-                <Label htmlFor="author_institution">Instituição</Label>
-                <Input
-                  id="author_institution"
-                  className="mt-1.5"
-                  placeholder="Universidade, centro de pesquisa…"
-                  {...register('author_institution')}
-                />
-                <FieldError message={errors.author_institution?.message} />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Identificação do verbete</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="title">Título *</Label>
-                <Input
-                  id="title"
-                  className="mt-1.5"
-                  placeholder="Nome do verbete"
-                  {...register('title')}
-                />
-                <FieldError message={errors.title?.message} />
-              </div>
-
-              <div>
-                <Label htmlFor="category">Categoria *</Label>
-                <select
-                  id="category"
-                  className="mt-1.5 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  {...register('category')}
-                >
-                  {SUBMISSION_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-                <FieldError message={errors.category?.message} />
-              </div>
-
-              <div>
-                <Label htmlFor="keywords">Palavras-chave *</Label>
-                <Input
-                  id="keywords"
-                  className="mt-1.5"
-                  placeholder="circulação, império, comércio"
-                  {...register('keywords')}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Separe por vírgulas (máximo 10).
-                </p>
-                <FieldError message={errors.keywords?.message} />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Resumo</CardTitle>
-              <CardDescription>
-                Texto curto exibido nas listagens e resultados de busca (50–500
-                caracteres).
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea
-                id="summary"
-                rows={4}
-                placeholder="Síntese do verbete em poucas linhas…"
-                {...register('summary')}
+        {/* Formulário com a exata estilização do Editor */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          
+          {/* ── Seção: Autor ───────────────────────────────── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="submit-author-name">Nome completo *</Label>
+              <Input
+                id="submit-author-name"
+                value={authorName}
+                onChange={(e) => setAuthorName(e.target.value)}
+                required
               />
-              <CharCount current={summaryValue.length} min={50} max={500} />
-              <FieldError message={errors.summary?.message} />
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Conteúdo principal</CardTitle>
-              <CardDescription>
-                Corpo do verbete com formatação (títulos, listas, negrito, etc.).
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Controller
-                name="content"
-                control={control}
-                render={({ field }) => (
-                  <RichTextEditor
-                    id="content"
-                    value={field.value}
-                    onChange={field.onChange}
-                    minHeightClassName="min-h-[280px]"
-                    placeholder="Desenvolva o verbete aqui. Use H2/H3 para subdivisões…"
-                  />
-                )}
+            <div className="space-y-2">
+              <Label htmlFor="submit-author-email">E-mail de contato *</Label>
+              <Input
+                id="submit-author-email"
+                type="email"
+                value={authorEmail}
+                onChange={(e) => setAuthorEmail(e.target.value)}
+                required
               />
-              <CharCount
-                current={stripHtml(contentValue).length}
-                min={100}
-                max={50000}
-              />
-              <FieldError message={errors.content?.message} />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-start justify-between gap-4">
-              <div>
-                <CardTitle>Seções adicionais</CardTitle>
-                <CardDescription>
-                  Blocos opcionais (ex.: biografia, obras, contexto histórico).
-                </CardDescription>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => append({ title: '', content: '' })}
-              >
-                <Plus className="h-4 w-4 mr-1" />
-                Seção
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {fields.length === 0 && (
-                <p className="text-sm text-muted-foreground">
-                  Nenhuma seção extra. Clique em &quot;Seção&quot; para adicionar.
-                </p>
-              )}
+          <div className="space-y-2">
+            <Label htmlFor="submit-institution">Instituição do autor</Label>
+            <Input
+              id="submit-institution"
+              value={authorInst}
+              onChange={(e) => setAuthorInst(e.target.value)}
+              placeholder="Universidade, centro de pesquisa…"
+            />
+          </div>
 
-              {fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="rounded-lg border border-dashed border-input p-4 space-y-4"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <Label htmlFor={`section-title-${index}`}>
-                      Título da seção {index + 1}
-                    </Label>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => remove(index)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Remover
-                    </Button>
-                  </div>
-                  <Input
-                    id={`section-title-${index}`}
-                    placeholder="Ex.: Obras principais"
-                    {...register(`sections.${index}.title`)}
-                  />
-                  <FieldError message={errors.sections?.[index]?.title?.message} />
+          <Separator />
 
-                  <Label>Conteúdo</Label>
-                  <Controller
-                    name={`sections.${index}.content`}
-                    control={control}
-                    render={({ field: sectionField }) => (
-                      <RichTextEditor
-                        value={sectionField.value}
-                        onChange={sectionField.onChange}
-                        minHeightClassName="min-h-[160px]"
-                        placeholder="Texto desta seção…"
-                      />
-                    )}
-                  />
-                  <FieldError message={errors.sections?.[index]?.content?.message} />
-                </div>
+          {/* ── Campos Básicos do Verbete ──────────────────── */}
+          <div className="space-y-2">
+            <Label htmlFor="submit-title">Título *</Label>
+            <Input
+              id="submit-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="submit-summary">Resumo *</Label>
+            <textarea
+              id="submit-summary"
+              value={summary}
+              onChange={(e) => setSummary(e.target.value)}
+              rows={4}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
+              placeholder="Síntese do verbete em poucas linhas (50 a 500 caracteres)..."
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="submit-category">Categoria *</Label>
+            <select
+              id="submit-category"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <option value="pessoa">Pessoa</option>
+              <option value="evento">Evento</option>
+              <option value="instituicao">Instituição</option>
+              <option value="tema">Tema</option>
+              <option value="obra">Obra</option>
+            </select>
+          </div>
+
+          <Separator />
+
+          {/* ── Keywords ───────────────────────────────────── */}
+          <div className="space-y-3">
+            <Label>Palavras-chave *</Label>
+            <div className="flex flex-wrap gap-2">
+              {keywords.map((kw) => (
+                <Badge key={kw} variant="secondary" className="gap-1 pr-1">
+                  {kw}
+                  <button
+                    type="button"
+                    onClick={() => removeKeyword(kw)}
+                    className="ml-1 hover:text-destructive"
+                  >
+                    <X size={12} />
+                  </button>
+                </Badge>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Nova palavra-chave..."
+                value={newKeyword}
+                onChange={(e) => setNewKeyword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addKeyword();
+                  }
+                }}
+              />
+              <Button variant="outline" onClick={addKeyword} type="button">
+                <Plus size={16} />
+              </Button>
+            </div>
+          </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between pt-2">
+          <Separator />
+
+          {/* ── Conteúdo (HTML/Texto Bruto) ────────────────── */}
+          <div className="space-y-2">
+            <Label htmlFor="submit-content">Conteúdo principal *</Label>
+            <p className="text-xs text-muted-foreground">
+              Este é o corpo principal do verbete. Digite ou cole o texto puro.
+            </p>
+            <textarea
+              id="submit-content"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={18}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
+              placeholder="Desenvolva o texto completo do seu verbete aqui..."
+              required
+            />
+          </div>
+
+          <Separator />
+
+          {/* ── Bibliografia ──────────────────────────────── */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label>Bibliografia</Label>
+              <Button variant="outline" size="sm" onClick={addBibItem} type="button">
+                <Plus size={14} className="mr-1" /> Adicionar item
+              </Button>
+            </div>
+
+            {bibliography.length === 0 && (
+              <p className="text-sm text-muted-foreground italic">
+                Nenhum item. Clique em &quot;Adicionar item&quot; para começar.
+              </p>
+            )}
+
+            {bibliography.map((item, index) => (
+              <div key={index} className="p-4 border rounded-lg space-y-3 relative">
+                <button
+                  onClick={() => removeBibItem(index)}
+                  className="absolute top-3 right-3 text-muted-foreground hover:text-destructive"
+                  type="button"
+                >
+                  <Trash2 size={14} />
+                </button>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Ano</Label>
+                    <Input
+                      value={item.year}
+                      onChange={(e) => updateBibItem(index, 'year', e.target.value)}
+                      placeholder="2026"
+                    />
+                  </div>
+                  <div className="space-y-1 col-span-2 sm:col-span-1">
+                    <Label className="text-xs">Autor</Label>
+                    <Input
+                      value={item.author}
+                      onChange={(e) => updateBibItem(index, 'author', e.target.value)}
+                      placeholder="SOBRENOME, Nome"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label className="text-xs">Título</Label>
+                  <Input
+                    value={item.title}
+                    onChange={(e) => updateBibItem(index, 'title', e.target.value)}
+                    placeholder="Título da obra"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Local</Label>
+                    <Input
+                      value={item.location ?? ''}
+                      onChange={(e) => updateBibItem(index, 'location', e.target.value)}
+                      placeholder="São Paulo"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Editora</Label>
+                    <Input
+                      value={item.publisher ?? ''}
+                      onChange={(e) => updateBibItem(index, 'publisher', e.target.value)}
+                      placeholder="Editora"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Separator />
+
+          {/* Barra de Ações Inferior */}
+          <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between pt-4">
             <Button
               type="submit"
               size="lg"
               disabled={mutation.isPending}
-              className="sm:min-w-[200px]"
+              className="sm:min-w-[220px]"
             >
               {mutation.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Enviando…
+                  Enviando...
                 </>
               ) : (
-                'Enviar submissão'
+                <>
+                  <Save size={16} className="mr-2" /> Enviar submissão
+                </>
               )}
             </Button>
             <p className="text-sm text-muted-foreground">
-              Ao enviar, você concorda com a revisão editorial.{' '}
+              Ao enviar, você aceita a revisão editorial.{' '}
               <Link to="/" className="text-primary hover:underline">
                 Voltar ao início
               </Link>
