@@ -9,6 +9,13 @@ const emailService = require('../../services/email');
 jest.mock('../../middleware/logging');
 jest.mock('../../database/client');
 jest.mock('../../services/email');
+jest.mock('../../services/zenodo', () => ({
+    __esModule: true,
+    default: {
+        isEnabled: jest.fn(() => false),
+        depositArticle: jest.fn(),
+    },
+}));
 
 describe('AdminReviewService', () => {
     let adminReviewService;

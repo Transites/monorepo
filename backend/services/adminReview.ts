@@ -18,6 +18,7 @@ import {
 } from '../types/admin';
 import { generateSlug, generateArticleUrl } from '../utils/url';
 import { InvalidStatusException } from "../utils/exceptions";
+import zenodoService from './zenodo';
 
 class AdminReviewService {
     private readonly pageSize = 20;
@@ -373,33 +374,79 @@ class AdminReviewService {
             // Generate slug and submission URL
             const slug = generateSlug(submission.title);
             const submissionUrl = generateArticleUrl(slug);
+            const publishedAt = new Date();
+            const shouldDepositToZenodo = publishRequest.depositToZenodo !== false;
 
-            // Atualizar status da submissão (talvez adicionar aqui o submitted_at para a data da primeira publicação?)
-            await this.db.query(
-                'UPDATE submissions SET status = $1, updated_at = NOW() WHERE id = $2',
-                ['PUBLISHED', submissionId]
-            );
+            let zenodoResult = null;
+
+            if (shouldDepositToZenodo && zenodoService.isEnabled()) {
+                zenodoResult = await zenodoService.depositArticle({
+                    id: submission.id,
+                    title: submission.title,
+                    summary: submission.summary,
+                    content: submission.content,
+                    keywords: publishRequest.keywordsOverride ?? submission.keywords,
+                    category: publishRequest.categoryOverride ?? submission.category,
+                    author_name: submission.author_name,
+                    author_institution: submission.author_institution,
+                    metadata: submission.metadata,
+                }, {
+                    articleUrl: submissionUrl,
+                    publish: true,
+                });
+            }
+
+            const zenodoMetadata = zenodoResult ? {
+                zenodo: {
+                    depositionId: zenodoResult.depositionId,
+                    doi: zenodoResult.doi,
+                    doiUrl: zenodoResult.doiUrl,
+                    recordUrl: zenodoResult.recordUrl,
+                    publishedAt: publishedAt.toISOString(),
+                },
+            } : {};
+
+            if (Object.keys(zenodoMetadata).length > 0) {
+                await this.db.query(
+                    `UPDATE submissions
+                     SET status = $1,
+                         updated_at = NOW(),
+                         doi = $2,
+                         metadata = COALESCE(metadata, '{}'::jsonb) || $3::jsonb
+                     WHERE id = $4`,
+                    ['PUBLISHED', zenodoResult.doi, JSON.stringify(zenodoMetadata), submissionId]
+                );
+            } else {
+                await this.db.query(
+                    'UPDATE submissions SET status = $1, updated_at = NOW() WHERE id = $2',
+                    ['PUBLISHED', submissionId]
+                );
+            }
 
             // Enviar notificação de publicação para o autor
             await this.emailService.notifyAuthorApproval(submission, submissionUrl);
 
             // Log da ação
-            await this.logAdminAction(adminId, 'publish_submission', 'submission', {
-                submissionId,
+            await this.logAdminAction(adminId, 'publish_submission', 'submission', submissionId, {
                 publishNotes: publishRequest.publishNotes,
-                submissionUrl
+                submissionUrl,
+                depositToZenodo: shouldDepositToZenodo,
+                zenodoDoi: zenodoResult?.doi,
             });
 
             this.logger.audit('Submission published', {
                 submissionId,
                 adminId,
                 publishedAt,
-                submissionUrl
+                submissionUrl,
+                zenodoDoi: zenodoResult?.doi,
             });
 
             return {
                 success: true,
-                articleUrl: submissionUrl
+                articleUrl: submissionUrl,
+                publishedAt,
+                zenodo: zenodoResult ? zenodoMetadata.zenodo : undefined,
             };
 
         } catch (error) {

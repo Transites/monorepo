@@ -198,6 +198,15 @@ export interface PublishRequest {
     publishNotes?: string;
     categoryOverride?: string;
     keywordsOverride?: string[];
+    depositToZenodo?: boolean;
+}
+
+export interface PublishZenodoResult {
+    depositionId: number;
+    doi?: string;
+    doiUrl?: string;
+    recordUrl?: string;
+    publishedAt: string;
 }
 
 export interface PublishResult {
@@ -205,6 +214,7 @@ export interface PublishResult {
     articleId?: string;
     publishedAt?: Date;
     articleUrl?: string;
+    zenodo?: PublishZenodoResult;
     error?: string;
 }
 
