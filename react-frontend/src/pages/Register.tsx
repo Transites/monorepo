@@ -23,7 +23,7 @@ const registerSchema = z.object({
 type RegisterValues = z.infer<typeof registerSchema>;
 
 const Register = () => {
-  const { createUser } = useAuth();
+  const { createUser, getAuthErrorMessage } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false); 
@@ -41,9 +41,9 @@ const Register = () => {
       await createUser(values.email, values.password);
       setRegisteredEmail(values.email);
       setIsSuccess(true); 
-    } catch (error: any) {
-      console.error("ERRO DO SUPABASE:", error);
-      setAuthError("Ocorreu um erro ao criar sua conta.");
+    } catch (error) {
+      const message = getAuthErrorMessage(error) 
+      setAuthError(message);
     } finally {
       setIsSubmitting(false);
     }
