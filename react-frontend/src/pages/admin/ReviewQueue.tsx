@@ -40,7 +40,7 @@ const TABS: { id: TabStatus; label: string }[] = [
 
 // Aqui nós dizemos exatamente quais status do banco pertencem a qual aba
 const STATUS_MAP: Record<TabStatus, string[]> = {
-  NO_REVIEW: ['DRAFT'],
+  NO_REVIEW: ['SUBMITTED'],
   UNDER_REVIEW: ['UNDER_REVIEW', 'CHANGES_REQUESTED'],
   APPROVED: ['APPROVED'],
   REJECTED: ['REJECTED'],
