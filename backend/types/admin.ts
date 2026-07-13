@@ -212,6 +212,7 @@ export type ReviewStatus = 'pending' | 'approved' | 'rejected' | 'changes_reques
 export type FeedbackStatus = 'PENDING' | 'ADDRESSED' | 'RESOLVED';
 export type SubmissionStatus =
     'DRAFT'
+    | 'SUBMITTED'
     | 'UNDER_REVIEW'
     | 'CHANGES_REQUESTED'
     | 'APPROVED'

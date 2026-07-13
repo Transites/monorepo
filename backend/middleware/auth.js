@@ -34,7 +34,7 @@ class AuthMiddleware {
                     tokenEmail: decoded.email,
                     ip: req.ip
                 });
-                return responses.unauthorized(res, 'Usuário não encontrado');
+                return responses.unauthorized(res, 'Usuário não é um administrador');
             }
 
             if (!admin.is_active) {
@@ -70,12 +70,41 @@ class AuthMiddleware {
     }
 
     /**
-     * Middleware que exige autenticação
+     * Middleware que exige autenticação de admin
      */
     requireAuth = async (req, res, next) => {
         await this.verifyJWT(req, res, next);
     };
+    
+    
+    /**
+     * Middleware que exige autenticação de autor (Que é qualquer usuário logado.)
+     */
+    requireAuthAsAuthor = async (req, res, next) => {
+        try {
+            const authHeader = req.headers.authorization;
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                return responses.unauthorized(res, 'Token de acesso não fornecido');
+            }
 
+            const token = authHeader.substring(7);
+            const decoded = jwt.verify(token, process.env.SUPABASE_JWT_SECRET);
+
+            if (!decoded || !decoded.email) {
+                return responses.unauthorized(res, 'Token inválido');
+            }
+
+            // Autor não precisa estar na tabela admins — só precisa ter um JWT válido do Supabase
+            req.user = {
+                id: decoded.sub,       // UUID do Supabase
+                email: decoded.email,
+            };
+
+            next();
+        } catch (error) {
+            return responses.unauthorized(res, 'Token inválido ou expirado');
+        }
+    };   
     /**
      * Middleware que torna autenticação opcional
      */

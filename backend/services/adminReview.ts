@@ -143,7 +143,11 @@ class AdminReviewService {
         }
 
         const result = await this.db.query(
-            `UPDATE submissions SET assigned_to = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
+            `UPDATE submissions
+             SET assigned_to = $1,
+                 status = CASE WHEN status = 'SUBMITTED' THEN 'UNDER_REVIEW' ELSE status END,
+                 updated_at = NOW()
+             WHERE id = $2 RETURNING *`,
             [adminId, submissionId]
         );
         
@@ -167,7 +171,11 @@ class AdminReviewService {
      */
     public async unassignSubmission(submissionId: string, adminId: string): Promise<Submission> {
         const result = await this.db.query(
-            `UPDATE submissions SET assigned_to = NULL, updated_at = NOW() WHERE id = $1 AND assigned_to = $2 RETURNING *`,
+            `UPDATE submissions
+             SET assigned_to = NULL,
+                 status = CASE WHEN status = 'UNDER_REVIEW' THEN 'SUBMITTED' ELSE status END,
+                 updated_at = NOW()
+             WHERE id = $1 AND assigned_to = $2 RETURNING *`,
             [submissionId, adminId]
         );
 
@@ -204,7 +212,7 @@ class AdminReviewService {
             }
 
             // Verificar se pode ser revisada
-            if (!['DRAFT', 'UNDER_REVIEW', 'CHANGES_REQUESTED'].includes(submission.status)) {
+            if (!['DRAFT', 'SUBMITTED', 'UNDER_REVIEW', 'CHANGES_REQUESTED'].includes(submission.status)) {
                 throw new InvalidStatusException('Submissão não pode ser revisada no status atual: ' + submission.status);
             }
 
@@ -352,8 +360,6 @@ class AdminReviewService {
     /**
      * Publicar submissão como artigo
      */
-    // TODO: atualizar esse metodo para nao mexer com tabela articles e manusear a tabela submissions diretamente, apenas atualizando o status da linha.
-    // TODO: deletar a tabela articles.
     public async publishSubmission(
         submissionId: string,
         adminId: string,
@@ -658,7 +664,7 @@ class AdminReviewService {
     private async getDashboardSummary() {
         const result = await this.db.query(`
             SELECT COUNT(*)                                                 as total_submissions,
-                   COUNT(CASE WHEN status = 'UNDER_REVIEW' THEN 1 END)      as pending_review,
+                   COUNT(CASE WHEN status IN ('SUBMITTED', 'UNDER_REVIEW') THEN 1 END) as pending_review,
                    COUNT(CASE WHEN status = 'CHANGES_REQUESTED' THEN 1 END) as changes_requested,
                    COUNT(CASE WHEN status = 'APPROVED' THEN 1 END)          as approved,
                    COUNT(CASE WHEN status = 'PUBLISHED' THEN 1 END)         as published,
@@ -720,6 +726,8 @@ class AdminReviewService {
         switch (row.status) {
             case 'DRAFT':
                 return 'Nova submissão criada';
+            case 'SUBMITTED':
+                return 'Submissão enviada para revisão';
             case 'UNDER_REVIEW':
                 return 'Submissão em revisão';
             case 'CHANGES_REQUESTED':
