@@ -649,3 +649,153 @@ export async function unassignSubmission(submissionId: string): Promise<AdminSub
   );
   return response.data.submission;
 }
+
+// Autor
+export interface AuthorSubmission {
+  id: string;
+  title: string;
+  status: string;
+  category?: string;
+  created_at: string;
+  updated_at: string;
+  expires_at: string;
+  pending_suggestions_count: string;
+}
+
+export interface SubmissionSuggestion {
+  id: string;
+  submission_id: string;
+  admin_name?: string;
+  notes: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  resolved_at?: string;
+  suggested_title?: string;
+  suggested_summary?: string;
+  suggested_content?: string;
+  suggested_category?: string;
+  suggested_keywords?: string[];
+  suggested_metadata?: Record<string, any>;
+}
+
+/**
+ * Faz requisição autenticada como autor (usa token Supabase)
+ */
+async function authorRequest<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<APIResponse<T>> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+
+  if (!token) {
+    throw new ApiError('Sessão expirada. Faça login novamente.', 401);
+  }
+
+  return apiRequest<T>(endpoint, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+/**
+ * Lista todas as submissões do autor logado
+ */
+export async function getMySubmissions(): Promise<AuthorSubmission[]> {
+  const response = await authorRequest<{ submissions: AuthorSubmission[] }>(
+    '/author/submissions'
+  );
+  return response.data.submissions;
+}
+
+/**
+ * Lista sugestões do curador para uma submissão
+ */
+export async function getSubmissionSuggestions(
+  submissionId: string
+): Promise<SubmissionSuggestion[]> {
+  const response = await authorRequest<{ suggestions: SubmissionSuggestion[] }>(
+    `/author/submissions/${submissionId}/suggestions`
+  );
+  return response.data.suggestions;
+}
+
+/**
+ * Autor aceita uma sugestão do curador
+ */
+export async function acceptSuggestion(
+  submissionId: string,
+  suggestionId: string
+): Promise<void> {
+  await authorRequest(
+    `/author/submissions/${submissionId}/suggestions/${suggestionId}/accept`,
+    { method: 'POST' }
+  );
+}
+
+/**
+ * Autor rejeita uma sugestão do curador
+ */
+export async function rejectSuggestion(
+  submissionId: string,
+  suggestionId: string
+): Promise<void> {
+  await authorRequest(
+    `/author/submissions/${submissionId}/suggestions/${suggestionId}/reject`,
+    { method: 'POST' }
+  );
+}
+
+// Interface para o payload da contra-proposta
+export interface CounterSuggestionPayload {
+  suggested_title?: string;
+  suggested_summary?: string;
+  suggested_content?: string;
+  suggested_category?: string;
+  suggested_keywords?: string[];
+  notes: string; // Obrigatório para explicar as mudanças
+}
+
+/**
+ * Envia uma contra-proposta do autor baseada em uma sugestão do curador
+ */
+export async function counterSuggestion(
+  submissionId: string,
+  suggestionId: string,
+  payload: CounterSuggestionPayload
+): Promise<void> {
+  console.log('Contra-proposta enviada:', JSON.stringify(payload));
+  await authorRequest(
+    `/author/submissions/${submissionId}/suggestions/${suggestionId}/counter`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }
+  );
+  console.log('Contra-proposta enviada:', JSON.stringify(payload));
+}
+
+// Interface para uma versão de submissão
+export interface SubmissionVersion {
+  version_number: number;
+  title: string;
+  summary?: string;
+  content?: string;
+  change_summary?: string;
+  created_by: string;
+  created_at: string;
+}
+
+// Função para obter as versões de uma submissão específica
+export async function getSubmissionVersions(
+  submissionId: string
+): Promise<SubmissionVersion[]> {
+  const response = await authorRequest<{ versions: SubmissionVersion[] }>(
+    `/author/submissions/${submissionId}/versions`
+  );
+  return response.data.versions;
+}

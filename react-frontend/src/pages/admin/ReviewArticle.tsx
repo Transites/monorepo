@@ -2,7 +2,7 @@ import { useState, useEffect} from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Loader2, AlertCircle, ArrowLeft, Save, Plus, Trash2, X,
+  Loader2, AlertCircle, ArrowLeft, Save, Plus, Trash2, X, History, FileText, MessageSquare
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { ApiError } from '@/lib/api';
+import { getSubmissionVersions, type SubmissionVersion } from '@/lib/api';
 
 // ─── tipos ────────────────────────────────────────────────────────────────────
 
@@ -30,6 +31,7 @@ interface Submission {
   title: string;
   summary?: string;
   content?: string;
+  content_html?: string;
   category?: string;
   keywords?: string[];
   author_name?: string;
@@ -84,19 +86,21 @@ async function adminFetch<T>(path: string, options: RequestInit = {}): Promise<T
 }
 
 // ─── componente principal ─────────────────────────────────────────────────────
+type Tab = 'current' | 'editing' | 'versions';
 
 export default function ReviewArticle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<'original' | 'editing'>('original');
+  const [activeTab, setActiveTab] = useState<Tab>('current');
   const [formReady, setFormReady] = useState(false);
+  const [selectedVersion, setSelectedVersion] = useState<SubmissionVersion | null>(null);
 
   // confirmação de ação
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
-    action: 'approved' | 'rejected' | null;
+    action: 'approved' | 'rejected' | 'published' | null;
   }>({ open: false, action: null });
 
   // campos editáveis
@@ -115,6 +119,13 @@ export default function ReviewArticle() {
   const { data, isLoading, isError, error } = useQuery<ReviewDetail>({
     queryKey: ['admin', 'review-detail', id],
     queryFn: () => adminFetch<ReviewDetail>(`/admin/review/submissions/${id}/review-detail`),
+    enabled: !!id,
+  });
+
+  // ── Buscar histórico de versões ──
+  const { data: versions } = useQuery({
+    queryKey: ['admin', 'versions', id],
+    queryFn: () => getSubmissionVersions(id!),
     enabled: !!id,
   });
 
@@ -153,8 +164,7 @@ export default function ReviewArticle() {
     setBibliography(bibliography.filter((_, i) => i !== index));
 
   // ── salvar sugestão ───────────────────────────────────────
-  const sub = data?.submission;
-
+  const sub = data?.submission; 
   const saveMutation = useMutation({
     mutationFn: () => {
       const payload: Record<string, unknown> = { notes };
@@ -185,6 +195,34 @@ export default function ReviewArticle() {
       queryClient.invalidateQueries({ queryKey: ['admin', 'review-detail', id] });
     },
   });
+  
+  // ── publicar submissão ─────────────────────────────────────
+  const publishMutation = useMutation({
+    mutationFn: () =>
+      adminFetch(`/admin/review/submissions/${id}/publish`, {
+        method: 'POST',
+        body: JSON.stringify({ publishNotes: 'Publicado via painel do curador.' }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'review-detail', id] });
+    },
+  });
+
+  // ── mapear status para rótulo legível ─────────────────────
+  const statusLabelMap: Record<string, string> = {
+  DRAFT: 'Rascunho',
+  SUBMITTED: 'Submetido',
+  UNDER_REVIEW: 'Sob revisão',
+  CHANGES_REQUESTED: 'Correções solicitadas',
+  APPROVED: 'Aprovado',
+  REJECTED: 'Rejeitado',
+  PUBLISHED: 'Publicado'
+};
+
+// Função auxiliar que tenta traduzir o status para um rótulo legível, ou retorna o status original se não houver mapeamento
+const formatStatus = (status: string) => {
+  return statusLabelMap[status.toUpperCase()] || status;
+};
 
   // ─── loading / erro ───────────────────────────────────────
   if (isLoading) {
@@ -210,6 +248,12 @@ export default function ReviewArticle() {
   }
 
   const hasPending = !!data?.pendingSuggestion;
+  const isApproved = sub.status.toUpperCase() === 'APPROVED';
+  const isPublished = sub.status.toUpperCase() === 'PUBLISHED';
+
+  // Lógica para o banner da Contra-proposta
+  const latestVersion = versions?.[0];
+  const isLatestFromAuthor = latestVersion?.created_by === 'author' && latestVersion?.version_number > 1;
 
   return (
     <div className="min-h-screen bg-background">
@@ -230,42 +274,70 @@ export default function ReviewArticle() {
             </p>
           </div>
           <Badge variant={hasPending ? 'destructive' : 'secondary'}>
-            {hasPending ? 'Sugestão pendente' : sub.status}
+            {hasPending ? 'Sugestão pendente' : formatStatus(sub.status)}
           </Badge>
         </div>
 
         {/* ── Abas ─────────────────────────────────────────── */}
-        <div className="flex border-b">
+        <div className="flex border-b gap-1 overflow-x-auto hide-scrollbar">
           <button
-            onClick={() => setActiveTab('original')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'original'
+            onClick={() => setActiveTab('current')}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'current'
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            Original
+            <FileText className="h-4 w-4" /> Artigo Atual
           </button>
+          
+          <button
+            onClick={() => setActiveTab('versions')}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'versions'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <History className="h-4 w-4" /> Histórico de versões
+          </button>
+
           <button
             onClick={() => setActiveTab('editing')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'editing'
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            Editando
+            <MessageSquare className="h-4 w-4" /> Fazer sugestão
             {hasPending && (
-              <span className="ml-2 inline-flex items-center justify-center h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-[10px]">
+              <span className="ml-1 inline-flex items-center justify-center h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-[10px]">
                 1
               </span>
             )}
           </button>
         </div>
 
-        {/* ── Aba: Original ─────────────────────────────────── */}
-        {activeTab === 'original' && (
+        {/* ── Aba: Artigo Atual ─────────────────────────────────── */}
+        {activeTab === 'current' && (
           <div className="space-y-6">
+
+            {isLatestFromAuthor && (
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge className="bg-blue-600 hover:bg-blue-700">Nova versão do autor</Badge>
+                  <span className="text-xs text-muted-foreground">
+                    Versão {latestVersion.version_number} • {new Date(latestVersion.created_at).toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">Notas do autor sobre as mudanças:</p>
+                <p className="text-sm text-blue-800 dark:text-blue-200 whitespace-pre-wrap italic">
+                  "{latestVersion.change_summary}"
+                </p>
+              </div>
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle>{sub.title}</CardTitle>
@@ -285,48 +357,158 @@ export default function ReviewArticle() {
                   </div>
                 )}
                 <Separator />
-                <div
-                  className="prose prose-sm dark:prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: sub.content ?? '' }}
-                />
+                {sub.content_html ? (
+                  <div
+                    className="prose prose-sm dark:prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{ __html: sub.content_html }}
+                  />
+                ) : (
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    {sub.content?.split('\n').map((paragraph, i) =>
+                      paragraph.trim() ? <p key={i}>{paragraph}</p> : null
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             {/* Botões de ação */}
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="destructive"
-                onClick={() => setConfirmDialog({ open: true, action: 'rejected' })}
-                disabled={statusMutation.isPending}
-              >
-                {statusMutation.isPending && statusMutation.variables === 'rejected' ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Rejeitando…</>
+            {!isPublished && (
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="destructive"
+                  onClick={() => setConfirmDialog({ open: true, action: 'rejected' })}
+                  disabled={statusMutation.isPending || publishMutation.isPending}
+                >
+                  {statusMutation.isPending && statusMutation.variables === 'rejected' ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Rejeitando…</>
+                  ) : (
+                    'Rejeitar'
+                  )}
+                </Button>
+                
+                {isApproved ? (
+                  <Button
+                   
+                    onClick={() => setConfirmDialog({ open: true, action: 'published' })}
+                    disabled={publishMutation.isPending}
+                  >
+                    {publishMutation.isPending ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Publicando…</>
+                    ) : (
+                      'Publicar Artigo'
+                    )}
+                  </Button>
                 ) : (
-                  'Rejeitar'
+                  <Button
+                    onClick={() => setConfirmDialog({ open: true, action: 'approved' })}
+                    disabled={statusMutation.isPending}
+                  >
+                    {statusMutation.isPending && statusMutation.variables === 'approved' ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Aprovando…</>
+                    ) : (
+                      'Aprovar'
+                    )}
+                  </Button>
                 )}
-              </Button>
-              <Button
-                onClick={() => setConfirmDialog({ open: true, action: 'approved' })}
-                disabled={statusMutation.isPending}
-              >
-                {statusMutation.isPending && statusMutation.variables === 'approved' ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Aprovando…</>
-                ) : (
-                  'Aprovar'
-                )}
-              </Button>
-            </div>
-
-            {/* Feedback de status */}
-            {statusMutation.isError && (
-              <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
-                <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-                <p>{statusMutation.error instanceof ApiError ? statusMutation.error.message : 'Erro ao atualizar status.'}</p>
               </div>
             )}
-            {statusMutation.isSuccess && (
+
+            {/* Feedbacks */}
+            {(statusMutation.isError || publishMutation.isError) && (
+              <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+                <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                <p>
+                  {statusMutation.error instanceof ApiError ? statusMutation.error.message : ''}
+                  {publishMutation.error instanceof ApiError ? publishMutation.error.message : ''}
+                  {!statusMutation.error && !publishMutation.error && 'Erro ao processar a requisição.'}
+                </p>
+              </div>
+            )}
+            
+            {(statusMutation.isSuccess || publishMutation.isSuccess) && (
               <div className="rounded-lg border border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950 p-3 text-sm text-green-800 dark:text-green-200">
-                Status atualizado com sucesso!
+                Ação realizada com sucesso! O status da submissão foi atualizado.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Aba: Histórico de versões ─────────────────────────────────── */}
+        {activeTab === 'versions' && (
+          <div className="space-y-4">
+            {!versions || versions.length === 0 ? (
+              <div className="flex justify-center py-16">
+                {isLoading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : <p className="text-muted-foreground">Nenhuma versão registrada.</p>}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+                
+                {/* Lista lateral de versões */}
+                <div className="space-y-2">
+                  {versions.map(v => (
+                    <button
+                      key={v.version_number}
+                      onClick={() => setSelectedVersion(v)}
+                      className={`w-full text-left p-4 rounded-lg border transition-colors ${
+                        selectedVersion?.version_number === v.version_number
+                          ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium">Versão {v.version_number}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {v.created_by === 'author' ? 'Autor' : 'Curador'}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(v.created_at).toLocaleDateString('pt-BR')}
+                      </p>
+                      {v.change_summary && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{v.change_summary}</p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Visualização da versão selecionada */}
+                {selectedVersion ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Versão {selectedVersion.version_number}</CardTitle>
+                      {selectedVersion.change_summary && (
+                        <div className="p-3 bg-muted/40 rounded-md border-l-4 border-primary mt-2">
+                          <p className="text-xs font-medium text-muted-foreground mb-1">Notas da versão</p>
+                          <p className="text-sm">{selectedVersion.change_summary}</p>
+                        </div>
+                      )}
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-muted-foreground">Título</p>
+                        <p className="text-sm">{selectedVersion.title}</p>
+                      </div>
+                      {selectedVersion.summary && (
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium text-muted-foreground">Resumo</p>
+                          <p className="text-sm">{selectedVersion.summary}</p>
+                        </div>
+                      )}
+                      {selectedVersion.content && (
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium text-muted-foreground">Conteúdo</p>
+                          <p className="text-sm whitespace-pre-wrap max-h-96 overflow-y-auto">
+                            {selectedVersion.content}
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="flex items-center justify-center py-16 text-muted-foreground border rounded-lg">
+                    <p className="text-sm">Selecione uma versão ao lado para visualizar o texto da época.</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -549,12 +731,15 @@ export default function ReviewArticle() {
               </button>
               
               <h2 className="text-lg font-semibold tracking-tight mb-2">
-                {confirmDialog.action === 'approved' ? 'Aprovar submissão?' : 'Rejeitar submissão?'}
+                {confirmDialog.action === 'approved' ? 'Aprovar submissão?' :
+                 confirmDialog.action === 'published' ? 'Publicar artigo?' : 'Rejeitar submissão?'}
               </h2>
               
               <div className="text-sm text-muted-foreground mb-6">
                 {confirmDialog.action === 'approved'
                   ? 'Tem certeza que deseja aprovar esta submissão? O autor será notificado.'
+                  : confirmDialog.action === 'published'
+                  ? 'Tem certeza que deseja publicar este artigo? Ele ficará visível publicamente na enciclopédia.'
                   : 'Tem certeza que deseja rejeitar esta submissão? O autor será notificado.'}
               </div>
 
@@ -565,11 +750,16 @@ export default function ReviewArticle() {
                 <Button 
                   variant={confirmDialog.action === 'rejected' ? 'destructive' : 'default'}
                   onClick={() => {
-                    statusMutation.mutate(confirmDialog.action!);
+                    if (confirmDialog.action === 'published') {
+                      publishMutation.mutate();
+                    } else if (confirmDialog.action) {
+                      statusMutation.mutate(confirmDialog.action);
+                    }
                     setConfirmDialog({ open: false, action: null });
                   }}
                 >
-                  {confirmDialog.action === 'approved' ? 'Aprovar' : 'Rejeitar'}
+                  {confirmDialog.action === 'approved' ? 'Aprovar' :
+                   confirmDialog.action === 'published' ? 'Publicar' : 'Rejeitar'}
                 </Button>
               </div>
             </div>
