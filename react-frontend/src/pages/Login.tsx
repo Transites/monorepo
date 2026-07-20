@@ -9,6 +9,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-user";
 import { cn } from "@/lib/utils";
+import { AuthError } from "@supabase/supabase-js";
 
 // Validation Schema
 const loginSchema = z.object({
@@ -19,7 +20,7 @@ const loginSchema = z.object({
 type LoginValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
-  const { login } = useAuth();
+  const { login, getAuthErrorMessage } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
@@ -37,10 +38,11 @@ const Login = () => {
     setAuthError(null);
     try {
       await login(values.email, values.password);
-      toast.success("Login realizado com sucesso!");
       navigate("/"); // redirect home 
-    } catch (error: any) {
-      setAuthError("E-mail ou senha incorretos.");
+    } catch (error) {
+      const message = getAuthErrorMessage(error)
+      setAuthError(message);
+      console.log(error)
     } finally {
       setIsSubmitting(false);
     }
