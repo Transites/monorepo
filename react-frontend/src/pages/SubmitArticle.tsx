@@ -16,7 +16,7 @@ import {
   buildSubmissionPayload,
   validateSubmissionForm,
 } from '@/lib/article-form';
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SubmitArticle() {
   const { user } = useAuth();
