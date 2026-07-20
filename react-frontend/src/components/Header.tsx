@@ -5,7 +5,7 @@ import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { LanguageToggle } from "./LanguageToggle";
-import { useAuth } from "@/hooks/use-user"; 
+import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
   const { scrollToElement } = useSmoothScroll();
