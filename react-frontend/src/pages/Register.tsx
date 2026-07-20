@@ -8,7 +8,7 @@ import { Mail, ArrowRight, CheckCircle2 } from "lucide-react"; // Icons for the 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/use-user";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
 const registerSchema = z.object({

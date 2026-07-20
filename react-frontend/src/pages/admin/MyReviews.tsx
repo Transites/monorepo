@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/use-user';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   getMyReviews,
   unassignSubmission,
