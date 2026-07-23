@@ -39,13 +39,6 @@ interface Submission {
   status: string;
   metadata?: {
     bibliography?: BibItem[];
-    zenodo?: {
-      depositionId?: number;
-      doi?: string;
-      doiUrl?: string;
-      recordUrl?: string;
-      publishedAt?: string;
-    };
     [key: string]: unknown;
   };
 }
@@ -238,7 +231,7 @@ export default function ReviewArticle() {
   const zenodoEnabled = data?.zenodoEnabled ?? false;
   const isApproved = sub.status?.toUpperCase() === 'APPROVED';
   const isPublished = sub.status?.toUpperCase() === 'PUBLISHED';
-  const zenodoDoi = sub.doi ?? sub.metadata?.zenodo?.doi;
+  const zenodoDoi = sub.doi;
 
   return (
     <div className="min-h-screen bg-background">
@@ -318,7 +311,7 @@ export default function ReviewArticle() {
                   <p className="text-sm text-muted-foreground">
                     DOI:{' '}
                     <a
-                      href={sub.metadata?.zenodo?.doiUrl || `https://doi.org/${zenodoDoi}`}
+                      href={`https://doi.org/${zenodoDoi}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary underline"

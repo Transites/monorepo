@@ -80,6 +80,26 @@ class ArticleController {
                   });
             }
       }
+
+      async assignDoi(req: Request, res: Response, next: NextFunction): Promise<any> {
+            try {
+            const { id } = req.params;
+
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(id)) {
+                  return responses.badRequest(res, 'ID inválido', ['ID deve ser um UUID válido']);
+            }
+
+            const updated = await articlesService.assignDoi(id);
+            return responses.success(res, { submission: updated }, 'DOI atribuído com sucesso');
+
+            } catch (error: any) {
+                  return handleControllerError(error, res, next, {
+                        operation: 'assignDoi',
+                        articleId: req.params.id,
+                  });
+            }
+      }
 }
 
 export default new ArticleController();

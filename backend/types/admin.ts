@@ -34,6 +34,7 @@ export interface Submission {
     category?: string;
     metadata?: Record<string, any>;
     attachments?: string[];
+    doi?: string;
     reviewedBy?: string;
     assignedTo?: string;
     reviewNotes?: string;

@@ -396,25 +396,14 @@ class AdminReviewService {
                 });
             }
 
-            const zenodoMetadata = zenodoResult ? {
-                zenodo: {
-                    depositionId: zenodoResult.depositionId,
-                    doi: zenodoResult.doi,
-                    doiUrl: zenodoResult.doiUrl,
-                    recordUrl: zenodoResult.recordUrl,
-                    publishedAt: publishedAt.toISOString(),
-                },
-            } : {};
-
-            if (Object.keys(zenodoMetadata).length > 0) {
+            if (zenodoResult) {
                 await this.db.query(
                     `UPDATE submissions
                      SET status = $1,
                          updated_at = NOW(),
-                         doi = $2,
-                         metadata = COALESCE(metadata, '{}'::jsonb) || $3::jsonb
-                     WHERE id = $4`,
-                    ['PUBLISHED', zenodoResult.doi, JSON.stringify(zenodoMetadata), submissionId]
+                         doi = $2
+                     WHERE id = $3`,
+                    ['PUBLISHED', zenodoResult.doi, submissionId]
                 );
             } else {
                 await this.db.query(
@@ -446,7 +435,13 @@ class AdminReviewService {
                 success: true,
                 articleUrl: submissionUrl,
                 publishedAt,
-                zenodo: zenodoResult ? zenodoMetadata.zenodo : undefined,
+                zenodo: zenodoResult ? {
+                    depositionId: zenodoResult.depositionId,
+                    doi: zenodoResult.doi,
+                    doiUrl: zenodoResult.doiUrl,
+                    recordUrl: zenodoResult.recordUrl,
+                    publishedAt: publishedAt.toISOString(),
+                } : undefined,
             };
 
         } catch (error) {
