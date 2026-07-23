@@ -19,4 +19,9 @@ router.patch(
   errorHandler.asyncHandler(articlesController.updateArticle)
 );
 
+router.post(
+  '/:id/assign-doi',
+  errorHandler.asyncHandler(articlesController.assignDoi)
+);
+
 module.exports = router;

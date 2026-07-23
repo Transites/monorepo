@@ -1,4 +1,6 @@
 const db = require('../database/client');
+import zenodoService from './zenodo';
+import { generateSlug, generateArticleUrl } from '../utils/url';
 
 interface ListArticlesParams {
       search?: string;
@@ -139,6 +141,52 @@ class ArticlesService {
       }
 
       return result.rows[0];
+      }
+
+      async assignDoi(id: string) {
+            const result = await db.query('SELECT * FROM submissions WHERE id = $1', [id]);
+            const submission = result.rows[0];
+
+            if (!submission) {
+                  throw new Error('Artigo não encontrado');
+            }
+
+            if (submission.doi) {
+                  throw new Error('Este artigo já possui um DOI atribuído');
+            }
+
+            if (!zenodoService.isEnabled()) {
+                  throw new Error('Integração com o Zenodo está desabilitada');
+            }
+
+            const slug = generateSlug(submission.title);
+            const articleUrl = generateArticleUrl(slug);
+
+            const zenodoResult = await zenodoService.depositArticle({
+                  id: submission.id,
+                  title: submission.title,
+                  summary: submission.summary,
+                  content: submission.content,
+                  keywords: submission.keywords,
+                  category: submission.category,
+                  author_name: submission.author_name,
+                  author_institution: submission.author_institution,
+                  metadata: submission.metadata,
+            }, {
+                  articleUrl,
+                  publish: true,
+            });
+
+            if (!zenodoResult.doi) {
+                  throw new Error('Zenodo não retornou um DOI para este artigo');
+            }
+
+            const updated = await db.query(
+                  'UPDATE submissions SET doi = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+                  [zenodoResult.doi, id]
+            );
+
+            return updated.rows[0];
       }
 
 }

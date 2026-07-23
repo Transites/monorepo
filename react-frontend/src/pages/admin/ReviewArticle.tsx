@@ -35,6 +35,7 @@ interface Submission {
   author_name?: string;
   author_institution?: string;
   author_email?: string;
+  doi?: string;
   status: string;
   metadata?: {
     bibliography?: BibItem[];
@@ -58,6 +59,7 @@ interface Suggestion {
 interface ReviewDetail {
   submission: Submission;
   pendingSuggestion: Suggestion | null;
+  zenodoEnabled?: boolean;
 }
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -98,6 +100,7 @@ export default function ReviewArticle() {
     open: boolean;
     action: 'approved' | 'rejected' | null;
   }>({ open: false, action: null });
+  const [depositToZenodo, setDepositToZenodo] = useState(true);
 
   // campos editáveis
   const [title, setTitle] = useState('');
@@ -186,6 +189,21 @@ export default function ReviewArticle() {
     },
   });
 
+  // ── publicar artigo ────────────────────────────────────────
+  const publishMutation = useMutation({
+    mutationFn: () =>
+      adminFetch<{
+        articleUrl?: string;
+        zenodo?: { doi?: string; recordUrl?: string };
+      }>(`/admin/review/submissions/${id}/publish`, {
+        method: 'POST',
+        body: JSON.stringify({ depositToZenodo }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'review-detail', id] });
+    },
+  });
+
   // ─── loading / erro ───────────────────────────────────────
   if (isLoading) {
     return (
@@ -210,6 +228,10 @@ export default function ReviewArticle() {
   }
 
   const hasPending = !!data?.pendingSuggestion;
+  const zenodoEnabled = data?.zenodoEnabled ?? false;
+  const isApproved = sub.status?.toUpperCase() === 'APPROVED';
+  const isPublished = sub.status?.toUpperCase() === 'PUBLISHED';
+  const zenodoDoi = sub.doi;
 
   return (
     <div className="min-h-screen bg-background">
@@ -285,6 +307,19 @@ export default function ReviewArticle() {
                   </div>
                 )}
                 <Separator />
+                {zenodoDoi && (
+                  <p className="text-sm text-muted-foreground">
+                    DOI:{' '}
+                    <a
+                      href={`https://doi.org/${zenodoDoi}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline"
+                    >
+                      {zenodoDoi}
+                    </a>
+                  </p>
+                )}
                 <div
                   className="prose prose-sm dark:prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: sub.content ?? '' }}
@@ -294,30 +329,62 @@ export default function ReviewArticle() {
 
             {/* Botões de ação */}
             <div className="flex justify-end gap-3">
-              <Button
-                variant="destructive"
-                onClick={() => setConfirmDialog({ open: true, action: 'rejected' })}
-                disabled={statusMutation.isPending}
-              >
-                {statusMutation.isPending && statusMutation.variables === 'rejected' ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Rejeitando…</>
-                ) : (
-                  'Rejeitar'
-                )}
-              </Button>
-              <Button
-                onClick={() => setConfirmDialog({ open: true, action: 'approved' })}
-                disabled={statusMutation.isPending}
-              >
-                {statusMutation.isPending && statusMutation.variables === 'approved' ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Aprovando…</>
-                ) : (
-                  'Aprovar'
-                )}
-              </Button>
+              {!isPublished && (
+                <>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setConfirmDialog({ open: true, action: 'rejected' })}
+                    disabled={statusMutation.isPending || publishMutation.isPending}
+                  >
+                    {statusMutation.isPending && statusMutation.variables === 'rejected' ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Rejeitando…</>
+                    ) : (
+                      'Rejeitar'
+                    )}
+                  </Button>
+                  {!isApproved && (
+                    <Button
+                      onClick={() => {
+                        setDepositToZenodo(true);
+                        setConfirmDialog({ open: true, action: 'approved' });
+                      }}
+                      disabled={statusMutation.isPending || publishMutation.isPending}
+                    >
+                      {statusMutation.isPending && statusMutation.variables === 'approved' ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Aprovando…</>
+                      ) : (
+                        'Aprovar'
+                      )}
+                    </Button>
+                  )}
+                  {isApproved && (
+                    <Button
+                      onClick={() => publishMutation.mutate()}
+                      disabled={statusMutation.isPending || publishMutation.isPending}
+                    >
+                      {publishMutation.isPending ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Publicando…</>
+                      ) : (
+                        'Publicar'
+                      )}
+                    </Button>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Feedback de status */}
+            {publishMutation.isError && (
+              <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+                <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                <p>{publishMutation.error instanceof ApiError ? publishMutation.error.message : 'Erro ao publicar artigo.'}</p>
+              </div>
+            )}
+            {publishMutation.isSuccess && (
+              <div className="rounded-lg border border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950 p-3 text-sm text-green-800 dark:text-green-200">
+                Artigo publicado com sucesso!
+              </div>
+            )}
             {statusMutation.isError && (
               <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
                 <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
@@ -558,6 +625,23 @@ export default function ReviewArticle() {
                   : 'Tem certeza que deseja rejeitar esta submissão? O autor será notificado.'}
               </div>
 
+              {confirmDialog.action === 'approved' && zenodoEnabled && (
+                <label className="flex items-start gap-3 mb-6 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={depositToZenodo}
+                    onChange={(e) => setDepositToZenodo(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-input"
+                  />
+                  <span className="text-sm">
+                    <span className="font-medium text-foreground">Depositar no Zenodo e atribuir DOI</span>
+                    <span className="block text-muted-foreground mt-0.5">
+                      Preferência salva para quando o artigo for publicado.
+                    </span>
+                  </span>
+                </label>
+              )}
+
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={() => setConfirmDialog({ open: false, action: null })}>
                   Cancelar
@@ -568,6 +652,7 @@ export default function ReviewArticle() {
                     statusMutation.mutate(confirmDialog.action!);
                     setConfirmDialog({ open: false, action: null });
                   }}
+                  disabled={publishMutation.isPending || statusMutation.isPending}
                 >
                   {confirmDialog.action === 'approved' ? 'Aprovar' : 'Rejeitar'}
                 </Button>

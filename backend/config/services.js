@@ -60,6 +60,13 @@ module.exports = {
     app: {
         frontendUrl: process.env.FRONTEND_URL || 'http://enciclopedia.iea.usp.br',
     },
+    zenodo: {
+        enabled: process.env.ZENODO_ENABLED === 'true',
+        accessToken: process.env.ZENODO_ACCESS_TOKEN || '',
+        baseUrl: process.env.ZENODO_BASE_URL || 'https://sandbox.zenodo.org',
+        license: process.env.ZENODO_LICENSE || 'cc-by-4.0',
+        community: process.env.ZENODO_COMMUNITY || '',
+    },
     core: {
         nodeEnv: process.env.NODE_ENV || 'development',
         port: parseInt(process.env.PORT || '3000', 10),

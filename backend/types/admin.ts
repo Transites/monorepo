@@ -34,6 +34,7 @@ export interface Submission {
     category?: string;
     metadata?: Record<string, any>;
     attachments?: string[];
+    doi?: string;
     reviewedBy?: string;
     assignedTo?: string;
     reviewNotes?: string;
@@ -198,6 +199,15 @@ export interface PublishRequest {
     publishNotes?: string;
     categoryOverride?: string;
     keywordsOverride?: string[];
+    depositToZenodo?: boolean;
+}
+
+export interface PublishZenodoResult {
+    depositionId: number;
+    doi?: string;
+    doiUrl?: string;
+    recordUrl?: string;
+    publishedAt: string;
 }
 
 export interface PublishResult {
@@ -205,6 +215,7 @@ export interface PublishResult {
     articleId?: string;
     publishedAt?: Date;
     articleUrl?: string;
+    zenodo?: PublishZenodoResult;
     error?: string;
 }
 

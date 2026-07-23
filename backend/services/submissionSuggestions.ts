@@ -1,6 +1,7 @@
 import untypedLogger from '../middleware/logging';
 import { LoggerWithAudit } from '../types/migration';
 import { DatabaseException, SubmissionNotFoundException } from '../utils/exceptions';
+import zenodoService from './zenodo';
 
 const logger = untypedLogger as unknown as LoggerWithAudit;
 
@@ -164,7 +165,11 @@ class SubmissionSuggestionsService {
       const submission = submissionResult.rows[0];
       const pendingSuggestion = await this.getPendingSuggestion(submissionId);
 
-      return { submission, pendingSuggestion };
+      return {
+        submission,
+        pendingSuggestion,
+        zenodoEnabled: zenodoService.isEnabled(),
+      };
     } catch (error: any) {
       logger.error('Error getting submission for review', { submissionId, error: error?.message });
       if (error instanceof SubmissionNotFoundException) throw error;
