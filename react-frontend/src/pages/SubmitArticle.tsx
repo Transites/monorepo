@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Save, X, Plus, Trash2, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { Save, X, Plus, Trash2, CheckCircle2, AlertCircle, Loader2, ImagePlus } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -9,12 +9,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { createArticleSubmission, ApiError, type BibliographyItem } from '@/lib/api';
+import { createArticleSubmission, uploadSubmissionMedia, ApiError, type BibliographyItem } from '@/lib/api';
 import {
   ARTICLE_EDITOR_CATEGORIES,
   ARTICLE_EDITOR_CATEGORY_LABELS,
   buildSubmissionPayload,
   validateSubmissionForm,
+  type ArticleFormFields,
 } from '@/lib/article-form';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -46,6 +47,12 @@ export default function SubmitArticle() {
   const [keywords, setKeywords] = useState<string[]>([]);
   const [newKeyword, setNewKeyword] = useState('');
   const [bibliography, setBibliography] = useState<BibliographyItem[]>([]);
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaPreviewUrl, setMediaPreviewUrl] = useState<string | null>(null);
+  const [mediaUploading, setMediaUploading] = useState(false);
+  const [mediaError, setMediaError] = useState<string | null>(null);
+  const [mediaCaption, setMediaCaption] = useState('');
+  const [mediaAlternativeText, setMediaAlternativeText] = useState('');
 
   // Lógica de Mutação adaptada para os estados manuais
   const mutation = useMutation({
@@ -69,6 +76,9 @@ export default function SubmitArticle() {
       setOccupations([]);
       setOrganizations([]);
       setAlternativeNames([]);
+      setMediaCaption('');
+      setMediaAlternativeText('');
+      removeMedia();
     },
   });
 
@@ -112,11 +122,50 @@ export default function SubmitArticle() {
     setBibliography(bibliography.filter((_, i) => i !== index));
   };
 
+  // ── Funções de Mídia (imagem ou vídeo, um único arquivo) ───
+  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setMediaError(null);
+
+    if (mediaPreviewUrl) {
+      URL.revokeObjectURL(mediaPreviewUrl);
+    }
+
+    if (!file) {
+      setMediaFile(null);
+      setMediaPreviewUrl(null);
+      return;
+    }
+
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      setMediaError('Selecione um arquivo de imagem ou vídeo.');
+      setMediaFile(null);
+      setMediaPreviewUrl(null);
+      e.target.value = '';
+      return;
+    }
+
+    setMediaFile(file);
+    setMediaPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const removeMedia = () => {
+    if (mediaPreviewUrl) {
+      URL.revokeObjectURL(mediaPreviewUrl);
+    }
+    setMediaFile(null);
+    setMediaPreviewUrl(null);
+    setMediaError(null);
+    setMediaCaption('');
+    setMediaAlternativeText('');
+  };
+
   // ── Enviar Submissão ───────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitSuccess(false);
     setValidationErrors([]);
+    setMediaError(null);
 
     // Estruturando o metadata de acordo com o JSON esperado pelo banco
     const metadataPayload: any = {
@@ -155,7 +204,30 @@ export default function SubmitArticle() {
       return;
     }
 
-    mutation.mutate(buildSubmissionPayload(formFields));
+    let media: ArticleFormFields['media'];
+    if (mediaFile) {
+      setMediaUploading(true);
+      try {
+        const uploaded = await uploadSubmissionMedia(mediaFile);
+        media = {
+          type: uploaded.resourceType,
+          data: {
+            url: uploaded.url,
+            caption: mediaCaption.trim() || undefined,
+            alternativeText: mediaAlternativeText.trim() || undefined,
+          },
+        };
+      } catch (error) {
+        setMediaError(
+          error instanceof ApiError ? error.message : 'Falha ao enviar a imagem/vídeo. Tente novamente.'
+        );
+        setMediaUploading(false);
+        return;
+      }
+      setMediaUploading(false);
+    }
+
+    mutation.mutate(buildSubmissionPayload({ ...formFields, media }));
   };
 
   const apiErrors = mutation.error instanceof ApiError ? mutation.error.errors : undefined;
@@ -524,6 +596,77 @@ export default function SubmitArticle() {
 
           <Separator />
 
+          {/* ── Imagem ou vídeo (opcional, um único arquivo) ── */}
+          <div className="space-y-2">
+            <Label htmlFor="submit-media">Imagem ou vídeo de destaque</Label>
+            <p className="text-xs text-muted-foreground">
+              Envie no máximo um arquivo (imagem ou vídeo) para ilustrar o artigo.
+            </p>
+
+            {!mediaPreviewUrl && (
+              <label
+                htmlFor="submit-media"
+                className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-input px-4 py-8 text-sm text-muted-foreground cursor-pointer hover:border-primary/50"
+              >
+                <ImagePlus className="h-6 w-6" />
+                Clique para selecionar uma imagem ou vídeo
+              </label>
+            )}
+
+            {mediaPreviewUrl && mediaFile && (
+              <div className="relative inline-block">
+                {mediaFile.type.startsWith('video/') ? (
+                  <video src={mediaPreviewUrl} controls className="max-h-64 rounded-md border" />
+                ) : (
+                  <img src={mediaPreviewUrl} alt="Pré-visualização" className="max-h-64 rounded-md border" />
+                )}
+                <button
+                  type="button"
+                  onClick={removeMedia}
+                  className="absolute -top-2 -right-2 rounded-full bg-destructive text-destructive-foreground p-1 shadow"
+                  aria-label="Remover mídia"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+
+            <input
+              id="submit-media"
+              type="file"
+              accept="image/*,video/*"
+              onChange={handleMediaChange}
+              className="hidden"
+            />
+
+            {mediaError && <p className="text-sm text-destructive">{mediaError}</p>}
+
+            {mediaFile && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div className="space-y-2">
+                  <Label htmlFor="submit-media-caption">Legenda</Label>
+                  <Input
+                    id="submit-media-caption"
+                    value={mediaCaption}
+                    onChange={(e) => setMediaCaption(e.target.value)}
+                    placeholder="Legenda exibida junto à mídia"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="submit-media-alt">Texto alternativo</Label>
+                  <Input
+                    id="submit-media-alt"
+                    value={mediaAlternativeText}
+                    onChange={(e) => setMediaAlternativeText(e.target.value)}
+                    placeholder="Descrição para acessibilidade"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
           {/* ── Bibliografia ──────────────────────────────── */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -606,10 +749,15 @@ export default function SubmitArticle() {
             <Button
               type="submit"
               size="lg"
-              disabled={mutation.isPending}
+              disabled={mutation.isPending || mediaUploading}
               className="sm:min-w-[220px]"
             >
-              {mutation.isPending ? (
+              {mediaUploading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Enviando mídia...
+                </>
+              ) : mutation.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Enviando...

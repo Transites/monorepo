@@ -1,9 +1,11 @@
 import {Request, Response, NextFunction} from 'express';
 import submissionService from '../services/submission';
 import emailService from '../services/email';
+import mediaService from '../services/media';
 import responses from '../utils/responses';
 import {validationResult} from 'express-validator';
 import {handleControllerError} from '../utils/errorHandler';
+import {ValidationException} from '../utils/exceptions';
 import untypedLogger from '../middleware/logging';
 import {LoggerWithAudit} from "../types/migration";
 
@@ -13,6 +15,10 @@ interface SubmissionRequest extends Request {
     submission?: any;
     tokenInfo?: any;
     authorEmail?: string;
+}
+
+interface MediaUploadRequest extends Request {
+    file?: Express.Multer.File;
 }
 
 class SubmissionController {
@@ -73,6 +79,36 @@ class SubmissionController {
                 submissionId: undefined,
                 authorEmail: req.body.author_email,
                 title: req.body.title,
+                ip: req.ip
+            });
+        }
+    }
+
+    /**
+     * POST /api/submissions/media
+     * Upload da imagem/vídeo único de uma submissão para o Cloudinary
+     */
+    async uploadMedia(req: MediaUploadRequest, res: Response, next: NextFunction): Promise<any> {
+        try {
+            if (!req.file) {
+                throw new ValidationException('Nenhum arquivo enviado', ['O campo "file" é obrigatório']);
+            }
+
+            const result = await mediaService.uploadSubmissionMedia(req.file.buffer, req.file.originalname);
+
+            logger.audit('Submission media uploaded', {
+                filename: req.file.originalname,
+                resourceType: result.resourceType,
+                size: req.file.size,
+                ip: req.ip
+            });
+
+            return responses.created(res, result, 'Mídia enviada com sucesso');
+
+        } catch (error: any) {
+            return handleControllerError(error, res, next, {
+                filename: req.file?.originalname,
+                operation: 'uploadMedia',
                 ip: req.ip
             });
         }

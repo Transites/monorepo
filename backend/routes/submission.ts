@@ -1,21 +1,29 @@
 /**
  * ROUTE USAGE STATUS:
- * ✅ ACTIVE: GET /api/submissions, GET /api/submissions/id/:id
- * ❌ DEPRECATED: All token-based endpoints (POST, PUT, auto-save, etc.)
- * 
+ * ✅ ACTIVE: GET /api/submissions, GET /api/submissions/id/:id, POST /api/submissions/media
+ * ❌ DEPRECATED: All token-based endpoints (POST /:token, PUT, auto-save, etc.)
+ *
  * See BACKEND_ROUTE_USAGE_ANALYSIS.md for details
  */
 
 import express from 'express';
+import multer from 'multer';
 import submissionController from '../controllers/submission';
 import tokenMiddleware from '../middleware/tokens';
 import submissionValidators from '../validators/submission';
+import constants from '../utils/constants';
 const errorHandler = require('../middleware/errors');
 
 const router = express.Router();
 
 // Rate limiting para submissões
 const submissionRateLimit = require('../middleware/security').createSubmissionLimiter();
+
+// Upload em memória - arquivo é enviado direto para o Cloudinary, nunca gravado em disco
+const mediaUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: constants.LIMITS.VIDEO_SIZE_MAX }
+});
 
 // Middleware to add deprecation headers for unused endpoints
 const addDeprecationHeader = (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -40,11 +48,20 @@ router.post('/',
     errorHandler.asyncHandler(submissionController.createSubmission)
 );
 
-// GET /api/submissions/search-fuzzy  
+// GET /api/submissions/search-fuzzy
 // Busca fuzzy tolerante a erros de digitação
 // Public
 router.get('/search-fuzzy',
     errorHandler.asyncHandler(submissionController.searchSubmissionsFuzzy)
+);
+
+// POST /api/submissions/media
+// Upload da imagem/vídeo único de uma submissão (proxy para o Cloudinary)
+// Public
+router.post('/media',
+    submissionRateLimit,
+    mediaUpload.single('file'),
+    errorHandler.asyncHandler(submissionController.uploadMedia)
 );
 
 // GET /api/submissions/id/:id
