@@ -104,12 +104,16 @@ describe('SubmissionController.createSubmission', () => {
 
         submissionService.createSubmission.mockResolvedValue(fakeSubmission);
 
-        const req = mockReq({ body: { author_name: 'Ana', author_email: 'ana@email.com', title: 'Meu Artigo' } });
+        const req = mockReq({ body: { author_name: 'Ana', author_email: 'ana@email.com', title: 'Meu Artigo', submit_for_review: false } });
         const res = mockRes();
 
         await submissionController.createSubmission(req, res, mockNext);
 
-        expect(submissionService.createSubmission).toHaveBeenCalledWith(req.body);
+        expect(submissionService.createSubmission).toHaveBeenCalledWith({
+            author_name: 'Ana',
+            author_email: 'ana@email.com',
+            title: 'Meu Artigo'
+        });
         expect(responses.created).toHaveBeenCalledWith(
             res,
             expect.objectContaining({
