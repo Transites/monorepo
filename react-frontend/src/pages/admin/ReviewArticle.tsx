@@ -198,18 +198,6 @@ export default function ReviewArticle() {
       queryClient.invalidateQueries({ queryKey: ['admin', 'review-detail', id] });
     },
   });
-  
-  // ── publicar submissão ─────────────────────────────────────
-  const publishMutation = useMutation({
-    mutationFn: () =>
-      adminFetch(`/admin/review/submissions/${id}/publish`, {
-        method: 'POST',
-        body: JSON.stringify({ publishNotes: 'Publicado via painel do curador.' }),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'review-detail', id] });
-    },
-  });
 
   // ── mapear status para rótulo legível ─────────────────────
   const statusLabelMap: Record<string, string> = {
