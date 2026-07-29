@@ -40,8 +40,8 @@ const App = () => (
               <Route path="/admin/fila-de-revisao" element={<AuthRoute><ReviewQueue /></AuthRoute>} />
               <Route path="/admin/minhas-revisoes" element={<AuthRoute><MyReviews /></AuthRoute>} />
               <Route path="/admin/revisar/:id" element={<AuthRoute><ReviewArticle /></AuthRoute>} />
-              <Route path="/minhas-submissoes"     element={<MySubmissions />} />
-              <Route path="/minhas-submissoes/:id" element={<SubmissionDetail />} />
+              <Route path="/minhas-submissoes"     element={<AdminRoute><MySubmissions /></AdminRoute>} />
+              <Route path="/minhas-submissoes/:id" element={<AdminRoute><SubmissionDetail /></AdminRoute>} />
               <Route path="/admin/home" element={<AdminRoute> <AdminPage/> </AdminRoute>}/>
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
