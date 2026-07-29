@@ -96,7 +96,7 @@ class AdminReviewValidators {
         query('status')
             .optional()
             .custom((value) => {
-                const validStatuses = ['DRAFT', 'UNDER_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'PUBLISHED', 'REJECTED'];
+                const validStatuses = ['DRAFT', 'SUBMITTED', 'UNDER_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'PUBLISHED', 'REJECTED'];
                 const statusArray = value.split(',');
                 return statusArray.every((status: string) => validStatuses.includes(status));
             })
@@ -113,7 +113,7 @@ class AdminReviewValidators {
         query('status')
             .optional()
             .custom((value) => {
-                const validStatuses = ['DRAFT', 'UNDER_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'PUBLISHED', 'REJECTED'];
+                const validStatuses = ['DRAFT','PENDING', 'SUBMITTED', 'UNDER_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'PUBLISHED', 'REJECTED'];
                 const statusArray = Array.isArray(value) ? value : value.split(',');
                 return statusArray.every((status: string) => validStatuses.includes(status));
             })

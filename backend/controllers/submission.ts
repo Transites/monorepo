@@ -313,12 +313,16 @@ class SubmissionController {
                 return responses.badRequest(res, 'Dados inválidos', errors.array());
             }
 
-            const {email} = req.query;
+            const userEmail = (req as any).user?.email;
+
+            if (!userEmail) {
+                return responses.unauthorized(res, 'Usuário não autenticado ou email não disponível no token');
+            }
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
 
             const result = await submissionService.getSubmissionsByAuthor(
-                email as string,
+                userEmail as string,
                 {page, limit}
             );
 
@@ -329,7 +333,7 @@ class SubmissionController {
 
         } catch (error: any) {
             return handleControllerError(error, res, next, {
-                email: req.query.email,
+                email: (req as any).user?.email,
                 operation: 'getAuthorSubmissions'
             });
         }

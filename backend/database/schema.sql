@@ -22,6 +22,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 -- Enum para status das submissões (simplified for display-only frontend)
 CREATE TYPE submission_status AS ENUM (
     'DRAFT', -- Rascunho inicial
+    'SUBMITTED', -- Enviada para revisão editorial, aguardando primeiro responsável
     'UNDER_REVIEW', -- Em revisão pelo admin
     'CHANGES_REQUESTED', -- Correções solicitadas
     'APPROVED', -- Aprovado para publicação

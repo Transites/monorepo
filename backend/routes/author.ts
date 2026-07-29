@@ -1,38 +1,48 @@
-/**
- * ❌ ALL AUTHOR ROUTES DEPRECATED - Author dashboard not implemented in React frontend
- * 
- * Author-specific functionality was part of unused submission system.
- * See BACKEND_ROUTE_USAGE_ANALYSIS.md for details
- * 
- * @warning DO NOT MODIFY without implementing author dashboard UI first
- */
-
 import express from 'express';
 import submissionController from '../controllers/submission';
-import submissionValidators from '../validators/submission';
+import { resolve } from '../di';
+import SubmissionSuggestionsController from '../controllers/submissionSuggestions';
 const errorHandler = require('../middleware/errors');
+const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
+const suggestionsController = resolve<SubmissionSuggestionsController>('SubmissionSuggestionsController');
 
-// Middleware to add deprecation headers for all author endpoints
-const addDeprecationHeader = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    res.set('X-API-Deprecation-Warning', 'Author endpoints not used by current frontend');
-    res.set('X-API-Status', 'DEPRECATED - Author dashboard not implemented in UI');
-    next();
-};
+router.use(authMiddleware.requireAuthAsAuthor);
 
-/**
- * @deprecated NOT USED by React frontend - author submissions list not implemented
- * @status UNTESTED - No author dashboard UI to test this endpoint
- * @warning DO NOT MODIFY without implementing author dashboard first
- */
-// GET /api/author/submissions
-// Listar submissões do autor
-// DEPRECATED - Author submissions list not used
+// DEBUG TEMPORÁRIO — remover depois
+router.use((req, res, next) => {
+  console.log('=== AUTHOR ROUTE DEBUG ===');
+  console.log('Method:', req.method);
+  console.log('Path:', req.path);
+  console.log('Content-Type:', req.headers['content-type']);
+  console.log('Body:', JSON.stringify(req.body));
+  console.log('Body keys:', Object.keys(req.body || {}));
+  next();
+});
+
+// Lista todas as submissões do autor logado
 router.get('/submissions',
-    addDeprecationHeader,
-    submissionValidators.validateAuthorQuery,
-    errorHandler.asyncHandler(submissionController.getAuthorSubmissions)
+  errorHandler.asyncHandler(submissionController.getAuthorSubmissions)
 );
 
+// Lista sugestões de uma submissão específica
+router.get('/submissions/:id/suggestions',
+  errorHandler.asyncHandler(suggestionsController.getAuthorSuggestions)
+);
+
+// Autor aceita sugestão
+router.post('/submissions/:id/suggestions/:suggestionId/accept',
+  errorHandler.asyncHandler(suggestionsController.acceptSuggestion)
+);
+
+// Autor cria contra-proposta
+router.post('/submissions/:id/suggestions/:suggestionId/counter',
+  errorHandler.asyncHandler(suggestionsController.counterSuggestion)
+);
+
+// Lista as versões de uma submissão específica
+router.get('/submissions/:id/versions',
+  errorHandler.asyncHandler(suggestionsController.getSubmissionVersions)
+);
 module.exports = router;

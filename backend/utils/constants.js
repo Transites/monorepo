@@ -2,6 +2,7 @@ module.exports = {
     // Statuses de submissão
     SUBMISSION_STATUS: {
         DRAFT: 'DRAFT',
+        SUBMITTED: 'SUBMITTED',
         UNDER_REVIEW: 'UNDER_REVIEW',
         CHANGES_REQUESTED: 'CHANGES_REQUESTED',
         APPROVED: 'APPROVED',
@@ -77,6 +78,7 @@ module.exports = {
     // Mensagens de status
     STATUS_MESSAGES: {
         DRAFT: 'Rascunho - Continue editando',
+        SUBMITTED: 'Enviada para revisão editorial',
         UNDER_REVIEW: 'Em revisão pelos editores',
         CHANGES_REQUESTED: 'Correções solicitadas',
         APPROVED: 'Aprovado para publicação',
