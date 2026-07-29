@@ -437,6 +437,35 @@ export interface CreateArticleSubmissionPayload {
   submit_for_review?: boolean;
 }
 
+export interface UploadSubmissionMediaResponse {
+  url: string;
+  resourceType: 'image' | 'video';
+}
+
+/**
+ * Uploads the single image/video attached to a submission. The file is streamed
+ * to Cloudinary server-side; only the resulting URL is returned to the client.
+ */
+export async function uploadSubmissionMedia(file: File): Promise<UploadSubmissionMediaResponse> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}/submissions/media`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  const data = (await response.json()) as APIResponse<UploadSubmissionMediaResponse>;
+  const message = data.message || data.error || `HTTP ${response.status}`;
+  const errors = parseApiErrors(data);
+
+  if (!response.ok || !data.success) {
+    throw new ApiError(message, response.status, errors);
+  }
+
+  return data.data;
+}
+
 export interface CreateArticleSubmissionResponse {
   submission: Submission;
   accessUrl?: string;

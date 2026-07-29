@@ -18,6 +18,14 @@ export const ARTICLE_EDITOR_CATEGORY_LABELS: Record<ArticleEditorCategory, strin
   obra: 'Obra',
 };
 
+/** Same shape ArticleContent/CatalogCard read from metadata.image / metadata.video. */
+export interface ArticleMedia {
+  url: string;
+  caption?: string;
+  alternativeText?: string;
+  credit?: string;
+}
+
 export interface ArticleFormFields {
   title: string;
   summary: string;
@@ -28,14 +36,21 @@ export interface ArticleFormFields {
   keywords: string[];
   bibliography: BibliographyItem[];
   metadata?: Record<string, any>;
+  media?: { type: 'image' | 'video'; data: ArticleMedia };
 }
 
 export interface SubmissionFormFields extends ArticleFormFields {
   author_email: string;
 }
 
-export function buildArticleMetadata(bibliography: BibliographyItem[]) {
-  return { bibliography };
+export function buildArticleMetadata(
+  bibliography: BibliographyItem[],
+  media?: ArticleFormFields['media']
+) {
+  return {
+    bibliography,
+    ...(media ? { [media.type]: media.data } : {}),
+  };
 }
 
 export function validateSubmissionForm(fields: SubmissionFormFields): string[] {
@@ -109,6 +124,7 @@ export function buildSubmissionPayload(fields: SubmissionFormFields): CreateArti
     content: fields.content.trim(),
     keywords: fields.keywords,
     metadata: fullMetadata,
+    metadata: buildArticleMetadata(fields.bibliography, fields.media),
     submit_for_review: true,
   };
 }
