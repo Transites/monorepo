@@ -269,7 +269,8 @@ class AdminReviewController {
 				submissionId,
 				publishNotes: req.body.publishNotes,
 				categoryOverride: req.body.categoryOverride,
-				keywordsOverride: req.body.keywordsOverride
+				keywordsOverride: req.body.keywordsOverride,
+				depositToZenodo: req.body.depositToZenodo,
 			};
 
 			const result = await this.adminReviewService.publishSubmission(
@@ -290,7 +291,8 @@ class AdminReviewController {
 					articleId: result.articleId,
 					publishedAt: result.publishedAt,
 					message: 'Artigo publicado com sucesso',
-					articleUrl: result.articleUrl
+					articleUrl: result.articleUrl,
+					zenodo: result.zenodo,
 				}, 'Submissão publicada como artigo');
 			} else {
 				this.responses.error(res, result.error || 'Erro ao publicar artigo', 400);

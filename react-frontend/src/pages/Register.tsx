@@ -8,7 +8,7 @@ import { Mail, ArrowRight, CheckCircle2 } from "lucide-react"; // Icons for the 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/use-user";
+import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
 const registerSchema = z.object({
@@ -23,7 +23,7 @@ const registerSchema = z.object({
 type RegisterValues = z.infer<typeof registerSchema>;
 
 const Register = () => {
-  const { createUser } = useAuth();
+  const { createUser, getAuthErrorMessage } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false); 
@@ -41,9 +41,9 @@ const Register = () => {
       await createUser(values.email, values.password);
       setRegisteredEmail(values.email);
       setIsSuccess(true); 
-    } catch (error: any) {
-      console.error("ERRO DO SUPABASE:", error);
-      setAuthError("Ocorreu um erro ao criar sua conta.");
+    } catch (error) {
+      const message = getAuthErrorMessage(error) 
+      setAuthError(message);
     } finally {
       setIsSubmitting(false);
     }

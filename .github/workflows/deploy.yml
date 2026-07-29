@@ -6,7 +6,12 @@ on:
     paths:
       - 'backend/**'
       - 'react-frontend/**'
-      
+  pull_request:
+    branches: ["master"]
+    paths:
+      - 'backend/**'
+      - 'react-frontend/**'
+
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -49,7 +54,8 @@ jobs:
           npm run build
 
   deploy:
-    needs: ci   
+    needs: ci 
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - name: Deploy via SSH

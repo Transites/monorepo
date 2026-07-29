@@ -1,12 +1,12 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/hooks/use-user";
 import { LoadingScreen } from "@/components/LoadingScreen"; 
+import { useAuth } from "@/contexts/AuthContext";
 
-interface ProtectedRouteProps {
+interface AuthRouteProps {
   children: React.ReactNode;
 }
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+const AuthRoute = ({ children }: AuthRouteProps) => {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
@@ -15,10 +15,11 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!isAuthenticated) {
+    {/* if the user is not logged in, redirect to login page */}
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   return <>{children}</>;
 };
 
-export default ProtectedRoute;
+export default AuthRoute;

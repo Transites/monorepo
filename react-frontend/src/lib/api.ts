@@ -30,6 +30,7 @@ export interface Submission {
   token?: string;
   versions?: unknown[];
   feedback?: unknown[];
+  doi?: string;
   metadata?: {
     slug?: string;
     type?: string;
@@ -490,6 +491,18 @@ export async function updateArticle(
       method: 'PATCH',
       body: JSON.stringify(data),
     }
+  );
+  return response.data.submission;
+}
+
+/**
+ * Atribui um DOI ao artigo via Zenodo.
+ * Chama POST /api/articles/:id/assign-doi.
+ */
+export async function assignDoi(id: string): Promise<Submission> {
+  const response = await apiRequest<{ submission: Submission }>(
+    `/articles/${id}/assign-doi`,
+    { method: 'POST' }
   );
   return response.data.submission;
 }

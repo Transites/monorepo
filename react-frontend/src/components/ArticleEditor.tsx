@@ -5,7 +5,7 @@ import { Input }         from '@/components/ui/input';
 import { Label }         from '@/components/ui/label';
 import { Separator }     from '@/components/ui/separator';
 import { Badge }         from '@/components/ui/badge';
-import { Submission, ArticleUpdateData, updateArticle } from '@/lib/api';
+import { Submission, ArticleUpdateData, updateArticle, assignDoi } from '@/lib/api';
 
 interface ArticleEditorProps {
   article:   Submission;
@@ -43,6 +43,11 @@ const [bibliography, setBibliography] = useState<BibItem[]>(
   // Estado de salvamento
   const [isSaving,  setIsSaving]  = useState(false);
   const [saveError, setSaveError] = useState('');
+
+  // Estado de atribuição de DOI
+  const [doi, setDoi] = useState(article.doi ?? '');
+  const [isAssigningDoi, setIsAssigningDoi] = useState(false);
+  const [doiError, setDoiError] = useState('');
 
   // ── Funções de keywords ────────────────────────────────────
   const addKeyword = () => {
@@ -112,6 +117,21 @@ const [bibliography, setBibliography] = useState<BibItem[]>(
     }
   };
 
+  // ── Atribuir DOI ───────────────────────────────────────────
+  const handleAssignDoi = async () => {
+    setIsAssigningDoi(true);
+    setDoiError('');
+
+    try {
+      const updated = await assignDoi(article.id);
+      setDoi(updated.doi ?? '');
+    } catch (err: any) {
+      setDoiError(err.message || 'Erro ao atribuir DOI. Tente novamente.');
+    } finally {
+      setIsAssigningDoi(false);
+    }
+  };
+
   return (
     // Overlay escuro que cobre a página inteira enquanto edita
     <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 overflow-y-auto">
@@ -135,6 +155,39 @@ const [bibliography, setBibliography] = useState<BibItem[]>(
         {saveError && (
           <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
             {saveError}
+          </p>
+        )}
+
+        {/* ── DOI ─────────────────────────────────────────── */}
+        <div className="flex items-center gap-3 flex-wrap p-3 rounded-md border bg-muted/30">
+          {doi ? (
+            <p className="text-sm text-muted-foreground">
+              DOI:{' '}
+              <a
+                href={`https://doi.org/${doi}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary underline"
+              >
+                {doi}
+              </a>
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground italic">Nenhum DOI atribuído.</p>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleAssignDoi}
+            disabled={!!doi || isAssigningDoi}
+            type="button"
+          >
+            {isAssigningDoi ? 'Atribuindo…' : 'Atribuir DOI'}
+          </Button>
+        </div>
+        {doiError && (
+          <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+            {doiError}
           </p>
         )}
 
