@@ -1,12 +1,19 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+import { AuthError, Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { User, Session, AuthError } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
   loading: boolean;
+  adminLoading: boolean; // NOVO: Estado dedicado para a checagem de admin
   isAuthenticated: boolean;
   createUser: (email: string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
@@ -16,119 +23,202 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [adminLoading, setAdminLoading] = useState(true); // Inicia como true para proteger a rota desde o começo
 
-  /* actions */
+  const applySession = useCallback((session: Session | null) => {
+    setSession(session);
+    setUser(session?.user ?? null);
+  }, []);
 
-  /**
-   * check if the current user is an admin
-   **/
-  const checkAdminStatus = async () => {
+  const checkAdminStatus = useCallback(async () => {
+    setAdminLoading(true); // Inicia o loading de admin
     try {
       const { data, error } = await supabase.rpc('is_admin');
+      
       if (error) throw error;
-      setIsAdmin(!!data);
+
+      setIsAdmin(Boolean(data));
     } catch (err) {
+      console.error('Error checking admin status:', err);
       setIsAdmin(false);
-      console.error("Error checking admin status:", err);
+    } finally {
+      setAdminLoading(false); // Finaliza o loading independente de sucesso ou erro
+    }
+  }, []);
+
+  const createUser = async (email: string, password: string) => {
+    if (user) throw new Error('Already logged in.');
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error) throw error;
+  };
+
+  const login = async (email: string, password: string) => {
+    setLoading(true);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setLoading(false);
+      throw error;
+    }
+
+    applySession(data.session);
+    setLoading(false);
+
+    if (data.session?.user) {
+      void checkAdminStatus();
+    } else {
+      setAdminLoading(false);
     }
   };
-    
-  /**
-   * creates a new user with the given email and password
-   * @param email - new user email
-   * @param password - new user password 
-   */
-  const createUser = async (email: string, password: string) => {
-    if (user) throw new Error("Already logged in.");
-    const { error } = await supabase.auth.signUp({ email, password });
-    if (error) throw error;
-  };
-  
-  /**
-   * login the user with the given email 
-   * @param email - the user email
-   * @param password  - the user password
-   */
-  const login = async (email: string, password: string) => {
-    if (user) throw new Error("You are already logged in.");
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-  };
 
-  /**
-   * logout the user 
-   */
   const logout = async () => {
-    if (!user) throw new Error("No active session found.");
+    setLoading(true);
+
     const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+
+    if (error) {
+      setLoading(false);
+      throw error;
+    }
+
+    applySession(null);
+    setIsAdmin(false);
+    setAdminLoading(false); // Reseta o loading de admin ao deslogar
+    setLoading(false);
   };
 
-  /* helpers */ 
-
-  /**
-   * convert a given auth error to a exibition error message
-   * @param error 
-   * @returns 
-   */
   const getAuthErrorMessage = (error: AuthError): string => {
     switch (error.message) {
       case 'invalid_credentials':
-        return "E-mail ou senha incorretos.";
+        return 'E-mail ou senha incorretos.';
       case 'email_not_confirmed':
-        return "Por favor, confirme seu e-mail antes de fazer login.";
+        return 'Por favor, confirme seu e-mail antes de fazer login.';
       case 'user_not_found':
-        return "Usuário não encontrado.";
+        return 'Usuário não encontrado.';
       case 'email_exists':
-        return "Este e-mail já está em uso.";
+        return 'Este e-mail já está em uso.';
       case 'weak_password':
-        return "A senha fornecida é muito fraca.";
+        return 'A senha fornecida é muito fraca.';
       case 'over_request_rate_limit':
-        return "Muitas tentativas seguidas. Por favor, tente novamente mais tarde.";
+        return 'Muitas tentativas seguidas. Por favor, tente novamente mais tarde.';
       default:
-        return "Erro na autenticação. Verifique os dados.";
+        return 'Erro na autenticação. Verifique os dados.';
     }
   };
-  
-    useEffect(() => {
-        const initializeAuth = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            setSession(session);
-            setUser(session?.user ?? null);
-            
-            if (session?.user) {
-                await checkAdminStatus(); 
-            }
-            setLoading(false);
-        };
 
-        initializeAuth();
+  useEffect(() => {
+    let mounted = true;
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            setLoading(true); 
-            setSession(session);
-            setUser(session?.user ?? null);
-            
-            if (session?.user) {
-                await checkAdminStatus();
-            } else {
-                setIsAdmin(false);
-            }
-            setLoading(false);
-        });
+    const initializeAuth = async () => {
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
 
-        return () => subscription.unsubscribe();
-    }, []);
+        if (!mounted) return;
+
+        if (error) {
+          console.error(error);
+          applySession(null);
+          setIsAdmin(false);
+          setAdminLoading(false);
+          return;
+        }
+
+        applySession(session);
+        setLoading(false); // O loading principal (do app todo) termina aqui
+
+        // Se tem usuário, checa se é admin (isso altera o adminLoading internamente)
+        // Se não tem usuário, já marcamos o adminLoading como falso
+        if (session?.user) {
+          void checkAdminStatus();
+        } else {
+          setAdminLoading(false);
+        }
+
+      } catch (err) {
+        console.error(err);
+
+        if (!mounted) return;
+
+        applySession(null);
+        setIsAdmin(false);
+        setAdminLoading(false);
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+
+      switch (event) {
+        case 'SIGNED_IN':
+          applySession(session);
+          if (session?.user) {
+            void checkAdminStatus();
+          } else {
+            setAdminLoading(false);
+          }
+          break;
+
+        case 'TOKEN_REFRESHED':
+        case 'USER_UPDATED':
+          applySession(session);
+          break;
+
+        case 'SIGNED_OUT':
+        case 'USER_DELETED':
+          applySession(null);
+          setIsAdmin(false);
+          setAdminLoading(false); // Limpa o estado ao sair
+          break;
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [applySession, checkAdminStatus]);
 
   return (
-    <AuthContext.Provider value={{
-      user, session, isAdmin, loading, isAuthenticated: !!user, createUser, login, logout, getAuthErrorMessage
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        isAdmin,
+        loading,
+        adminLoading, // NOVO
+        isAuthenticated: !!user,
+        createUser,
+        login,
+        logout,
+        getAuthErrorMessage,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -136,6 +226,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+
   return context;
 };
