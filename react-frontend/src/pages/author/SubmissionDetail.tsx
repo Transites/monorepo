@@ -19,6 +19,7 @@ import {
   type SubmissionSuggestion,
   type SubmissionVersion,
 } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 function DiffField({ label, original, suggested }: {
   label: string;
@@ -67,24 +68,26 @@ export default function SubmissionDetail() {
   const [newKeyword, setNewKeyword] = useState('');
   const [authorNotes, setAuthorNotes] = useState('');
 
+  const { isAuthenticated, loading: authLoading } = useAuth();
+
   const { data: submission } = useQuery({
     queryKey: ['submission', id],
     queryFn: () => getSubmissionById(id!),
-    enabled: !!id,
+    enabled: !!id && !authLoading && !!isAuthenticated,
   });
 
   // Só sugestões do curador (created_by = 'admin')
   const { data: allSuggestions, isLoading: loadingSuggestions } = useQuery({
     queryKey: ['author', 'suggestions', id],
     queryFn: () => getSubmissionSuggestions(id!),
-    enabled: !!id,
+    enabled: !!id && !authLoading && !!isAuthenticated,
   });
   const suggestions = allSuggestions?.filter(s => s.created_by === 'admin') ?? [];
 
   const { data: versions, isLoading: loadingVersions } = useQuery({
     queryKey: ['author', 'versions', id],
     queryFn: () => getSubmissionVersions(id!),
-    enabled: !!id,
+    enabled: !!id && !authLoading && !!isAuthenticated,
   });
 
   const acceptMutation = useMutation({

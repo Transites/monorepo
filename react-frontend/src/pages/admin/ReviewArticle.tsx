@@ -14,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { ApiError } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { getSubmissionVersions, type SubmissionVersion } from '@/lib/api';
 
 // ─── tipos ────────────────────────────────────────────────────────────────────
@@ -119,17 +120,19 @@ export default function ReviewArticle() {
   const [notes, setNotes] = useState('');
 
   // ── buscar submissão ───────────────────────────────────────
+  const { user, isAdmin, loading: authLoading } = useAuth();
+
   const { data, isLoading, isError, error } = useQuery<ReviewDetail>({
     queryKey: ['admin', 'review-detail', id],
     queryFn: () => adminFetch<ReviewDetail>(`/admin/review/submissions/${id}/review-detail`),
-    enabled: !!id,
+    enabled: !!id && !authLoading && !!isAdmin,
   });
 
   // ── Buscar histórico de versões ──
   const { data: versions } = useQuery({
     queryKey: ['admin', 'versions', id],
     queryFn: () => getSubmissionVersions(id!),
-    enabled: !!id,
+    enabled: !!id && !authLoading && !!isAdmin,
   });
 
   useEffect(() => {
@@ -567,19 +570,18 @@ const formatStatus = (status: string) => {
             {/* Campos básicos */}
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="r-title">Título</Label>
-                <Input id="r-title" value={title} onChange={e => setTitle(e.target.value)} />
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="r-summary">Resumo</Label>
                 <textarea
                   id="r-summary"
                   value={summary}
                   onChange={e => setSummary(e.target.value)}
                   rows={4}
+                  maxLength={1000}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
                 />
+                <div className="text-right text-xs text-muted-foreground mt-1">
+                  {summary.length}/1000
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -650,8 +652,12 @@ const formatStatus = (status: string) => {
                 value={content}
                 onChange={e => setContent(e.target.value)}
                 rows={20}
+                maxLength={10000}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
               />
+              <div className="text-right text-xs text-muted-foreground mt-1">
+                {content.length}/10000
+              </div>
             </div>
 
             <Separator />

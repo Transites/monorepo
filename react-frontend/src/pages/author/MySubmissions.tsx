@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, AlertCircle, FileText, Clock, ChevronRight } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -85,9 +86,12 @@ function SubmissionCard({ submission }: { submission: AuthorSubmission }) {
 }
 
 export default function MySubmissions() {
+  const { isAuthenticated, loading: authLoading } = useAuth();
+
   const { data: submissions, isLoading, isError } = useQuery({
     queryKey: ['author', 'my-submissions'],
     queryFn:  getMySubmissions,
+    enabled: !authLoading && !!isAuthenticated,
   });
 
   return (

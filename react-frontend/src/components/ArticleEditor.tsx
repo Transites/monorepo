@@ -212,6 +212,9 @@ const [bibliography, setBibliography] = useState<BibItem[]>(
               rows={4}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
             />
+            <div className="text-right text-xs text-muted-foreground mt-1">
+                {summary.length}/1000
+              </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -301,6 +304,9 @@ const [bibliography, setBibliography] = useState<BibItem[]>(
               rows={20}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
             />
+            <div className="text-right text-xs text-muted-foreground mt-1">
+                {content.length}/10000
+              </div>
           </div>
 
                     <Separator />
