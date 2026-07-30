@@ -1292,75 +1292,86 @@ class SubmissionService {
 
             const cleanSearchTerm = searchTerm.trim();
 
-            // Hybrid search: exact matches first, fuzzy matches second
-            const hybridQuery = `
-                WITH exact_matches AS (
+            // Build a prefix tsquery so partial typing (search-as-you-type) still matches,
+            // e.g. "encicl" -> "encicl:*". Strip tsquery operator characters per word so the
+            // resulting string is always valid input to to_tsquery.
+            const prefixQuery = cleanSearchTerm
+                .split(/\s+/)
+                .filter(Boolean)
+                .map(word => word.replace(/[&|!():<>'"*\\]/g, ''))
+                .filter(Boolean)
+                .map(word => `${word}:*`)
+                .join(' & ');
+
+            // Shared scoring logic: weighted full-text rank (title > summary/keywords > content)
+            // plus trigram similarity fallback for typos, both accent- and case-insensitive.
+            // `content` is excluded from trigram scoring since running word_similarity against
+            // full article bodies per row is wasteful; it's only used in the full-text layer.
+            const scoringCTEs = `
+                WITH base AS (
                     SELECT
-                        id, title, summary, status, category, author_name, author_email,
-                        created_at, updated_at, expires_at, metadata, keywords,
-                        1.0 as relevance_score,
-                        'exact' as match_type
+                        s.id, s.title, s.summary, s.status, s.category, s.author_name, s.author_email,
+                        s.created_at, s.updated_at, s.expires_at, s.metadata, s.keywords,
+                        (SELECT COUNT(*) FROM feedback f WHERE f.submission_id = s.id) AS feedback_count,
+                        setweight(to_tsvector('portuguese', immutable_unaccent(s.title)), 'A') ||
+                        setweight(to_tsvector('portuguese', immutable_unaccent(COALESCE(s.summary, ''))), 'B') ||
+                        setweight(to_tsvector('portuguese', immutable_unaccent(array_to_string(s.keywords, ' '))), 'B') ||
+                        setweight(to_tsvector('portuguese', immutable_unaccent(COALESCE(s.content, ''))), 'C') AS document
                     FROM submissions s
-                    WHERE to_tsvector('portuguese', title || ' ' || COALESCE(summary, '') || ' ' || COALESCE(content, ''))
-                          @@ plainto_tsquery('portuguese', $1)
-                    AND status = 'PUBLISHED'
+                    WHERE s.status = 'PUBLISHED'
                 ),
-                fuzzy_matches AS (
+                scored AS (
                     SELECT
                         id, title, summary, status, category, author_name, author_email,
-                        created_at, updated_at, expires_at, metadata, keywords,
+                        created_at, updated_at, expires_at, metadata, keywords, feedback_count,
+                        CASE
+                            WHEN $2 <> '' THEN ts_rank_cd(document, to_tsquery('portuguese', immutable_unaccent($2)))
+                            ELSE 0
+                        END AS text_rank,
                         GREATEST(
-                            similarity(title, $1),
-                            similarity(author_name, $1)
-                        ) as relevance_score,
-                        'fuzzy' as match_type
-                    FROM submissions s
-                    WHERE (similarity(title, $1) > $2 OR similarity(author_name, $1) > $2)
-                    AND id NOT IN (SELECT id FROM exact_matches)
-                    AND status = 'PUBLISHED'
-                ),
-                combined_results AS (
-                    SELECT *, 'exact' as result_source FROM exact_matches
-                    UNION ALL
-                    SELECT *, 'fuzzy' as result_source FROM fuzzy_matches
+                            word_similarity(immutable_unaccent(lower($1)), immutable_unaccent(lower(title))),
+                            word_similarity(immutable_unaccent(lower($1)), immutable_unaccent(lower(COALESCE(summary, '')))),
+                            word_similarity(immutable_unaccent(lower($1)), immutable_unaccent(lower(author_name))),
+                            word_similarity(immutable_unaccent(lower($1)), immutable_unaccent(lower(array_to_string(keywords, ' '))))
+                        ) AS trigram_score
+                    FROM base
+                    WHERE
+                        ($2 <> '' AND document @@ to_tsquery('portuguese', immutable_unaccent($2)))
+                        OR word_similarity(immutable_unaccent(lower($1)), immutable_unaccent(lower(title))) > $3
+                        OR word_similarity(immutable_unaccent(lower($1)), immutable_unaccent(lower(COALESCE(summary, '')))) > $3
+                        OR word_similarity(immutable_unaccent(lower($1)), immutable_unaccent(lower(author_name))) > $3
+                        OR word_similarity(immutable_unaccent(lower($1)), immutable_unaccent(lower(array_to_string(keywords, ' ')))) > $3
                 )
-                SELECT * FROM combined_results
-                ORDER BY relevance_score DESC, match_type ASC
-                LIMIT $3 OFFSET $4
             `;
 
-            // Count query for pagination
+            const hybridQuery = `
+                ${scoringCTEs}
+                SELECT *,
+                    (text_rank * 2 + trigram_score) AS relevance_score,
+                    CASE WHEN text_rank > 0 THEN 'exact' ELSE 'fuzzy' END AS match_type
+                FROM scored
+                ORDER BY relevance_score DESC, title ASC
+                LIMIT $4 OFFSET $5
+            `;
+
             const countQuery = `
-                WITH exact_matches AS (
-                    SELECT id
-                    FROM submissions s
-                    WHERE to_tsvector('portuguese', title || ' ' || COALESCE(summary, '') || ' ' || COALESCE(content, ''))
-                          @@ plainto_tsquery('portuguese', $1)
-                    AND status = 'PUBLISHED'
-                ),
-                fuzzy_matches AS (
-                    SELECT id
-                    FROM submissions s
-                    WHERE (similarity(title, $1) > $2 OR similarity(author_name, $1) > $2)
-                    AND id NOT IN (SELECT id FROM exact_matches)
-                    AND status = 'PUBLISHED'
-                )
+                ${scoringCTEs}
                 SELECT
-                    (SELECT COUNT(*) FROM exact_matches) as exact_count,
-                    (SELECT COUNT(*) FROM fuzzy_matches) as fuzzy_count,
-                    (SELECT COUNT(*) FROM exact_matches) + (SELECT COUNT(*) FROM fuzzy_matches) as total_count
+                    COUNT(*) FILTER (WHERE text_rank > 0) AS exact_count,
+                    COUNT(*) FILTER (WHERE text_rank = 0) AS fuzzy_count,
+                    COUNT(*) AS total_count
+                FROM scored
             `;
 
             // Execute queries
             const [resultQuery, countResult] = await Promise.all([
-                db.query(hybridQuery, [cleanSearchTerm, threshold, pagination.top, pagination.skip]),
-                db.query(countQuery, [cleanSearchTerm, threshold])
+                db.query(hybridQuery, [cleanSearchTerm, prefixQuery, threshold, pagination.top, pagination.skip]),
+                db.query(countQuery, [cleanSearchTerm, prefixQuery, threshold])
             ]);
 
             const submissions = resultQuery.rows as (SubmissionSummary & {
                 relevance_score: number;
                 match_type: 'exact' | 'fuzzy';
-                result_source: string;
             })[];
 
             const counts = countResult.rows[0];
