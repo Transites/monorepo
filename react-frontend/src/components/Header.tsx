@@ -1,4 +1,4 @@
-import { Menu, LogOut, User as UserIcon } from "lucide-react"; // Added icons
+import { Menu, LogOut, User as UserIcon, LockOpen } from "lucide-react"; // Added icons
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
@@ -72,7 +72,14 @@ const Header = () => {
             <a href="#sobre" onClick={(e) => handleNavClick(e, 'sobre')} className="text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer">Sobre</a>
             <a href="#contato" onClick={(e) => handleNavClick(e, 'contato')} className="text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer">Contato</a>
             <Link to="/submissao/nova" className="text-sm font-medium text-foreground hover:text-primary transition-colors">Submeter</Link> 
-            {isAdmin && (<Link to="/admin/home" className="text-sm font-medium text-foreground hover:text-primary transition-colors">Administração</Link>) }
+            {isAdmin && (
+              <Link to="/admin/home">
+                <Button size="sm" className="bg-black text-white hover:bg-black/90">
+                  <LockOpen className="h-4 w-4" />
+                  Área do Administrador
+                </Button>
+              </Link>
+            )}
 
             <div className="h-6 w-px bg-border mx-2" /> {/* Vertical Divider */}
 
@@ -116,10 +123,16 @@ const Header = () => {
                 <a href="#sobre" onClick={(e) => handleNavClick(e, 'sobre')} className="text-lg font-medium">Sobre</a>
                 <a href="#contato" onClick={(e) => handleNavClick(e, 'contato')} className="text-lg font-medium">Contato</a>
                 <Link to="/submissao/nova" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium">Submeter</Link>
-                {isAdmin && (<Link to="/admin/home" className="text-sm font-medium text-foreground hover:text-primary transition-colors">Administração</Link>) }
+                {isAdmin && (
+                  <Link to="/admin/home" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button className="w-full justify-start bg-black text-white hover:bg-black/90">
+                      <LockOpen className="h-4 w-4" />
+                      Área do Administrador
+                    </Button>
+                  </Link>
+                )}
 
 
-                
                 {/* 3. Conditional Rendering for Mobile Auth */}
                 <div className="border-t pt-6 flex flex-col space-y-4">
                   {isAuthenticated ? (
