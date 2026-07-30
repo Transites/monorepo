@@ -44,7 +44,12 @@ jobs:
            
         run: |
           npm ci # 
-          npm test
+          npm test -- --coverage
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v5
+        with:
+          files: backend/coverage/lcov.info
 
       # FRONTEND
       - name: Install & Build Frontend
