@@ -1270,11 +1270,11 @@ class SubmissionService {
     /**
      * Listar submissões com busca fuzzy (tolerante a erros de digitação)
      * @param searchTerm Termo de busca
-     * @param threshold Limiar de similaridade (padrão: 0.15)
+     * @param threshold Limiar de similaridade (padrão: 0.35)
      * @param pagination Parâmetros de paginação
      * @returns Lista de submissões com scores de relevância e tipos de match
      */
-    async listSubmissionsWithFuzzy(searchTerm: string, threshold = 0.15, pagination = {
+    async listSubmissionsWithFuzzy(searchTerm: string, threshold = 0.35, pagination = {
         top: 10,
         skip: 0
     }): Promise<ListSubmissionsResult & {
@@ -1292,64 +1292,122 @@ class SubmissionService {
 
             const cleanSearchTerm = searchTerm.trim();
 
-            // Build a prefix tsquery so partial typing (search-as-you-type) still matches,
-            // e.g. "encicl" -> "encicl:*". Strip tsquery operator characters per word so the
-            // resulting string is always valid input to to_tsquery.
-            const prefixQuery = cleanSearchTerm
+            const PT_STOPWORDS = new Set([
+                'a', 'o', 'as', 'os', 'um', 'uma', 'uns', 'umas',
+                'de', 'da', 'do', 'das', 'dos', 'em', 'no', 'na', 'nos', 'nas',
+                'por', 'para', 'com', 'sem', 'sob', 'sobre', 'e', 'ou', 'que',
+                'se', 'ao', 'aos', 'à', 'às', 'é', 'ser', 'este', 'esta', 'isso',
+                'isto', 'como'
+            ]);
+
+            const words = cleanSearchTerm
                 .split(/\s+/)
                 .filter(Boolean)
                 .map(word => word.replace(/[&|!():<>'"*\\]/g, ''))
-                .filter(Boolean)
-                .map(word => `${word}:*`)
-                .join(' & ');
+                .filter(Boolean);
 
-            // Shared scoring logic: weighted full-text rank (title > summary/keywords > content)
-            // plus trigram similarity fallback for typos, both accent- and case-insensitive.
-            // `content` is excluded from trigram scoring since running word_similarity against
-            // full article bodies per row is wasteful; it's only used in the full-text layer.
+            // Words that actually carry meaning — used both to drive the fuzzy fallback and to
+            // decide whether a full-text phrase search makes sense at all. If the whole query is
+            // stop words (or empty after sanitizing), there's no real topic to search for.
+            const significantWords = Array.from(new Set(
+                words.filter(word => !PT_STOPWORDS.has(word.toLowerCase())).map(word => word.toLowerCase())
+            ));
+
+            // Phrase tsquery: words FOLLOWED BY each other (with a prefix on the last for
+            // as-you-type), so a multi-word query must appear as a connected phrase in the
+            // document — not as scattered individual words that could each match unrelated
+            // parts of a long `content` field. Stop words are kept here (not stripped) so
+            // to_tsquery can bridge the gap automatically (e.g. "história <-> da <-> usp"
+            // becomes "história <2> usp" once the dictionary drops the stop word), preserving
+            // the original word spacing instead of forcing false adjacency.
+            const phraseQuery = significantWords.length > 0
+                ? words.map((word, i) => i === words.length - 1 ? `${word}:*` : word).join(' <-> ')
+                : '';
+
+            // A floor stricter than the API's own lower bound (0.05): pg_trgm similarity below
+            // ~0.35 is not a meaningful signal of "this is probably the word they meant" and was
+            // letting unrelated rows through.
+            const effectiveThreshold = Math.max(threshold, 0.35);
+
+            // ts_rank_cd weight array, in Postgres's {D, C, B, A} order: a title/keyword hit
+            // (A) counts fully, a summary hit (B) counts for much less, and a content hit (C)
+            // counts for barely anything on its own — see CONTENT_MATCH_RANK_THRESHOLD below.
+            const RANK_WEIGHTS = '{0.01, 0.05, 0.15, 1.0}';
+
+            // A summary/content-only match (no hit in title or keywords) only counts if its
+            // rank clears this bar. The rank is normalized by document length (ts_rank_cd's
+            // normalization option 2), so a mention diluted across a long article scores far
+            // lower than the same mention in a short, focused one — a term showing up once,
+            // twice, or even a handful of times in a long `content` field should not clear it;
+            // it needs to be a substantial, dense topic of that text, not an incidental mention.
+            const CONTENT_MATCH_RANK_THRESHOLD = 0.03;
+
+            // Matching has two independent tiers, combined with OR:
+            //  1. "exact": either (a) the query appears as a connected phrase in title/keywords
+            //     — always trusted, since those are short, deliberate fields — or (b) it appears
+            //     in summary/content with a rank dense/significant enough to clear
+            //     CONTENT_MATCH_RANK_THRESHOLD.
+            //  2. "fuzzy": every significant query word has a good trigram match against EITHER
+            //     the title or the author name (checked per-word, not as one blob) — this is
+            //     what tolerates typos without letting one loosely-matching word, or a match
+            //     against a noisy long field, drag in unrelated articles. Only title/author are
+            //     used for fuzzy matching: they're short, high-signal fields, unlike summary/
+            //     content where trigram similarity against a long string is unreliable.
             const scoringCTEs = `
                 WITH base AS (
                     SELECT
                         s.id, s.title, s.summary, s.status, s.category, s.author_name, s.author_email,
                         s.created_at, s.updated_at, s.expires_at, s.metadata, s.keywords,
-                        (SELECT COUNT(*) FROM feedback f WHERE f.submission_id = s.id) AS feedback_count,
-                        setweight(to_tsvector('portuguese', immutable_unaccent(s.title)), 'A') ||
-                        setweight(to_tsvector('portuguese', immutable_unaccent(COALESCE(s.summary, ''))), 'B') ||
-                        setweight(to_tsvector('portuguese', immutable_unaccent(array_to_string(s.keywords, ' '))), 'B') ||
-                        setweight(to_tsvector('portuguese', immutable_unaccent(COALESCE(s.content, ''))), 'C') AS document
+                        setweight(to_tsvector('portuguese', s.title), 'A') ||
+                        setweight(to_tsvector('portuguese', array_to_string(s.keywords, ' ')), 'A') AS core_document,
+                        setweight(to_tsvector('portuguese', s.title), 'A') ||
+                        setweight(to_tsvector('portuguese', array_to_string(s.keywords, ' ')), 'A') ||
+                        setweight(to_tsvector('portuguese', COALESCE(s.summary, '')), 'B') ||
+                        setweight(to_tsvector('portuguese', COALESCE(s.content, '')), 'C') AS full_document
                     FROM submissions s
                     WHERE s.status = 'PUBLISHED'
                 ),
                 scored AS (
                     SELECT
-                        id, title, summary, status, category, author_name, author_email,
-                        created_at, updated_at, expires_at, metadata, keywords, feedback_count,
+                        b.id, b.title, b.summary, b.status, b.category, b.author_name, b.author_email,
+                        b.created_at, b.updated_at, b.expires_at, b.metadata, b.keywords,
+                        ($1 <> '' AND b.core_document @@ to_tsquery('portuguese', $1)) AS is_core_match,
+                        ($1 <> '' AND b.full_document @@ to_tsquery('portuguese', $1)) AS is_full_match,
                         CASE
-                            WHEN $2 <> '' THEN ts_rank_cd(document, to_tsquery('portuguese', immutable_unaccent($2)))
+                            WHEN $1 <> '' THEN
+                                ts_rank_cd('${RANK_WEIGHTS}'::float4[], b.full_document, to_tsquery('portuguese', $1), 2)
                             ELSE 0
                         END AS text_rank,
-                        GREATEST(
-                            word_similarity(immutable_unaccent(lower($1)), immutable_unaccent(lower(title))),
-                            word_similarity(immutable_unaccent(lower($1)), immutable_unaccent(lower(COALESCE(summary, '')))),
-                            word_similarity(immutable_unaccent(lower($1)), immutable_unaccent(lower(author_name))),
-                            word_similarity(immutable_unaccent(lower($1)), immutable_unaccent(lower(array_to_string(keywords, ' '))))
-                        ) AS trigram_score
-                    FROM base
-                    WHERE
-                        ($2 <> '' AND document @@ to_tsquery('portuguese', immutable_unaccent($2)))
-                        OR word_similarity(immutable_unaccent(lower($1)), immutable_unaccent(lower(title))) > $3
-                        OR word_similarity(immutable_unaccent(lower($1)), immutable_unaccent(lower(COALESCE(summary, '')))) > $3
-                        OR word_similarity(immutable_unaccent(lower($1)), immutable_unaccent(lower(author_name))) > $3
-                        OR word_similarity(immutable_unaccent(lower($1)), immutable_unaccent(lower(array_to_string(keywords, ' ')))) > $3
+                        (cardinality($3::text[]) > 0 AND word_scores.min_similarity >= $2) AS is_fuzzy_match,
+                        COALESCE(word_scores.avg_similarity, 0) AS trigram_score
+                    FROM base b
+                    CROSS JOIN LATERAL (
+                        SELECT
+                            MIN(GREATEST(
+                                word_similarity(qw.word, lower(b.title)),
+                                word_similarity(qw.word, lower(b.author_name))
+                            )) AS min_similarity,
+                            AVG(GREATEST(
+                                word_similarity(qw.word, lower(b.title)),
+                                word_similarity(qw.word, lower(b.author_name))
+                            )) AS avg_similarity
+                        FROM unnest($3::text[]) AS qw(word)
+                    ) word_scores
+                ),
+                flags AS (
+                    SELECT *,
+                        (is_core_match OR (is_full_match AND text_rank >= ${CONTENT_MATCH_RANK_THRESHOLD})) AS is_exact
+                    FROM scored
                 )
             `;
 
             const hybridQuery = `
                 ${scoringCTEs}
                 SELECT *,
-                    (text_rank * 2 + trigram_score) AS relevance_score,
-                    CASE WHEN text_rank > 0 THEN 'exact' ELSE 'fuzzy' END AS match_type
-                FROM scored
+                    (text_rank * 2 + CASE WHEN is_exact THEN 0 ELSE trigram_score END) AS relevance_score,
+                    CASE WHEN is_exact THEN 'exact' ELSE 'fuzzy' END AS match_type
+                FROM flags
+                WHERE is_exact OR is_fuzzy_match
                 ORDER BY relevance_score DESC, title ASC
                 LIMIT $4 OFFSET $5
             `;
@@ -1357,16 +1415,16 @@ class SubmissionService {
             const countQuery = `
                 ${scoringCTEs}
                 SELECT
-                    COUNT(*) FILTER (WHERE text_rank > 0) AS exact_count,
-                    COUNT(*) FILTER (WHERE text_rank = 0) AS fuzzy_count,
-                    COUNT(*) AS total_count
-                FROM scored
+                    COUNT(*) FILTER (WHERE is_exact) AS exact_count,
+                    COUNT(*) FILTER (WHERE NOT is_exact AND is_fuzzy_match) AS fuzzy_count,
+                    COUNT(*) FILTER (WHERE is_exact OR is_fuzzy_match) AS total_count
+                FROM flags
             `;
 
             // Execute queries
             const [resultQuery, countResult] = await Promise.all([
-                db.query(hybridQuery, [cleanSearchTerm, prefixQuery, threshold, pagination.top, pagination.skip]),
-                db.query(countQuery, [cleanSearchTerm, prefixQuery, threshold])
+                db.query(hybridQuery, [phraseQuery, effectiveThreshold, significantWords, pagination.top, pagination.skip]),
+                db.query(countQuery, [phraseQuery, effectiveThreshold, significantWords])
             ]);
 
             const submissions = resultQuery.rows as (SubmissionSummary & {
