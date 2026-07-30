@@ -439,10 +439,10 @@ class TokenService {
      * Validar formato do token
      */
     isValidTokenFormat(token) {
-        return token &&
-               typeof token === 'string' &&
-               token.length === this.tokenLength &&
-               /^[a-f0-9]+$/.test(token);
+         return !!(token &&
+             typeof token === 'string' &&
+             token.length === this.tokenLength &&
+             /^[a-f0-9]+$/.test(token));
     }
 
     /**

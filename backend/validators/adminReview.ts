@@ -78,8 +78,8 @@ class AdminReviewValidators {
                 return keywords.every((keyword: any) =>
                     typeof keyword === 'string' && keyword.length <= 50
                 );
-            })
-            .withMessage('Cada keyword deve ser uma string com no máximo 50 caracteres'),
+            }),
+            
 
         body('depositToZenodo')
             .optional()

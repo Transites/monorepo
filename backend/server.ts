@@ -25,8 +25,8 @@ class Server {
                 throw new Error(`Database unhealthy: ${healthCheck.error}`);
             }
 
-            // Iniciar jobs automáticos
-            if (process.env.NODE_ENV !== 'development') {
+            // Iniciar jobs automáticos somente em produção (evita jobs durante testes)
+            if (process.env.NODE_ENV === 'production') {
                 const tokenCleanupJob = require('./jobs/tokenCleanup');
                 const emailNotificationJob = require('./jobs/emailNotifications');
 
