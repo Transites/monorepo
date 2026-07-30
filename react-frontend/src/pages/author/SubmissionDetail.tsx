@@ -17,8 +17,8 @@ import {
   counterSuggestion,
   getSubmissionById,
   uploadSubmissionMedia,
-  authorSetSubmissionImage,
-  authorRemoveSubmissionImage,
+  authorSetSubmissionMedia,
+  authorRemoveSubmissionMedia,
   ApiError,
   type SubmissionSuggestion,
   type SubmissionVersion,
@@ -215,7 +215,8 @@ export default function SubmissionDetail() {
   const setImageMutation = useMutation({
     mutationFn: async (file: File) => {
       const uploaded = await uploadSubmissionMedia(file);
-      await authorSetSubmissionImage(id!, {
+      await authorSetSubmissionMedia(id!, {
+        type: uploaded.resourceType,
         url: uploaded.url,
         publicId: uploaded.publicId,
       });
@@ -225,18 +226,18 @@ export default function SubmissionDetail() {
       queryClient.invalidateQueries({ queryKey: ['submission', id] });
     },
     onError: (error: any) => {
-      setImageError(error instanceof ApiError ? error.message : 'Falha ao enviar a imagem. Tente novamente.');
+      setImageError(error instanceof ApiError ? error.message : 'Falha ao enviar a imagem/vídeo. Tente novamente.');
     },
   });
 
   const removeImageMutation = useMutation({
-    mutationFn: () => authorRemoveSubmissionImage(id!),
+    mutationFn: () => authorRemoveSubmissionMedia(id!),
     onSuccess: () => {
       setImageError(null);
       queryClient.invalidateQueries({ queryKey: ['submission', id] });
     },
     onError: (error: any) => {
-      setImageError(error instanceof ApiError ? error.message : 'Falha ao remover a imagem. Tente novamente.');
+      setImageError(error instanceof ApiError ? error.message : 'Falha ao remover a imagem/vídeo. Tente novamente.');
     },
   });
 
@@ -244,8 +245,8 @@ export default function SubmissionDetail() {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      setImageError('Selecione um arquivo de imagem válido.');
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      setImageError('Selecione um arquivo de imagem ou vídeo válido.');
       return;
     }
     setImageMutation.mutate(file);
@@ -330,7 +331,14 @@ export default function SubmissionDetail() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold tracking-tight">{submission?.title ?? 'Carregando…'}</h1>
           <p className="text-muted-foreground mt-2">Revisão editorial</p>
-          {submission?.metadata?.image?.url && (
+          {submission?.metadata?.video?.url ? (
+            <div className="mt-4">
+              <video src={submission.metadata.video.url} controls className="max-h-64 rounded-md border" />
+              {submission.metadata.video.caption && (
+                <p className="text-xs text-muted-foreground italic mt-1">{submission.metadata.video.caption}</p>
+              )}
+            </div>
+          ) : submission?.metadata?.image?.url ? (
             <div className="mt-4">
               <img
                 src={submission.metadata.image.url}
@@ -341,7 +349,7 @@ export default function SubmissionDetail() {
                 <p className="text-xs text-muted-foreground italic mt-1">{submission.metadata.image.caption}</p>
               )}
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Abas */}
@@ -557,12 +565,29 @@ export default function SubmissionDetail() {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Imagem de destaque</Label>
+                <Label>Imagem ou vídeo de destaque</Label>
                 <p className="text-xs text-muted-foreground">
-                  É preciso remover a imagem atual antes de enviar uma nova.
+                  É preciso remover a mídia atual antes de enviar uma nova. Apenas um arquivo (imagem ou vídeo) por artigo.
                 </p>
 
-                {submission?.metadata?.image?.url ? (
+                {submission?.metadata?.video?.url ? (
+                  <div className="relative inline-block">
+                    <video src={submission.metadata.video.url} controls className="max-h-64 rounded-md border" />
+                    <button
+                      type="button"
+                      onClick={() => removeImageMutation.mutate()}
+                      disabled={removeImageMutation.isPending}
+                      className="absolute -top-2 -right-2 rounded-full bg-destructive text-destructive-foreground p-1 shadow disabled:opacity-50"
+                      aria-label="Remover vídeo"
+                    >
+                      {removeImageMutation.isPending ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <X size={14} />
+                      )}
+                    </button>
+                  </div>
+                ) : submission?.metadata?.image?.url ? (
                   <div className="relative inline-block">
                     <img
                       src={submission.metadata.image.url}
@@ -594,12 +619,12 @@ export default function SubmissionDetail() {
                       ) : (
                         <ImagePlus className="h-6 w-6" />
                       )}
-                      Clique para selecionar uma imagem
+                      Clique para selecionar uma imagem ou vídeo
                     </label>
                     <input
                       id="counter-image"
                       type="file"
-                      accept="image/*"
+                      accept="image/*,video/*"
                       onChange={handleImageChange}
                       disabled={setImageMutation.isPending}
                       className="hidden"

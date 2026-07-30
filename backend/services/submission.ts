@@ -684,11 +684,13 @@ class SubmissionService {
     }
 
     /**
-     * Define a imagem de destaque da submissão — só permitido se não houver imagem atual
+     * Define a mídia de destaque (imagem OU vídeo) da submissão — só permitido se não
+     * houver imagem/vídeo atual. Os dois tipos são mutuamente exclusivos.
      */
-    async setSubmissionImage(
+    async setSubmissionMedia(
         submissionId: string,
-        image: { url: string; publicId: string; caption?: string; alternativeText?: string },
+        mediaType: 'image' | 'video',
+        media: { url: string; publicId: string; caption?: string; alternativeText?: string },
         authorEmail?: string
     ): Promise<any> {
         const submission = await db.findById('submissions', submissionId);
@@ -700,29 +702,30 @@ class SubmissionService {
             throw new ValidationException('Acesso negado', ['Você não é o autor desta submissão']);
         }
 
-        if (submission.metadata?.image) {
+        if (submission.metadata?.image || submission.metadata?.video) {
             throw new ValidationException(
-                'Já existe uma imagem cadastrada',
-                ['Remova a imagem atual antes de enviar uma nova']
+                'Já existe uma imagem ou vídeo cadastrado',
+                ['Remova a mídia atual antes de enviar uma nova']
             );
         }
 
-        const metadata = { ...(submission.metadata || {}), image };
+        const metadata = { ...(submission.metadata || {}), [mediaType]: media };
 
         const result = await db.query(
             'UPDATE submissions SET metadata = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
             [metadata, submissionId]
         );
 
-        logger.audit('Submission image set', { submissionId, authorEmail });
+        logger.audit('Submission media set', { submissionId, mediaType, authorEmail });
 
         return result.rows[0];
     }
 
     /**
-     * Remove a imagem de destaque da submissão — apaga do Cloudinary e limpa o metadata
+     * Remove a mídia de destaque (imagem ou vídeo, o que estiver presente) da submissão —
+     * apaga do Cloudinary e limpa o metadata
      */
-    async removeSubmissionImage(submissionId: string, authorEmail?: string): Promise<any> {
+    async removeSubmissionMedia(submissionId: string, authorEmail?: string): Promise<any> {
         const submission = await db.findById('submissions', submissionId);
         if (!submission) {
             throw new SubmissionNotFoundException('Submissão não encontrada');
@@ -732,22 +735,29 @@ class SubmissionService {
             throw new ValidationException('Acesso negado', ['Você não é o autor desta submissão']);
         }
 
-        const image = submission.metadata?.image;
-        if (!image) {
-            throw new ValidationException('Nenhuma imagem para remover', ['Esta submissão não possui imagem cadastrada']);
+        const mediaType: 'image' | 'video' | undefined = submission.metadata?.image
+            ? 'image'
+            : submission.metadata?.video
+                ? 'video'
+                : undefined;
+
+        if (!mediaType) {
+            throw new ValidationException('Nenhuma mídia para remover', ['Esta submissão não possui imagem ou vídeo cadastrado']);
         }
 
-        await mediaService.deleteSubmissionMedia(image.publicId, 'image');
+        const media = submission.metadata[mediaType];
+
+        await mediaService.deleteSubmissionMedia(media.publicId, mediaType);
 
         const metadata = { ...(submission.metadata || {}) };
-        delete metadata.image;
+        delete metadata[mediaType];
 
         const result = await db.query(
             'UPDATE submissions SET metadata = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
             [metadata, submissionId]
         );
 
-        logger.audit('Submission image removed', { submissionId, authorEmail });
+        logger.audit('Submission media removed', { submissionId, mediaType, authorEmail });
 
         return result.rows[0];
     }

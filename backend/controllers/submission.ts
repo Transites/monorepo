@@ -115,85 +115,91 @@ class SubmissionController {
     }
 
     /**
-     * PUT /api/admin/review/submissions/:id/image
-     * Define a imagem de destaque de uma submissão (admin)
+     * PUT /api/admin/review/submissions/:id/media
+     * Define a imagem/vídeo de destaque de uma submissão (admin)
      */
-    async setImage(req: Request, res: Response, next: NextFunction): Promise<any> {
+    async setMedia(req: Request, res: Response, next: NextFunction): Promise<any> {
         try {
-            const { url, publicId, caption, alternativeText } = req.body || {};
+            const { type, url, publicId, caption, alternativeText } = req.body || {};
+            if (type !== 'image' && type !== 'video') {
+                throw new ValidationException('Dados inválidos', ['O campo "type" deve ser "image" ou "video"']);
+            }
             if (!url || typeof url !== 'string' || !publicId || typeof publicId !== 'string') {
                 throw new ValidationException('Dados inválidos', ['Os campos "url" e "publicId" são obrigatórios']);
             }
 
-            const submission = await submissionService.setSubmissionImage(req.params.id, {
+            const submission = await submissionService.setSubmissionMedia(req.params.id, type, {
                 url, publicId, caption, alternativeText
             });
 
-            return responses.success(res, { submission }, 'Imagem atualizada com sucesso');
+            return responses.success(res, { submission }, 'Mídia atualizada com sucesso');
         } catch (error: any) {
             return handleControllerError(error, res, next, {
                 submissionId: req.params.id,
-                operation: 'setImage'
+                operation: 'setMedia'
             });
         }
     }
 
     /**
-     * DELETE /api/admin/review/submissions/:id/image
-     * Remove a imagem de destaque de uma submissão (admin)
+     * DELETE /api/admin/review/submissions/:id/media
+     * Remove a imagem/vídeo de destaque de uma submissão (admin)
      */
-    async removeImage(req: Request, res: Response, next: NextFunction): Promise<any> {
+    async removeMedia(req: Request, res: Response, next: NextFunction): Promise<any> {
         try {
-            const submission = await submissionService.removeSubmissionImage(req.params.id);
-            return responses.success(res, { submission }, 'Imagem removida com sucesso');
+            const submission = await submissionService.removeSubmissionMedia(req.params.id);
+            return responses.success(res, { submission }, 'Mídia removida com sucesso');
         } catch (error: any) {
             return handleControllerError(error, res, next, {
                 submissionId: req.params.id,
-                operation: 'removeImage'
+                operation: 'removeMedia'
             });
         }
     }
 
     /**
-     * PUT /api/author/submissions/:id/image
-     * Define a imagem de destaque de uma submissão (autor)
+     * PUT /api/author/submissions/:id/media
+     * Define a imagem/vídeo de destaque de uma submissão (autor)
      */
-    async setImageAsAuthor(req: Request, res: Response, next: NextFunction): Promise<any> {
+    async setMediaAsAuthor(req: Request, res: Response, next: NextFunction): Promise<any> {
         try {
             const authorEmail = (req as any).user?.email;
-            const { url, publicId, caption, alternativeText } = req.body || {};
+            const { type, url, publicId, caption, alternativeText } = req.body || {};
+            if (type !== 'image' && type !== 'video') {
+                throw new ValidationException('Dados inválidos', ['O campo "type" deve ser "image" ou "video"']);
+            }
             if (!url || typeof url !== 'string' || !publicId || typeof publicId !== 'string') {
                 throw new ValidationException('Dados inválidos', ['Os campos "url" e "publicId" são obrigatórios']);
             }
 
-            const submission = await submissionService.setSubmissionImage(req.params.id, {
+            const submission = await submissionService.setSubmissionMedia(req.params.id, type, {
                 url, publicId, caption, alternativeText
             }, authorEmail);
 
-            return responses.success(res, { submission }, 'Imagem atualizada com sucesso');
+            return responses.success(res, { submission }, 'Mídia atualizada com sucesso');
         } catch (error: any) {
             return handleControllerError(error, res, next, {
                 submissionId: req.params.id,
                 authorEmail: (req as any).user?.email,
-                operation: 'setImageAsAuthor'
+                operation: 'setMediaAsAuthor'
             });
         }
     }
 
     /**
-     * DELETE /api/author/submissions/:id/image
-     * Remove a imagem de destaque de uma submissão (autor)
+     * DELETE /api/author/submissions/:id/media
+     * Remove a imagem/vídeo de destaque de uma submissão (autor)
      */
-    async removeImageAsAuthor(req: Request, res: Response, next: NextFunction): Promise<any> {
+    async removeMediaAsAuthor(req: Request, res: Response, next: NextFunction): Promise<any> {
         try {
             const authorEmail = (req as any).user?.email;
-            const submission = await submissionService.removeSubmissionImage(req.params.id, authorEmail);
-            return responses.success(res, { submission }, 'Imagem removida com sucesso');
+            const submission = await submissionService.removeSubmissionMedia(req.params.id, authorEmail);
+            return responses.success(res, { submission }, 'Mídia removida com sucesso');
         } catch (error: any) {
             return handleControllerError(error, res, next, {
                 submissionId: req.params.id,
                 authorEmail: (req as any).user?.email,
-                operation: 'removeImageAsAuthor'
+                operation: 'removeMediaAsAuthor'
             });
         }
     }

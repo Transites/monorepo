@@ -79,18 +79,18 @@ router.post('/submissions/:id/suggestions',
     errorHandler.asyncHandler(suggestionsController.createSuggestion)
 );
 
-// PUT /api/admin/review/submissions/:id/image
-// Definir imagem de destaque da submissão
-router.put('/submissions/:id/image',
-    authMiddleware.logAdminAction('set_submission_image'),
-    errorHandler.asyncHandler(submissionController.setImage)
+// PUT /api/admin/review/submissions/:id/media
+// Definir imagem ou vídeo de destaque da submissão
+router.put('/submissions/:id/media',
+    authMiddleware.logAdminAction('set_submission_media'),
+    errorHandler.asyncHandler(submissionController.setMedia)
 );
 
-// DELETE /api/admin/review/submissions/:id/image
-// Remover imagem de destaque da submissão
-router.delete('/submissions/:id/image',
-    authMiddleware.logAdminAction('remove_submission_image'),
-    errorHandler.asyncHandler(submissionController.removeImage)
+// DELETE /api/admin/review/submissions/:id/media
+// Remover imagem ou vídeo de destaque da submissão
+router.delete('/submissions/:id/media',
+    authMiddleware.logAdminAction('remove_submission_media'),
+    errorHandler.asyncHandler(submissionController.removeMedia)
 );
 
 // PUT /api/admin/review/submissions/:id/status
