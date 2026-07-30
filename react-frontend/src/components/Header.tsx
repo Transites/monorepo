@@ -14,7 +14,7 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Destructure auth state and methods
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin, logout } = useAuth();
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, elementId: string) => {
     e.preventDefault();
@@ -71,8 +71,8 @@ const Header = () => {
             <a href="#pesquisar" onClick={(e) => handleNavClick(e, 'pesquisar')} className="text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer">Pesquisar</a>
             <a href="#sobre" onClick={(e) => handleNavClick(e, 'sobre')} className="text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer">Sobre</a>
             <a href="#contato" onClick={(e) => handleNavClick(e, 'contato')} className="text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer">Contato</a>
-            
-            <Link to="/submissao/nova" className="text-sm font-medium text-foreground hover:text-primary transition-colors">Submeter</Link>
+            <Link to="/submissao/nova" className="text-sm font-medium text-foreground hover:text-primary transition-colors">Submeter</Link> 
+            {isAdmin && (<Link to="/admin/home" className="text-sm font-medium text-foreground hover:text-primary transition-colors">Administração</Link>) }
 
             <div className="h-6 w-px bg-border mx-2" /> {/* Vertical Divider */}
 
@@ -116,6 +116,9 @@ const Header = () => {
                 <a href="#sobre" onClick={(e) => handleNavClick(e, 'sobre')} className="text-lg font-medium">Sobre</a>
                 <a href="#contato" onClick={(e) => handleNavClick(e, 'contato')} className="text-lg font-medium">Contato</a>
                 <Link to="/submissao/nova" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium">Submeter</Link>
+                {isAdmin && (<Link to="/admin/home" className="text-sm font-medium text-foreground hover:text-primary transition-colors">Administração</Link>) }
+
+
                 
                 {/* 3. Conditional Rendering for Mobile Auth */}
                 <div className="border-t pt-6 flex flex-col space-y-4">
