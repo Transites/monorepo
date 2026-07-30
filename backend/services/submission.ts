@@ -2,6 +2,7 @@
 import db from '../database/client';
 import tokenService from './tokens';
 import emailService from './email';
+import mediaService from './media';
 import constants from '../utils/constants';
 import {generateSlug} from '../utils/url';
 import {
@@ -680,6 +681,75 @@ class SubmissionService {
         logger.audit('Suggestion rejected by author', { submissionId, suggestionId, authorEmail });
 
         return { success: true, message: 'Sugestão rejeitada' };
+    }
+
+    /**
+     * Define a imagem de destaque da submissão — só permitido se não houver imagem atual
+     */
+    async setSubmissionImage(
+        submissionId: string,
+        image: { url: string; publicId: string; caption?: string; alternativeText?: string },
+        authorEmail?: string
+    ): Promise<any> {
+        const submission = await db.findById('submissions', submissionId);
+        if (!submission) {
+            throw new SubmissionNotFoundException('Submissão não encontrada');
+        }
+
+        if (authorEmail !== undefined && submission.author_email !== authorEmail) {
+            throw new ValidationException('Acesso negado', ['Você não é o autor desta submissão']);
+        }
+
+        if (submission.metadata?.image) {
+            throw new ValidationException(
+                'Já existe uma imagem cadastrada',
+                ['Remova a imagem atual antes de enviar uma nova']
+            );
+        }
+
+        const metadata = { ...(submission.metadata || {}), image };
+
+        const result = await db.query(
+            'UPDATE submissions SET metadata = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+            [metadata, submissionId]
+        );
+
+        logger.audit('Submission image set', { submissionId, authorEmail });
+
+        return result.rows[0];
+    }
+
+    /**
+     * Remove a imagem de destaque da submissão — apaga do Cloudinary e limpa o metadata
+     */
+    async removeSubmissionImage(submissionId: string, authorEmail?: string): Promise<any> {
+        const submission = await db.findById('submissions', submissionId);
+        if (!submission) {
+            throw new SubmissionNotFoundException('Submissão não encontrada');
+        }
+
+        if (authorEmail !== undefined && submission.author_email !== authorEmail) {
+            throw new ValidationException('Acesso negado', ['Você não é o autor desta submissão']);
+        }
+
+        const image = submission.metadata?.image;
+        if (!image) {
+            throw new ValidationException('Nenhuma imagem para remover', ['Esta submissão não possui imagem cadastrada']);
+        }
+
+        await mediaService.deleteSubmissionMedia(image.publicId, 'image');
+
+        const metadata = { ...(submission.metadata || {}) };
+        delete metadata.image;
+
+        const result = await db.query(
+            'UPDATE submissions SET metadata = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+            [metadata, submissionId]
+        );
+
+        logger.audit('Submission image removed', { submissionId, authorEmail });
+
+        return result.rows[0];
     }
 
     // TODO: mover função para dentro do serviço de upload.

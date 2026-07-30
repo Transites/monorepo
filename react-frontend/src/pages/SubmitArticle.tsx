@@ -213,6 +213,7 @@ export default function SubmitArticle() {
           type: uploaded.resourceType,
           data: {
             url: uploaded.url,
+            publicId: uploaded.publicId,
             caption: mediaCaption.trim() || undefined,
             alternativeText: mediaAlternativeText.trim() || undefined,
           },

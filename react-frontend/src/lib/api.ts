@@ -39,6 +39,7 @@ export interface Submission {
       caption?: string;
       credit?: string;
       alternativeText?: string;
+      publicId?: string;
     };
     video?: {
       url: string;
@@ -440,6 +441,7 @@ export interface CreateArticleSubmissionPayload {
 export interface UploadSubmissionMediaResponse {
   url: string;
   resourceType: 'image' | 'video';
+  publicId: string;
 }
 
 /**
@@ -819,6 +821,36 @@ export async function counterSuggestion(
     }
   );
   console.log('Contra-proposta enviada:', JSON.stringify(payload));
+}
+
+// Payload para definir a imagem de destaque de uma submissão
+export interface SetSubmissionImagePayload {
+  url: string;
+  publicId: string;
+  caption?: string;
+  alternativeText?: string;
+}
+
+/**
+ * Autor define a imagem de destaque da submissão (só permitido se não houver imagem atual)
+ */
+export async function authorSetSubmissionImage(
+  submissionId: string,
+  payload: SetSubmissionImagePayload
+): Promise<void> {
+  await authorRequest(`/author/submissions/${submissionId}/image`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Autor remove a imagem de destaque da submissão
+ */
+export async function authorRemoveSubmissionImage(submissionId: string): Promise<void> {
+  await authorRequest(`/author/submissions/${submissionId}/image`, {
+    method: 'DELETE',
+  });
 }
 
 // Interface para uma versão de submissão

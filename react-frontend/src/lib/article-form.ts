@@ -24,6 +24,7 @@ export interface ArticleMedia {
   caption?: string;
   alternativeText?: string;
   credit?: string;
+  publicId?: string;
 }
 
 export interface ArticleFormFields {

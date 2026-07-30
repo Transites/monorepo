@@ -35,4 +35,14 @@ router.get('/submissions/:id/versions',
   errorHandler.asyncHandler(suggestionsController.getSubmissionVersions)
 );
 
+// Autor define a imagem de destaque da submissão
+router.put('/submissions/:id/image',
+  errorHandler.asyncHandler(submissionController.setImageAsAuthor)
+);
+
+// Autor remove a imagem de destaque da submissão
+router.delete('/submissions/:id/image',
+  errorHandler.asyncHandler(submissionController.removeImageAsAuthor)
+);
+
 module.exports = router;
