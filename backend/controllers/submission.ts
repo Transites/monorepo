@@ -1,9 +1,11 @@
 import {Request, Response, NextFunction} from 'express';
 import submissionService from '../services/submission';
 import emailService from '../services/email';
+import mediaService from '../services/media';
 import responses from '../utils/responses';
 import {validationResult} from 'express-validator';
 import {handleControllerError} from '../utils/errorHandler';
+import {ValidationException} from '../utils/exceptions';
 import untypedLogger from '../middleware/logging';
 import {LoggerWithAudit} from "../types/migration";
 
@@ -13,6 +15,10 @@ interface SubmissionRequest extends Request {
     submission?: any;
     tokenInfo?: any;
     authorEmail?: string;
+}
+
+interface MediaUploadRequest extends Request {
+    file?: Express.Multer.File;
 }
 
 class SubmissionController {
@@ -74,6 +80,126 @@ class SubmissionController {
                 authorEmail: req.body.author_email,
                 title: req.body.title,
                 ip: req.ip
+            });
+        }
+    }
+
+    /**
+     * POST /api/submissions/media
+     * Upload da imagem/vídeo único de uma submissão para o Cloudinary
+     */
+    async uploadMedia(req: MediaUploadRequest, res: Response, next: NextFunction): Promise<any> {
+        try {
+            if (!req.file) {
+                throw new ValidationException('Nenhum arquivo enviado', ['O campo "file" é obrigatório']);
+            }
+
+            const result = await mediaService.uploadSubmissionMedia(req.file.buffer, req.file.originalname);
+
+            logger.audit('Submission media uploaded', {
+                filename: req.file.originalname,
+                resourceType: result.resourceType,
+                size: req.file.size,
+                ip: req.ip
+            });
+
+            return responses.created(res, result, 'Mídia enviada com sucesso');
+
+        } catch (error: any) {
+            return handleControllerError(error, res, next, {
+                filename: req.file?.originalname,
+                operation: 'uploadMedia',
+                ip: req.ip
+            });
+        }
+    }
+
+    /**
+     * PUT /api/admin/review/submissions/:id/media
+     * Define a imagem/vídeo de destaque de uma submissão (admin)
+     */
+    async setMedia(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+            const { type, url, publicId, caption, alternativeText } = req.body || {};
+            if (type !== 'image' && type !== 'video') {
+                throw new ValidationException('Dados inválidos', ['O campo "type" deve ser "image" ou "video"']);
+            }
+            if (!url || typeof url !== 'string' || !publicId || typeof publicId !== 'string') {
+                throw new ValidationException('Dados inválidos', ['Os campos "url" e "publicId" são obrigatórios']);
+            }
+
+            const submission = await submissionService.setSubmissionMedia(req.params.id, type, {
+                url, publicId, caption, alternativeText
+            });
+
+            return responses.success(res, { submission }, 'Mídia atualizada com sucesso');
+        } catch (error: any) {
+            return handleControllerError(error, res, next, {
+                submissionId: req.params.id,
+                operation: 'setMedia'
+            });
+        }
+    }
+
+    /**
+     * DELETE /api/admin/review/submissions/:id/media
+     * Remove a imagem/vídeo de destaque de uma submissão (admin)
+     */
+    async removeMedia(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+            const submission = await submissionService.removeSubmissionMedia(req.params.id);
+            return responses.success(res, { submission }, 'Mídia removida com sucesso');
+        } catch (error: any) {
+            return handleControllerError(error, res, next, {
+                submissionId: req.params.id,
+                operation: 'removeMedia'
+            });
+        }
+    }
+
+    /**
+     * PUT /api/author/submissions/:id/media
+     * Define a imagem/vídeo de destaque de uma submissão (autor)
+     */
+    async setMediaAsAuthor(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+            const authorEmail = (req as any).user?.email;
+            const { type, url, publicId, caption, alternativeText } = req.body || {};
+            if (type !== 'image' && type !== 'video') {
+                throw new ValidationException('Dados inválidos', ['O campo "type" deve ser "image" ou "video"']);
+            }
+            if (!url || typeof url !== 'string' || !publicId || typeof publicId !== 'string') {
+                throw new ValidationException('Dados inválidos', ['Os campos "url" e "publicId" são obrigatórios']);
+            }
+
+            const submission = await submissionService.setSubmissionMedia(req.params.id, type, {
+                url, publicId, caption, alternativeText
+            }, authorEmail);
+
+            return responses.success(res, { submission }, 'Mídia atualizada com sucesso');
+        } catch (error: any) {
+            return handleControllerError(error, res, next, {
+                submissionId: req.params.id,
+                authorEmail: (req as any).user?.email,
+                operation: 'setMediaAsAuthor'
+            });
+        }
+    }
+
+    /**
+     * DELETE /api/author/submissions/:id/media
+     * Remove a imagem/vídeo de destaque de uma submissão (autor)
+     */
+    async removeMediaAsAuthor(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+            const authorEmail = (req as any).user?.email;
+            const submission = await submissionService.removeSubmissionMedia(req.params.id, authorEmail);
+            return responses.success(res, { submission }, 'Mídia removida com sucesso');
+        } catch (error: any) {
+            return handleControllerError(error, res, next, {
+                submissionId: req.params.id,
+                authorEmail: (req as any).user?.email,
+                operation: 'removeMediaAsAuthor'
             });
         }
     }
@@ -313,12 +439,16 @@ class SubmissionController {
                 return responses.badRequest(res, 'Dados inválidos', errors.array());
             }
 
-            const {email} = req.query;
+            const userEmail = (req as any).user?.email;
+
+            if (!userEmail) {
+                return responses.unauthorized(res, 'Usuário não autenticado ou email não disponível no token');
+            }
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
 
             const result = await submissionService.getSubmissionsByAuthor(
-                email as string,
+                userEmail as string,
                 {page, limit}
             );
 
@@ -329,7 +459,7 @@ class SubmissionController {
 
         } catch (error: any) {
             return handleControllerError(error, res, next, {
-                email: req.query.email,
+                email: (req as any).user?.email,
                 operation: 'getAuthorSubmissions'
             });
         }

@@ -117,7 +117,7 @@ function SubmissionCard({
 
 export default function MyReviews() {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+ // const { user } = useAuth();
   
   const [activeTab, setActiveTab] = useState<TabStatus>('UNDER_REVIEW');
   const [unassigningId, setUnassigningId] = useState<string | null>(null);
@@ -125,12 +125,15 @@ export default function MyReviews() {
   // Estado para controlar o modal de confirmação de devolução
   const [unassignConfirm, setUnassignConfirm] = useState<AdminSubmission | null>(null);
 
-  const adminId = user?.id;
 
+  const { user, isAdmin, loading: authLoading } = useAuth();
+  
+  const adminId = user?.id;
+  
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['admin', 'my-reviews', adminId],
     queryFn: () => getMyReviews(adminId as string, { limit: 50 }),
-    enabled: !!adminId,
+    enabled: !authLoading && !!adminId && !!isAdmin,
   });
 
   const unassignMutation = useMutation({

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, AlertCircle, Inbox, UserPlus, Clock } from 'lucide-react';
@@ -40,7 +41,7 @@ const TABS: { id: TabStatus; label: string }[] = [
 
 // Aqui nós dizemos exatamente quais status do banco pertencem a qual aba
 const STATUS_MAP: Record<TabStatus, string[]> = {
-  NO_REVIEW: ['DRAFT'],
+  NO_REVIEW: ['SUBMITTED'],
   UNDER_REVIEW: ['UNDER_REVIEW', 'CHANGES_REQUESTED'],
   APPROVED: ['APPROVED'],
   REJECTED: ['REJECTED'],
@@ -123,6 +124,8 @@ export default function ReviewQueue() {
   const [assigningId, setAssigningId] = useState<string | null>(null);
 
   // ──────────────────────────────────
+  const { user, isAdmin, loading: authLoading } = useAuth();
+
   const { data, isLoading, isError, error } = useQuery({
     // A chave agora inclui a aba. Ao mudar de aba, o React refaz a busca.
     queryKey: ['admin', 'review-queue', activeTab],
@@ -132,6 +135,7 @@ export default function ReviewQueue() {
       // Se estiver na aba sem revisão, pedimos só os artigos que não têm dono
       unassigned: activeTab === 'NO_REVIEW' ? true : undefined,
     }),
+    enabled: !authLoading && !!isAdmin,
   });
 
   const assignMutation = useMutation({

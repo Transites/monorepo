@@ -2,7 +2,7 @@ import { useState, useEffect} from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Loader2, AlertCircle, ArrowLeft, Save, Plus, Trash2, X,
+  Loader2, AlertCircle, ArrowLeft, Save, Plus, Trash2, X, History, FileText, MessageSquare
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -14,6 +14,8 @@ import { Separator } from '@/components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { ApiError } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { getSubmissionVersions, type SubmissionVersion } from '@/lib/api';
 
 // ─── tipos ────────────────────────────────────────────────────────────────────
 
@@ -25,19 +27,30 @@ interface BibItem {
   publisher?: string;
 }
 
+interface SubmissionImage {
+  url: string;
+  caption?: string;
+  alternativeText?: string;
+  publicId?: string;
+}
+
 interface Submission {
   id: string;
   title: string;
   summary?: string;
   content?: string;
+  content_html?: string;
   category?: string;
   keywords?: string[];
   author_name?: string;
   author_institution?: string;
   author_email?: string;
+  doi?: string;
   status: string;
   metadata?: {
     bibliography?: BibItem[];
+    image?: SubmissionImage;
+    video?: SubmissionImage;
     [key: string]: unknown;
   };
 }
@@ -50,6 +63,7 @@ interface Suggestion {
   suggested_content?: string;
   suggested_category?: string;
   suggested_keywords?: string[];
+  suggested_metadata?: Record<string, any>;
   notes: string;
   status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
@@ -58,6 +72,7 @@ interface Suggestion {
 interface ReviewDetail {
   submission: Submission;
   pendingSuggestion: Suggestion | null;
+  zenodoEnabled?: boolean;
 }
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -83,23 +98,34 @@ async function adminFetch<T>(path: string, options: RequestInit = {}): Promise<T
   return json.data as T;
 }
 
+const getMeta = (data: any) => {
+  if (!data) return {};
+  if (typeof data === 'string') {
+    try { return JSON.parse(data); } catch { return {}; }
+  }
+  return data;
+};
+
 // ─── componente principal ─────────────────────────────────────────────────────
+type Tab = 'current' | 'editing' | 'versions';
 
 export default function ReviewArticle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<'original' | 'editing'>('original');
+  const [activeTab, setActiveTab] = useState<Tab>('current');
   const [formReady, setFormReady] = useState(false);
+  const [selectedVersion, setSelectedVersion] = useState<SubmissionVersion | null>(null);
 
   // confirmação de ação
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
-    action: 'approved' | 'rejected' | null;
+    action: 'approved' | 'rejected' | 'published' | null;
   }>({ open: false, action: null });
+  const [depositToZenodo, setDepositToZenodo] = useState(true);
 
-  // campos editáveis
+  // campos editáveis básicos
   const [title, setTitle] = useState('');
   const [summary, setSummary] = useState('');
   const [content, setContent] = useState('');
@@ -111,11 +137,32 @@ export default function ReviewArticle() {
   const [bibliography, setBibliography] = useState<BibItem[]>([]);
   const [notes, setNotes] = useState('');
 
+  // campos editáveis de metadados
+  const [birthDate, setBirthDate] = useState('');
+  const [birthPlace, setBirthPlace] = useState('');
+  const [deathDate, setDeathDate] = useState('');
+  const [deathPlace, setDeathPlace] = useState('');
+  const [occupations, setOccupations] = useState<string[]>([]);
+  const [newOccupation, setNewOccupation] = useState('');
+  const [organizations, setOrganizations] = useState<string[]>([]);
+  const [newOrganization, setNewOrganization] = useState('');
+  const [alternativeNames, setAlternativeNames] = useState<string[]>([]);
+  const [newAlternativeName, setNewAlternativeName] = useState('');
+
   // ── buscar submissão ───────────────────────────────────────
+  const { user, isAdmin, loading: authLoading } = useAuth();
+
   const { data, isLoading, isError, error } = useQuery<ReviewDetail>({
     queryKey: ['admin', 'review-detail', id],
     queryFn: () => adminFetch<ReviewDetail>(`/admin/review/submissions/${id}/review-detail`),
-    enabled: !!id,
+    enabled: !!id && !authLoading && !!isAdmin,
+  });
+
+  // ── Buscar histórico de versões ──
+  const { data: versions } = useQuery({
+    queryKey: ['admin', 'versions', id],
+    queryFn: () => getSubmissionVersions(id!),
+    enabled: !!id && !authLoading && !!isAdmin,
   });
 
   useEffect(() => {
@@ -131,18 +178,52 @@ export default function ReviewArticle() {
       setAuthorName(sub.author_name ?? '');
       setAuthorInst(sub.author_institution ?? '');
       setKeywords(pending?.suggested_keywords ?? sub.keywords ?? []);
-      setBibliography(sub.metadata?.bibliography ?? []);
       setNotes(pending?.notes ?? '');
+
+      // Resgata o metadata apropriado (da sugestão pendente ou da submissão original)
+      const hasSuggestedMeta = pending?.suggested_metadata !== undefined && pending?.suggested_metadata !== null;
+      const meta = hasSuggestedMeta ? getMeta(pending.suggested_metadata) : getMeta(sub.metadata);
+
+      setBibliography(meta.bibliography ?? []);
+      setBirthDate(meta.birth?.date ?? '');
+      setBirthPlace(meta.birth?.place ?? '');
+      setDeathDate(meta.death?.date ?? '');
+      setDeathPlace(meta.death?.place ?? '');
+      setOccupations(meta.occupation ?? []);
+      setOrganizations(meta.organizations ?? []);
+      setAlternativeNames(meta.alternativeNames ?? []);
+
       setFormReady(true);
       }, [data, formReady]);
 
-  // ── keywords ──────────────────────────────────────────────
+  // ── funções de array ──────────────────────────────────────────────
   const addKeyword = () => {
     const kw = newKeyword.trim();
     if (kw && !keywords.includes(kw)) setKeywords([...keywords, kw]);
     setNewKeyword('');
   };
   const removeKeyword = (kw: string) => setKeywords(keywords.filter(k => k !== kw));
+
+  const addOccupation = () => {
+    const occ = newOccupation.trim();
+    if (occ && !occupations.includes(occ)) setOccupations([...occupations, occ]);
+    setNewOccupation('');
+  };
+  const removeOccupation = (occ: string) => setOccupations(occupations.filter((o) => o !== occ));
+
+  const addOrganization = () => {
+    const org = newOrganization.trim();
+    if (org && !organizations.includes(org)) setOrganizations([...organizations, org]);
+    setNewOrganization('');
+  };
+  const removeOrganization = (org: string) => setOrganizations(organizations.filter((o) => o !== org));
+
+  const addAlternativeName = () => {
+    const an = newAlternativeName.trim();
+    if (an && !alternativeNames.includes(an)) setAlternativeNames([...alternativeNames, an]);
+    setNewAlternativeName('');
+  };
+  const removeAlternativeName = (an: string) => setAlternativeNames(alternativeNames.filter((a) => a !== an));
 
   // ── bibliografia ──────────────────────────────────────────
   const addBibItem = () =>
@@ -153,8 +234,7 @@ export default function ReviewArticle() {
     setBibliography(bibliography.filter((_, i) => i !== index));
 
   // ── salvar sugestão ───────────────────────────────────────
-  const sub = data?.submission;
-
+  const sub = data?.submission; 
   const saveMutation = useMutation({
     mutationFn: () => {
       const payload: Record<string, unknown> = { notes };
@@ -163,12 +243,65 @@ export default function ReviewArticle() {
       if (content !== sub?.content) payload.suggested_content = content;
       if (category !== sub?.category) payload.suggested_category = category;
       if (JSON.stringify(keywords) !== JSON.stringify(sub?.keywords)) payload.suggested_keywords = keywords;
+      
+      const formatLifeEvent = (dateStr: string, placeStr: string) => {
+        let formattedDate = '';
+        if (dateStr) {
+          const [y, m, d] = dateStr.split('-');
+          const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+          if (y && m && d) formattedDate = `${parseInt(d, 10)} de ${months[parseInt(m, 10) - 1]} de ${y}`;
+        }
+        return [formattedDate, placeStr].filter(Boolean).join(', ');
+      };
 
+      const baseMetadata = getMeta(sub?.metadata);
+
+      // 2. Mescla o metadata antigo com a bibliografia e novos campos sugeridos
+      const newMetadata: any = {
+        ...baseMetadata,
+        bibliography: bibliography.length > 0 ? bibliography : undefined,
+        occupation: occupations.length > 0 ? occupations : undefined,
+        organizations: organizations.length > 0 ? organizations : undefined,
+        alternativeNames: alternativeNames.length > 0 ? alternativeNames : undefined,
+      };
+
+      if (category === 'pessoa') {
+        if (birthDate || birthPlace) {
+          newMetadata.birth = { date: birthDate || undefined, place: birthPlace || undefined, formatted: formatLifeEvent(birthDate, birthPlace) || undefined };
+        } else {
+          delete newMetadata.birth;
+        }
+        if (deathDate || deathPlace) {
+          newMetadata.death = { date: deathDate || undefined, place: deathPlace || undefined, formatted: formatLifeEvent(deathDate, deathPlace) || undefined };
+        } else {
+          delete newMetadata.death;
+        }
+      } else {
+        delete newMetadata.birth;
+        delete newMetadata.death;
+      }
+
+      // Limpa as chaves vazias
+      Object.keys(newMetadata).forEach(key => newMetadata[key] === undefined && delete newMetadata[key]);
+
+      // 3. Força o envio do metadata na requisição
+      payload.suggested_metadata = newMetadata;     
       return adminFetch(`/admin/review/submissions/${id}/suggestions`, {
         method: 'POST',
         body: JSON.stringify(payload),
       });
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'review-detail', id] });
+    },
+  });
+
+  // ── remover imagem/vídeo ──────────────────────────────────────────
+  const removeImageMutation = useMutation({
+    mutationFn: () =>
+      adminFetch(`/admin/review/submissions/${id}/media`, {
+        method: 'DELETE',
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'review-detail', id] });
     },
@@ -180,6 +313,36 @@ export default function ReviewArticle() {
       adminFetch(`/admin/review/submissions/${id}/status`, {
         method: 'PUT',
         body: JSON.stringify({ status: newStatus }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'review-detail', id] });
+    },
+  });
+
+  // ── mapear status para rótulo legível ─────────────────────
+  const statusLabelMap: Record<string, string> = {
+  DRAFT: 'Rascunho',
+  SUBMITTED: 'Submetido',
+  UNDER_REVIEW: 'Sob revisão',
+  CHANGES_REQUESTED: 'Correções solicitadas',
+  APPROVED: 'Aprovado',
+  REJECTED: 'Rejeitado',
+  PUBLISHED: 'Publicado'
+};
+
+const formatStatus = (status: string) => {
+  return statusLabelMap[status.toUpperCase()] || status;
+};
+
+  // ── publicar artigo ────────────────────────────────────────
+  const publishMutation = useMutation({
+    mutationFn: () =>
+      adminFetch<{
+        articleUrl?: string;
+        zenodo?: { doi?: string; recordUrl?: string };
+      }>(`/admin/review/submissions/${id}/publish`, {
+        method: 'POST',
+        body: JSON.stringify({ depositToZenodo }),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'review-detail', id] });
@@ -210,6 +373,14 @@ export default function ReviewArticle() {
   }
 
   const hasPending = !!data?.pendingSuggestion;
+  const isApproved = sub.status.toUpperCase() === 'APPROVED';
+  const isPublished = sub.status.toUpperCase() === 'PUBLISHED';
+
+  const latestVersion = versions?.[0];
+  const isLatestFromAuthor = latestVersion?.created_by === 'author' && latestVersion?.version_number > 1;
+
+  const zenodoEnabled = data?.zenodoEnabled ?? false;
+  const zenodoDoi = sub.doi;
 
   return (
     <div className="min-h-screen bg-background">
@@ -230,48 +401,95 @@ export default function ReviewArticle() {
             </p>
           </div>
           <Badge variant={hasPending ? 'destructive' : 'secondary'}>
-            {hasPending ? 'Sugestão pendente' : sub.status}
+            {hasPending ? 'Sugestão pendente' : formatStatus(sub.status)}
           </Badge>
         </div>
 
         {/* ── Abas ─────────────────────────────────────────── */}
-        <div className="flex border-b">
+        <div className="flex border-b gap-1 overflow-x-auto hide-scrollbar">
           <button
-            onClick={() => setActiveTab('original')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'original'
+            onClick={() => setActiveTab('current')}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'current'
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            Original
+            <FileText className="h-4 w-4" /> Artigo Atual
           </button>
+          
+          <button
+            onClick={() => setActiveTab('versions')}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'versions'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <History className="h-4 w-4" /> Histórico de versões
+          </button>
+
           <button
             onClick={() => setActiveTab('editing')}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               activeTab === 'editing'
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            Editando
+            <MessageSquare className="h-4 w-4" /> Fazer sugestão
             {hasPending && (
-              <span className="ml-2 inline-flex items-center justify-center h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-[10px]">
+              <span className="ml-1 inline-flex items-center justify-center h-4 w-4 rounded-full bg-destructive text-destructive-foreground text-[10px]">
                 1
               </span>
             )}
           </button>
         </div>
 
-        {/* ── Aba: Original ─────────────────────────────────── */}
-        {activeTab === 'original' && (
+        {/* ── Aba: Artigo Atual ─────────────────────────────────── */}
+        {activeTab === 'current' && (
           <div className="space-y-6">
+
+            {isLatestFromAuthor && (
+              <div className="p-4 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge className="bg-blue-600 hover:bg-blue-700">Nova versão do autor</Badge>
+                  <span className="text-xs text-muted-foreground">
+                    Versão {latestVersion.version_number} • {new Date(latestVersion.created_at).toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">Notas do autor sobre as mudanças:</p>
+                <p className="text-sm text-blue-800 dark:text-blue-200 whitespace-pre-wrap italic">
+                  "{latestVersion.change_summary}"
+                </p>
+              </div>
+            )}
+
             <Card>
               <CardHeader>
                 <CardTitle>{sub.title}</CardTitle>
                 {sub.summary && <CardDescription>{sub.summary}</CardDescription>}
               </CardHeader>
               <CardContent className="space-y-4">
+                {sub.metadata?.image?.url && (
+                  <img
+                    src={sub.metadata.image.url}
+                    alt={sub.metadata.image.alternativeText || sub.title}
+                    className="w-full max-h-80 object-cover rounded-md border"
+                  />
+                )}
+                {sub.metadata?.video?.url && (
+                  <video
+                    src={sub.metadata.video.url}
+                    controls
+                    className="w-full max-h-80 rounded-md border"
+                  />
+                )}
+                {(sub.metadata?.image?.caption || sub.metadata?.video?.caption) && (
+                  <p className="text-xs text-muted-foreground italic">
+                    {sub.metadata.image?.caption || sub.metadata.video?.caption}
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
                   {sub.category && <span className="font-medium">{sub.category}</span>}
                   {sub.author_name && <span>· {sub.author_name}</span>}
@@ -285,48 +503,187 @@ export default function ReviewArticle() {
                   </div>
                 )}
                 <Separator />
-                <div
-                  className="prose prose-sm dark:prose-invert max-w-none"
-                  dangerouslySetInnerHTML={{ __html: sub.content ?? '' }}
-                />
+                {zenodoDoi && (
+                  <p className="text-sm text-muted-foreground">
+                    DOI:{' '}
+                    <a
+                      href={`https://doi.org/${zenodoDoi}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline"
+                    >
+                      {zenodoDoi}
+                    </a>
+                  </p>
+                )}
+        
+                {sub.content_html ? (
+                  <div
+                    className="prose prose-sm dark:prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{ __html: sub.content_html }}
+                  />
+                ) : (
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    {sub.content?.split('\n').map((paragraph, i) =>
+                      paragraph.trim() ? <p key={i}>{paragraph}</p> : null
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             {/* Botões de ação */}
             <div className="flex justify-end gap-3">
-              <Button
-                variant="destructive"
-                onClick={() => setConfirmDialog({ open: true, action: 'rejected' })}
-                disabled={statusMutation.isPending}
-              >
-                {statusMutation.isPending && statusMutation.variables === 'rejected' ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Rejeitando…</>
-                ) : (
-                  'Rejeitar'
-                )}
-              </Button>
-              <Button
-                onClick={() => setConfirmDialog({ open: true, action: 'approved' })}
-                disabled={statusMutation.isPending}
-              >
-                {statusMutation.isPending && statusMutation.variables === 'approved' ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Aprovando…</>
-                ) : (
-                  'Aprovar'
-                )}
-              </Button>
+              {!isPublished && (
+                <>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setConfirmDialog({ open: true, action: 'rejected' })}
+                    disabled={statusMutation.isPending || publishMutation.isPending}
+                  >
+                    {statusMutation.isPending && statusMutation.variables === 'rejected' ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Rejeitando…</>
+                    ) : (
+                      'Rejeitar'
+                    )}
+                  </Button>
+                  {!isApproved && (
+                    <Button
+                      onClick={() => {
+                        setDepositToZenodo(true);
+                        setConfirmDialog({ open: true, action: 'approved' });
+                      }}
+                      disabled={statusMutation.isPending || publishMutation.isPending}
+                    >
+                      {statusMutation.isPending && statusMutation.variables === 'approved' ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Aprovando…</>
+                      ) : (
+                        'Aprovar'
+                      )}
+                    </Button>
+                  )}
+                  {isApproved && (
+                    <Button
+                      onClick={() => publishMutation.mutate()}
+                      disabled={statusMutation.isPending || publishMutation.isPending}
+                    >
+                      {publishMutation.isPending ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Publicando…</>
+                      ) : (
+                        'Publicar'
+                      )}
+                    </Button>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Feedback de status */}
+            {publishMutation.isError && (
+              <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
+                <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                <p>{publishMutation.error instanceof ApiError ? publishMutation.error.message : 'Erro ao publicar artigo.'}</p>
+              </div>
+            )}
+            {publishMutation.isSuccess && (
+              <div className="rounded-lg border border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950 p-3 text-sm text-green-800 dark:text-green-200">
+                Artigo publicado com sucesso!
+              </div>
+            )}
             {statusMutation.isError && (
               <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive">
                 <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-                <p>{statusMutation.error instanceof ApiError ? statusMutation.error.message : 'Erro ao atualizar status.'}</p>
+                <p>
+                  {statusMutation.error instanceof ApiError ? statusMutation.error.message : ''}
+                  {publishMutation.error instanceof ApiError ? publishMutation.error.message : ''}
+                  {!statusMutation.error && !publishMutation.error && 'Erro ao processar a requisição.'}
+                </p>
               </div>
             )}
-            {statusMutation.isSuccess && (
+            
+            {(statusMutation.isSuccess || publishMutation.isSuccess) && (
               <div className="rounded-lg border border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950 p-3 text-sm text-green-800 dark:text-green-200">
-                Status atualizado com sucesso!
+                Ação realizada com sucesso! O status da submissão foi atualizado.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Aba: Histórico de versões ─────────────────────────────────── */}
+        {activeTab === 'versions' && (
+          <div className="space-y-4">
+            {!versions || versions.length === 0 ? (
+              <div className="flex justify-center py-16">
+                {isLoading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : <p className="text-muted-foreground">Nenhuma versão registrada.</p>}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
+                
+                {/* Lista lateral de versões */}
+                <div className="space-y-2">
+                  {versions.map(v => (
+                    <button
+                      key={v.version_number}
+                      onClick={() => setSelectedVersion(v)}
+                      className={`w-full text-left p-4 rounded-lg border transition-colors ${
+                        selectedVersion?.version_number === v.version_number
+                          ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium">Versão {v.version_number}</span>
+                        <Badge variant="outline" className="text-xs">
+                          {v.created_by === 'author' ? 'Autor' : 'Curador'}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(v.created_at).toLocaleDateString('pt-BR')}
+                      </p>
+                      {v.change_summary && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{v.change_summary}</p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Visualização da versão selecionada */}
+                {selectedVersion ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Versão {selectedVersion.version_number}</CardTitle>
+                      {selectedVersion.change_summary && (
+                        <div className="p-3 bg-muted/40 rounded-md border-l-4 border-primary mt-2">
+                          <p className="text-xs font-medium text-muted-foreground mb-1">Notas da versão</p>
+                          <p className="text-sm">{selectedVersion.change_summary}</p>
+                        </div>
+                      )}
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-muted-foreground">Título</p>
+                        <p className="text-sm">{selectedVersion.title}</p>
+                      </div>
+                      {selectedVersion.summary && (
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium text-muted-foreground">Resumo</p>
+                          <p className="text-sm">{selectedVersion.summary}</p>
+                        </div>
+                      )}
+                      {selectedVersion.content && (
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium text-muted-foreground">Conteúdo</p>
+                          <p className="text-sm whitespace-pre-wrap max-h-96 overflow-y-auto">
+                            {selectedVersion.content}
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="flex items-center justify-center py-16 text-muted-foreground border rounded-lg">
+                    <p className="text-sm">Selecione uma versão ao lado para visualizar o texto da época.</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -344,13 +701,56 @@ export default function ReviewArticle() {
               </div>
             )}
 
+            {/* Imagem/Vídeo */}
+            <div className="space-y-3">
+              <Label>Imagem ou vídeo de destaque</Label>
+              <p className="text-xs text-muted-foreground">
+                Curadores só podem remover a mídia atual — apenas o autor pode enviar uma nova.
+              </p>
+              {sub.metadata?.image?.url || sub.metadata?.video?.url ? (
+                <div className="relative inline-block">
+                  {sub.metadata?.video?.url ? (
+                    <video
+                      src={sub.metadata.video.url}
+                      controls
+                      className="max-h-64 rounded-md border"
+                    />
+                  ) : (
+                    <img
+                      src={sub.metadata?.image!.url}
+                      alt={sub.metadata?.image!.alternativeText || sub.title}
+                      className="max-h-64 rounded-md border"
+                    />
+                  )}
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => removeImageMutation.mutate()}
+                    disabled={removeImageMutation.isPending}
+                  >
+                    {removeImageMutation.isPending ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Removendo…</>
+                    ) : (
+                      <><X className="h-4 w-4 mr-2" />Remover mídia</>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">Nenhuma imagem ou vídeo cadastrado.</p>
+              )}
+              {removeImageMutation.isError && (
+                <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+                  {removeImageMutation.error instanceof ApiError ? removeImageMutation.error.message : 'Erro ao remover mídia.'}
+                </p>
+              )}
+            </div>
+
+            <Separator />
+
             {/* Campos básicos */}
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="r-title">Título</Label>
-                <Input id="r-title" value={title} onChange={e => setTitle(e.target.value)} />
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="r-summary">Resumo</Label>
                 <textarea
@@ -358,8 +758,12 @@ export default function ReviewArticle() {
                   value={summary}
                   onChange={e => setSummary(e.target.value)}
                   rows={4}
+                  maxLength={1000}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
                 />
+                <div className="text-right text-xs text-muted-foreground mt-1">
+                  {summary.length}/1000
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -389,6 +793,95 @@ export default function ReviewArticle() {
               <div className="space-y-2">
                 <Label htmlFor="r-institution">Instituição do autor</Label>
                 <Input id="r-institution" value={authorInst} onChange={e => setAuthorInst(e.target.value)} />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Nascimento, Morte ── */}
+            {category === 'pessoa' && (
+              <div className="space-y-6 pt-2 pb-2">
+                <div className="space-y-3">
+                  <Label className="text-base font-semibold">Nascimento</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Data de Nascimento</Label>
+                      <Input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Local de Nascimento</Label>
+                      <Input value={birthPlace} onChange={(e) => setBirthPlace(e.target.value)} placeholder="Ex: São Paulo, Brasil" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-base font-semibold">Morte</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Data de Morte</Label>
+                      <Input type="date" value={deathDate} onChange={(e) => setDeathDate(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Local de Morte</Label>
+                      <Input value={deathPlace} onChange={(e) => setDeathPlace(e.target.value)} placeholder="Ex: São Paulo, Brasil" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-3 mt-4">
+              <Label>Ocupação</Label>
+              <div className="flex flex-wrap gap-2">
+                {occupations.map((occ) => (
+                  <Badge key={occ} variant="secondary" className="gap-1 pr-1">
+                    {occ}
+                    <button type="button" onClick={() => removeOccupation(occ)} className="ml-1 hover:text-destructive">
+                      <X size={12} />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input placeholder="Ex: jornalista, advogado..." value={newOccupation} onChange={(e) => setNewOccupation(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addOccupation(); } }} />
+                <Button variant="outline" onClick={addOccupation} type="button"><Plus size={16} /></Button>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Organizações</Label>
+              <div className="flex flex-wrap gap-2">
+                {organizations.map((org) => (
+                  <Badge key={org} variant="secondary" className="gap-1 pr-1">
+                    {org}
+                    <button type="button" onClick={() => removeOrganization(org)} className="ml-1 hover:text-destructive">
+                      <X size={12} />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input placeholder="Ex: O Estado de S. Paulo..." value={newOrganization} onChange={(e) => setNewOrganization(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addOrganization(); } }} />
+                <Button variant="outline" onClick={addOrganization} type="button"><Plus size={16} /></Button>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Nomes Alternativos</Label>
+              <div className="flex flex-wrap gap-2">
+                {alternativeNames.map((an) => (
+                  <Badge key={an} variant="secondary" className="gap-1 pr-1">
+                    {an}
+                    <button type="button" onClick={() => removeAlternativeName(an)} className="ml-1 hover:text-destructive">
+                      <X size={12} />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input placeholder="Ex: Paulo Alfeu Junqueira..." value={newAlternativeName} onChange={(e) => setNewAlternativeName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addAlternativeName(); } }} />
+                <Button variant="outline" onClick={addAlternativeName} type="button"><Plus size={16} /></Button>
               </div>
             </div>
 
@@ -430,8 +923,12 @@ export default function ReviewArticle() {
                 value={content}
                 onChange={e => setContent(e.target.value)}
                 rows={20}
+                maxLength={10000}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
               />
+              <div className="text-right text-xs text-muted-foreground mt-1">
+                {content.length}/10000
+              </div>
             </div>
 
             <Separator />
@@ -549,14 +1046,34 @@ export default function ReviewArticle() {
               </button>
               
               <h2 className="text-lg font-semibold tracking-tight mb-2">
-                {confirmDialog.action === 'approved' ? 'Aprovar submissão?' : 'Rejeitar submissão?'}
+                {confirmDialog.action === 'approved' ? 'Aprovar submissão?' :
+                 confirmDialog.action === 'published' ? 'Publicar artigo?' : 'Rejeitar submissão?'}
               </h2>
               
               <div className="text-sm text-muted-foreground mb-6">
                 {confirmDialog.action === 'approved'
                   ? 'Tem certeza que deseja aprovar esta submissão? O autor será notificado.'
+                  : confirmDialog.action === 'published'
+                  ? 'Tem certeza que deseja publicar este artigo? Ele ficará visível publicamente na enciclopédia.'
                   : 'Tem certeza que deseja rejeitar esta submissão? O autor será notificado.'}
               </div>
+
+              {confirmDialog.action === 'approved' && zenodoEnabled && (
+                <label className="flex items-start gap-3 mb-6 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={depositToZenodo}
+                    onChange={(e) => setDepositToZenodo(e.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-input"
+                  />
+                  <span className="text-sm">
+                    <span className="font-medium text-foreground">Depositar no Zenodo e atribuir DOI</span>
+                    <span className="block text-muted-foreground mt-0.5">
+                      Preferência salva para quando o artigo for publicado.
+                    </span>
+                  </span>
+                </label>
+              )}
 
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={() => setConfirmDialog({ open: false, action: null })}>
@@ -565,11 +1082,17 @@ export default function ReviewArticle() {
                 <Button 
                   variant={confirmDialog.action === 'rejected' ? 'destructive' : 'default'}
                   onClick={() => {
-                    statusMutation.mutate(confirmDialog.action!);
+                    if (confirmDialog.action === 'published') {
+                      publishMutation.mutate();
+                    } else if (confirmDialog.action) {
+                      statusMutation.mutate(confirmDialog.action);
+                    }
                     setConfirmDialog({ open: false, action: null });
                   }}
+                  disabled={publishMutation.isPending || statusMutation.isPending}
                 >
-                  {confirmDialog.action === 'approved' ? 'Aprovar' : 'Rejeitar'}
+                  {confirmDialog.action === 'approved' ? 'Aprovar' :
+                   confirmDialog.action === 'published' ? 'Publicar' : 'Rejeitar'}
                 </Button>
               </div>
             </div>

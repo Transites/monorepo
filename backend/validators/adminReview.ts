@@ -79,7 +79,12 @@ class AdminReviewValidators {
                     typeof keyword === 'string' && keyword.length <= 50
                 );
             })
-            .withMessage('Cada keyword deve ser uma string com no máximo 50 caracteres')
+            .withMessage('Cada keyword deve ser uma string com no máximo 50 caracteres'),
+
+        body('depositToZenodo')
+            .optional()
+            .isBoolean()
+            .withMessage('depositToZenodo deve ser um valor booleano')
     ];
 
     public validateSearchSubmissions = [
@@ -91,7 +96,7 @@ class AdminReviewValidators {
         query('status')
             .optional()
             .custom((value) => {
-                const validStatuses = ['DRAFT', 'UNDER_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'PUBLISHED', 'REJECTED'];
+                const validStatuses = ['DRAFT', 'SUBMITTED', 'UNDER_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'PUBLISHED', 'REJECTED'];
                 const statusArray = value.split(',');
                 return statusArray.every((status: string) => validStatuses.includes(status));
             })
@@ -108,7 +113,7 @@ class AdminReviewValidators {
         query('status')
             .optional()
             .custom((value) => {
-                const validStatuses = ['DRAFT', 'UNDER_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'PUBLISHED', 'REJECTED'];
+                const validStatuses = ['DRAFT','PENDING', 'SUBMITTED', 'UNDER_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'PUBLISHED', 'REJECTED'];
                 const statusArray = Array.isArray(value) ? value : value.split(',');
                 return statusArray.every((status: string) => validStatuses.includes(status));
             })
@@ -260,7 +265,8 @@ class AdminReviewValidators {
     public sanitizePublishData = [
         body('publishNotes').optional().trim(),
         body('categoryOverride').optional().trim(),
-        body('keywordsOverride.*').optional().trim()
+        body('keywordsOverride.*').optional().trim(),
+        body('depositToZenodo').optional().toBoolean(),
     ];
 
     public sanitizeSearchData = [

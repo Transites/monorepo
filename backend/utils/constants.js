@@ -2,6 +2,7 @@ module.exports = {
     // Statuses de submissão
     SUBMISSION_STATUS: {
         DRAFT: 'DRAFT',
+        SUBMITTED: 'SUBMITTED',
         UNDER_REVIEW: 'UNDER_REVIEW',
         CHANGES_REQUESTED: 'CHANGES_REQUESTED',
         APPROVED: 'APPROVED',
@@ -58,6 +59,13 @@ module.exports = {
         'rtf'
     ],
 
+    ALLOWED_VIDEO_TYPES: [
+        'mp4',
+        'mov',
+        'webm',
+        'avi'
+    ],
+
     // Limites específicos de submissão
     SUBMISSION_LIMITS: {
         MAX_ATTACHMENTS: 5,
@@ -77,6 +85,7 @@ module.exports = {
     // Mensagens de status
     STATUS_MESSAGES: {
         DRAFT: 'Rascunho - Continue editando',
+        SUBMITTED: 'Enviada para revisão editorial',
         UNDER_REVIEW: 'Em revisão pelos editores',
         CHANGES_REQUESTED: 'Correções solicitadas',
         APPROVED: 'Aprovado para publicação',
@@ -95,6 +104,7 @@ module.exports = {
         KEYWORDS_MAX: 10,
         KEYWORD_MAX: 50,
         FILE_SIZE_MAX: 10 * 1024 * 1024, // 10MB
+        VIDEO_SIZE_MAX: 50 * 1024 * 1024, // 50MB
         SUBMISSIONS_PER_DAY: 5,
         TOKEN_ATTEMPTS_PER_HOUR: 10
     },

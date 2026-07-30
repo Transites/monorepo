@@ -7,20 +7,20 @@ interface AdminRouteProps {
 }
 
 const AdminRoute = ({ children }: AdminRouteProps) => {
-  const { isAdmin, loading } = useAuth();
+  const { isAdmin, loading, adminLoading } = useAuth();
   const location = useLocation();
 
-  if (loading) {
+  // Espera a sessão base carregar OU a checagem de privilégios terminar
+  if (loading || adminLoading) {
     return <LoadingScreen />;
   }
 
+  // Se ambos os loadings terminaram e a pessoa não é admin, recusa a entrada
   if (!isAdmin) {
-    {/* if the user is not an admin, redirect to home */}
     return <Navigate to="/" state={{ from: location.pathname }} replace />;
   }
 
   return <>{children}</>;
 };
-
 
 export default AdminRoute;

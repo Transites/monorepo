@@ -2,6 +2,7 @@
 import db from '../database/client';
 import tokenService from './tokens';
 import emailService from './email';
+import mediaService from './media';
 import constants from '../utils/constants';
 import {generateSlug} from '../utils/url';
 import {
@@ -114,14 +115,15 @@ class SubmissionService {
             if (!validation.isValid) {
                 throw new ValidationException('Dados inválidos', validation.errors);
             }
+            const contentHtml = formatContentToHtml(submissionData.content || '');
 
             // Iniciar transação
             return await db.transaction(async (client: any) => {
                 // Criar submissão
                 const submission = await client.query(`
                     INSERT INTO submissions (token, status, author_name, author_email, author_institution,
-                                             title, summary, content, keywords, category, metadata)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                                             title, summary, content, keywords, category, metadata, content_html)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                     RETURNING *
                 `, [
                     await tokenService.generateSecureToken(),
@@ -134,7 +136,8 @@ class SubmissionService {
                     submissionData.content || '',
                     submissionData.keywords || [],
                     submissionData.category || null,
-                    submissionData.metadata || {}
+                    submissionData.metadata || {},
+                    contentHtml,
                 ]);
 
                 const newSubmission = submission.rows[0];
@@ -149,13 +152,21 @@ class SubmissionService {
                 }, client);
 
                 // Enviar email com token (async - não bloqueia)
+                const adminsResult = await client.query(
+                    'SELECT email FROM admins WHERE is_active = TRUE'
+                );
+                const adminEmails = adminsResult.rows.map((admin: { email: string; }) => admin.email);
+
                 setImmediate(async () => {
                     try {
                         await emailService.sendSubmissionToken(
                             newSubmission.author_email,
                             newSubmission,
-                            newSubmission.token
                         );
+
+                        if(adminEmails.length > 0) {
+                            await emailService.notifyAdminNewSubmission(newSubmission, adminEmails);
+                        }
                     } catch (emailError: any) {
                         logger.error('Failed to send submission token email', {
                             submissionId: newSubmission.id,
@@ -466,35 +477,25 @@ class SubmissionService {
                 );
             }
 
-            const renewalDate = new Date();
-            renewalDate.setDate(renewalDate.getDate() + 30);
-
             return await db.transaction(async (client: any) => {
+                // Atualizar status e timestamp
                 const result = await client.query(`
                     UPDATE submissions
                     SET status       = $1,
                         submitted_at = $2,
-                        updated_at   = $2,
-                        expires_at   = $3
-                    WHERE id = $4
+                        updated_at   = $2
+                    WHERE id = $3
                     RETURNING *
                 `, [
-                    constants.SUBMISSION_STATUS.UNDER_REVIEW,
+                    constants.SUBMISSION_STATUS.SUBMITTED,
                     new Date(),
-                    renewalDate,
                     submissionId
                 ]);
 
                 const updatedSubmission = result.rows[0];
 
-                // Criar snapshot da versão submetida
-                await this.createVersionSnapshot(submissionId, {
-                    title: updatedSubmission.title,
-                    summary: updatedSubmission.summary,
-                    content: updatedSubmission.content,
-                    metadata: updatedSubmission.metadata,
-                    change_summary: 'Versão submetida para revisão'
-                }, client);
+                // Renovar token automaticamente (30 dias adicionais)
+               // await tokenService.renewToken(submissionId, 30);
 
                 // Buscar emails dos admins
                 // Expected adminsResult = { rows: [{ email: string }] }
@@ -541,6 +542,224 @@ class SubmissionService {
 
             throw new DatabaseException('Erro ao enviar submissão para revisão', error);
         }
+    }
+
+    /**
+     * Buscar sugestões de revisão de uma submissão
+     */
+    async getSubmissionSuggestions(submissionId: string, authorEmail: string): Promise<any> {
+        // Verifica que a submissão pertence ao autor
+        const submission = await db.query(
+            'SELECT id, author_email FROM submissions WHERE id = $1',
+            [submissionId]
+        );
+
+        if (submission.rows.length === 0) {
+            throw new SubmissionNotFoundException('Submissão não encontrada');
+        }
+
+        if (submission.rows[0].author_email !== authorEmail) {
+            throw new ValidationException('Acesso negado', ['Você não é o autor desta submissão']);
+        }
+
+        const suggestions = await db.query(`
+            SELECT
+                ss.*,
+                a.name as admin_name
+            FROM submission_suggestions ss
+            LEFT JOIN admins a ON ss.admin_id = a.id
+            WHERE ss.submission_id = $1
+            ORDER BY ss.created_at DESC
+        `, [submissionId]);
+
+        return suggestions.rows;
+    }
+
+    /**
+     * Autor aceita sugestão — aplica as mudanças na submissão original
+     */
+    async acceptSuggestion(submissionId: string, suggestionId: string, authorEmail: string): Promise<any> {
+        // Verifica que a submissão pertence ao autor
+        const submission = await db.query(
+            'SELECT * FROM submissions WHERE id = $1',
+            [submissionId]
+        );
+
+        if (submission.rows.length === 0) {
+            throw new SubmissionNotFoundException('Submissão não encontrada');
+        }
+
+        if (submission.rows[0].author_email !== authorEmail) {
+            throw new ValidationException('Acesso negado', ['Você não é o autor desta submissão']);
+        }
+
+        // Busca a sugestão
+        const suggestion = await db.query(
+            'SELECT * FROM submission_suggestions WHERE id = $1 AND submission_id = $2',
+            [suggestionId, submissionId]
+        );
+
+        if (suggestion.rows.length === 0) {
+            throw new SubmissionNotFoundException('Sugestão não encontrada');
+        }
+
+        const s = suggestion.rows[0];
+
+        return await db.transaction(async (client: any) => {
+            // Monta os campos a atualizar — só os que o curador sugeriu (não nulos)
+            const fields: string[] = [];
+            const values: any[]    = [];
+            let i = 1;
+
+            const mapping: Record<string, string> = {
+                suggested_title:    'title',
+                suggested_summary:  'summary',
+                suggested_content:  'content',
+                suggested_category: 'category',
+                suggested_keywords: 'keywords',
+                suggested_metadata: 'metadata',
+            };
+
+            Object.entries(mapping).forEach(([suggField, subField]) => {
+                if (s[suggField] !== null && s[suggField] !== undefined) {
+                    fields.push(`${subField} = $${i}`);
+                    values.push(s[suggField]);
+                    i++;
+                }
+            });
+
+            if (fields.length > 0) {
+                fields.push(`updated_at = $${i}`);
+                values.push(new Date());
+                i++;
+                values.push(submissionId);
+
+                await client.query(
+                    `UPDATE submissions SET ${fields.join(', ')} WHERE id = $${i}`,
+                    values
+                );
+            }
+
+            // Marca a sugestão como aceita
+            await client.query(
+                `UPDATE submission_suggestions
+                SET status = 'accepted', resolved_at = NOW()
+                WHERE id = $1`,
+                [suggestionId]
+            );
+
+            logger.audit('Suggestion accepted by author', { submissionId, suggestionId, authorEmail });
+
+            return { success: true, message: 'Sugestão aceita e aplicada com sucesso' };
+        });
+    }
+
+    /**
+     * Autor rejeita sugestão
+     */
+    async rejectSuggestion(submissionId: string, suggestionId: string, authorEmail: string): Promise<any> {
+        const submission = await db.query(
+            'SELECT author_email FROM submissions WHERE id = $1',
+            [submissionId]
+        );
+
+        if (submission.rows.length === 0) {
+            throw new SubmissionNotFoundException('Submissão não encontrada');
+        }
+
+        if (submission.rows[0].author_email !== authorEmail) {
+            throw new ValidationException('Acesso negado', ['Você não é o autor desta submissão']);
+        }
+
+        await db.query(
+            `UPDATE submission_suggestions
+            SET status = 'rejected', resolved_at = NOW()
+            WHERE id = $1 AND submission_id = $2`,
+            [suggestionId, submissionId]
+        );
+
+        logger.audit('Suggestion rejected by author', { submissionId, suggestionId, authorEmail });
+
+        return { success: true, message: 'Sugestão rejeitada' };
+    }
+
+    /**
+     * Define a mídia de destaque (imagem OU vídeo) da submissão — só permitido se não
+     * houver imagem/vídeo atual. Os dois tipos são mutuamente exclusivos.
+     */
+    async setSubmissionMedia(
+        submissionId: string,
+        mediaType: 'image' | 'video',
+        media: { url: string; publicId: string; caption?: string; alternativeText?: string },
+        authorEmail?: string
+    ): Promise<any> {
+        const submission = await db.findById('submissions', submissionId);
+        if (!submission) {
+            throw new SubmissionNotFoundException('Submissão não encontrada');
+        }
+
+        if (authorEmail !== undefined && submission.author_email !== authorEmail) {
+            throw new ValidationException('Acesso negado', ['Você não é o autor desta submissão']);
+        }
+
+        if (submission.metadata?.image || submission.metadata?.video) {
+            throw new ValidationException(
+                'Já existe uma imagem ou vídeo cadastrado',
+                ['Remova a mídia atual antes de enviar uma nova']
+            );
+        }
+
+        const metadata = { ...(submission.metadata || {}), [mediaType]: media };
+
+        const result = await db.query(
+            'UPDATE submissions SET metadata = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+            [metadata, submissionId]
+        );
+
+        logger.audit('Submission media set', { submissionId, mediaType, authorEmail });
+
+        return result.rows[0];
+    }
+
+    /**
+     * Remove a mídia de destaque (imagem ou vídeo, o que estiver presente) da submissão —
+     * apaga do Cloudinary e limpa o metadata
+     */
+    async removeSubmissionMedia(submissionId: string, authorEmail?: string): Promise<any> {
+        const submission = await db.findById('submissions', submissionId);
+        if (!submission) {
+            throw new SubmissionNotFoundException('Submissão não encontrada');
+        }
+
+        if (authorEmail !== undefined && submission.author_email !== authorEmail) {
+            throw new ValidationException('Acesso negado', ['Você não é o autor desta submissão']);
+        }
+
+        const mediaType: 'image' | 'video' | undefined = submission.metadata?.image
+            ? 'image'
+            : submission.metadata?.video
+                ? 'video'
+                : undefined;
+
+        if (!mediaType) {
+            throw new ValidationException('Nenhuma mídia para remover', ['Esta submissão não possui imagem ou vídeo cadastrado']);
+        }
+
+        const media = submission.metadata[mediaType];
+
+        await mediaService.deleteSubmissionMedia(media.publicId, mediaType);
+
+        const metadata = { ...(submission.metadata || {}) };
+        delete metadata[mediaType];
+
+        const result = await db.query(
+            'UPDATE submissions SET metadata = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+            [metadata, submissionId]
+        );
+
+        logger.audit('Submission media removed', { submissionId, mediaType, authorEmail });
+
+        return result.rows[0];
     }
 
     // TODO: mover função para dentro do serviço de upload.
@@ -768,17 +987,20 @@ class SubmissionService {
             const offset = (pagination.page - 1) * pagination.limit;
 
             const result = await db.query(`
-                SELECT id,
-                       title,
-                       status,
-                       category,
-                       created_at,
-                       updated_at,
-                       expires_at,
-                       (SELECT COUNT(*) FROM feedback WHERE submission_id = s.id) as feedback_count
+                SELECT
+                    s.id,
+                    s.title,
+                    s.status,
+                    s.category,
+                    s.created_at,
+                    s.updated_at,
+                    s.expires_at,
+                    COUNT(ss.id) FILTER (WHERE ss.status = 'pending') as pending_suggestions_count
                 FROM submissions s
-                WHERE author_email = $1
-                ORDER BY updated_at DESC
+                LEFT JOIN submission_suggestions ss ON ss.submission_id = s.id
+                WHERE s.author_email = $1
+                GROUP BY s.id
+                ORDER BY s.updated_at DESC
                 LIMIT $2 OFFSET $3
             `, [authorEmail, pagination.limit, offset]);
 
@@ -790,10 +1012,8 @@ class SubmissionService {
             const total = parseInt(totalResult.rows[0].count);
             const totalPages = Math.ceil(total / pagination.limit);
 
-            const submissions = result.rows as SubmissionSummary[];
-
             return {
-                submissions,
+                submissions: result.rows,
                 pagination: {
                     page: pagination.page,
                     limit: pagination.limit,
@@ -878,12 +1098,12 @@ class SubmissionService {
             );
 
             const nextVersion = versionResult.rows[0].next_version;
-
+            const contentHtml = formatContentToHtml(versionData.content || '');
             // Inserir nova versão
             const result = await dbClient.query(`
                 INSERT INTO submission_versions (submission_id, version_number, title, summary, content,
-                                                 metadata, created_by, change_summary)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                                                 metadata, created_by, change_summary, content_html)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                 RETURNING *
             `, [
                 submissionId,
@@ -892,8 +1112,9 @@ class SubmissionService {
                 versionData.summary,
                 versionData.content,
                 versionData.metadata || {},
-                versionData.created_by || 'system',
-                versionData.change_summary || 'Versão automática'
+                versionData.created_by || 'author',
+                versionData.change_summary || 'Versão automática',
+                contentHtml,
             ]);
 
             return result.rows[0];
@@ -1301,6 +1522,19 @@ class SubmissionService {
             throw new DatabaseException('Erro ao listar submissões', error);
         }
     }
+}
+
+function formatContentToHtml(content) {
+    if (!content) return '';
+    
+    // Converte formatações básicas de texto para HTML
+    let processed = content
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+
+    return `<p>${processed}</p>`;
 }
 
 export default new SubmissionService();

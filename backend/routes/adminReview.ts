@@ -5,6 +5,7 @@ import AdminReviewController from '../controllers/adminReview';
 import { AuthMiddleware } from '../middleware/auth';
 import { ErrorHandler } from '../middleware/errors';
 import SubmissionSuggestionsController from '../controllers/submissionSuggestions'
+import submissionController from '../controllers/submission';
 
 const router = Router();
 
@@ -76,6 +77,20 @@ router.get('/submissions/:id/suggestions',
 router.post('/submissions/:id/suggestions',
     authMiddleware.logAdminAction('create_suggestion'),
     errorHandler.asyncHandler(suggestionsController.createSuggestion)
+);
+
+// PUT /api/admin/review/submissions/:id/media
+// Definir imagem ou vídeo de destaque da submissão
+router.put('/submissions/:id/media',
+    authMiddleware.logAdminAction('set_submission_media'),
+    errorHandler.asyncHandler(submissionController.setMedia)
+);
+
+// DELETE /api/admin/review/submissions/:id/media
+// Remover imagem ou vídeo de destaque da submissão
+router.delete('/submissions/:id/media',
+    authMiddleware.logAdminAction('remove_submission_media'),
+    errorHandler.asyncHandler(submissionController.removeMedia)
 );
 
 // PUT /api/admin/review/submissions/:id/status

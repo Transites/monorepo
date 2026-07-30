@@ -30,6 +30,7 @@ export interface Submission {
   token?: string;
   versions?: unknown[];
   feedback?: unknown[];
+  doi?: string;
   metadata?: {
     slug?: string;
     type?: string;
@@ -38,12 +39,14 @@ export interface Submission {
       caption?: string;
       credit?: string;
       alternativeText?: string;
+      publicId?: string;
     };
     video?: {
       url: string;
       caption?: string;
       credit?: string;
       alternativeText?: string;
+      publicId?: string;
     };
     birth?: {
       date: string;
@@ -436,6 +439,36 @@ export interface CreateArticleSubmissionPayload {
   submit_for_review?: boolean;
 }
 
+export interface UploadSubmissionMediaResponse {
+  url: string;
+  resourceType: 'image' | 'video';
+  publicId: string;
+}
+
+/**
+ * Uploads the single image/video attached to a submission. The file is streamed
+ * to Cloudinary server-side; only the resulting URL is returned to the client.
+ */
+export async function uploadSubmissionMedia(file: File): Promise<UploadSubmissionMediaResponse> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await fetch(`${API_BASE_URL}/submissions/media`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  const data = (await response.json()) as APIResponse<UploadSubmissionMediaResponse>;
+  const message = data.message || data.error || `HTTP ${response.status}`;
+  const errors = parseApiErrors(data);
+
+  if (!response.ok || !data.success) {
+    throw new ApiError(message, response.status, errors);
+  }
+
+  return data.data;
+}
+
 export interface CreateArticleSubmissionResponse {
   submission: Submission;
   accessUrl?: string;
@@ -490,6 +523,18 @@ export async function updateArticle(
       method: 'PATCH',
       body: JSON.stringify(data),
     }
+  );
+  return response.data.submission;
+}
+
+/**
+ * Atribui um DOI ao artigo via Zenodo.
+ * Chama POST /api/articles/:id/assign-doi.
+ */
+export async function assignDoi(id: string): Promise<Submission> {
+  const response = await apiRequest<{ submission: Submission }>(
+    `/articles/${id}/assign-doi`,
+    { method: 'POST' }
   );
   return response.data.submission;
 }
@@ -648,4 +693,185 @@ export async function unassignSubmission(submissionId: string): Promise<AdminSub
     { method: 'POST' }
   );
   return response.data.submission;
+}
+
+// Autor
+export interface AuthorSubmission {
+  id: string;
+  title: string;
+  status: string;
+  category?: string;
+  created_at: string;
+  updated_at: string;
+  expires_at: string;
+  pending_suggestions_count: string;
+}
+
+export interface SubmissionSuggestion {
+  id: string;
+  submission_id: string;
+  admin_name?: string;
+  notes: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  resolved_at?: string;
+  suggested_title?: string;
+  suggested_summary?: string;
+  suggested_content?: string;
+  suggested_category?: string;
+  suggested_keywords?: string[];
+  suggested_metadata?: Record<string, any>;
+}
+
+/**
+ * Faz requisição autenticada como autor (usa token Supabase)
+ */
+async function authorRequest<T>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<APIResponse<T>> {
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+
+  if (!token) {
+    throw new ApiError('Sessão expirada. Faça login novamente.', 401);
+  }
+
+  return apiRequest<T>(endpoint, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+/**
+ * Lista todas as submissões do autor logado
+ */
+export async function getMySubmissions(): Promise<AuthorSubmission[]> {
+  const response = await authorRequest<{ submissions: AuthorSubmission[] }>(
+    '/author/submissions'
+  );
+  return response.data.submissions;
+}
+
+/**
+ * Lista sugestões do curador para uma submissão
+ */
+export async function getSubmissionSuggestions(
+  submissionId: string
+): Promise<SubmissionSuggestion[]> {
+  const response = await authorRequest<{ suggestions: SubmissionSuggestion[] }>(
+    `/author/submissions/${submissionId}/suggestions`
+  );
+  return response.data.suggestions;
+}
+
+/**
+ * Autor aceita uma sugestão do curador
+ */
+export async function acceptSuggestion(
+  submissionId: string,
+  suggestionId: string
+): Promise<void> {
+  await authorRequest(
+    `/author/submissions/${submissionId}/suggestions/${suggestionId}/accept`,
+    { method: 'POST' }
+  );
+}
+
+/**
+ * Autor rejeita uma sugestão do curador
+ */
+export async function rejectSuggestion(
+  submissionId: string,
+  suggestionId: string
+): Promise<void> {
+  await authorRequest(
+    `/author/submissions/${submissionId}/suggestions/${suggestionId}/reject`,
+    { method: 'POST' }
+  );
+}
+
+// Interface para o payload da contra-proposta
+export interface CounterSuggestionPayload {
+  suggested_title?: string;
+  suggested_summary?: string;
+  suggested_content?: string;
+  suggested_category?: string;
+  suggested_keywords?: string[];
+  notes: string; // Obrigatório para explicar as mudanças
+}
+
+/**
+ * Envia uma contra-proposta do autor baseada em uma sugestão do curador
+ */
+export async function counterSuggestion(
+  submissionId: string,
+  suggestionId: string,
+  payload: CounterSuggestionPayload
+): Promise<void> {
+  console.log('Contra-proposta enviada:', JSON.stringify(payload));
+  await authorRequest(
+    `/author/submissions/${submissionId}/suggestions/${suggestionId}/counter`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }
+  );
+  console.log('Contra-proposta enviada:', JSON.stringify(payload));
+}
+
+// Payload para definir a mídia de destaque (imagem ou vídeo) de uma submissão
+export interface SetSubmissionMediaPayload {
+  type: 'image' | 'video';
+  url: string;
+  publicId: string;
+  caption?: string;
+  alternativeText?: string;
+}
+
+/**
+ * Autor define a mídia de destaque da submissão (só permitido se não houver imagem/vídeo atual)
+ */
+export async function authorSetSubmissionMedia(
+  submissionId: string,
+  payload: SetSubmissionMediaPayload
+): Promise<void> {
+  await authorRequest(`/author/submissions/${submissionId}/media`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Autor remove a mídia de destaque (imagem ou vídeo) da submissão
+ */
+export async function authorRemoveSubmissionMedia(submissionId: string): Promise<void> {
+  await authorRequest(`/author/submissions/${submissionId}/media`, {
+    method: 'DELETE',
+  });
+}
+
+// Interface para uma versão de submissão
+export interface SubmissionVersion {
+  version_number: number;
+  title: string;
+  summary?: string;
+  content?: string;
+  change_summary?: string;
+  created_by: string;
+  created_at: string;
+}
+
+// Função para obter as versões de uma submissão específica
+export async function getSubmissionVersions(
+  submissionId: string
+): Promise<SubmissionVersion[]> {
+  const response = await authorRequest<{ versions: SubmissionVersion[] }>(
+    `/author/submissions/${submissionId}/versions`
+  );
+  return response.data.versions;
 }

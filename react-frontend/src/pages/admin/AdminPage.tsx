@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { fetchAdmins, addAdminFn, blockUserFn, moderatePageFn, removeAdminFn } from '@/hooks/use-admin-actions';
+import { useAuth } from '@/contexts/AuthContext';
 
 
 export default function AdminDashboard() {
@@ -35,9 +36,12 @@ export default function AdminDashboard() {
   
   const [targetPage, setTargetPage] = useState<string>('');
 
+  const { isAdmin, loading: authLoading } = useAuth();
+
   const { data: admins = [], isLoading: isLoadingAdmins } = useQuery({
     queryKey: ['admins'],
     queryFn: fetchAdmins,
+    enabled: !authLoading && !!isAdmin,
   });
 
   const clearMessages = () => {

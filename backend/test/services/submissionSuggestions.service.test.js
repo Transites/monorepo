@@ -241,7 +241,9 @@ describe('SubmissionSuggestionsService', () => {
       const result = await service.getSubmissionForReview(SUBMISSION_ID);
 
       expect(result.submission.id).toBe(SUBMISSION_ID);
-      expect(result.pendingSuggestion).toEqual(mockSuggestion);
+      expect(result.suggestions).toBeDefined();
+expect(result.suggestions.length).toBeGreaterThan(0);
+expect(result.suggestions[0]).toEqual(expect.objectContaining({ id: mockSuggestion.id }));
     });
 
     test('deve retornar submissão com pendingSuggestion null quando não há sugestão', async () => {
@@ -252,7 +254,7 @@ describe('SubmissionSuggestionsService', () => {
       const result = await service.getSubmissionForReview(SUBMISSION_ID);
 
       expect(result.submission.id).toBe(SUBMISSION_ID);
-      expect(result.pendingSuggestion).toBeNull();
+      expect(result.suggestions).toEqual([]);
     });
 
     test('deve lançar SubmissionNotFoundException quando submissão não existe', async () => {

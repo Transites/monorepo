@@ -18,6 +18,15 @@ export const ARTICLE_EDITOR_CATEGORY_LABELS: Record<ArticleEditorCategory, strin
   obra: 'Obra',
 };
 
+/** Same shape ArticleContent/CatalogCard read from metadata.image / metadata.video. */
+export interface ArticleMedia {
+  url: string;
+  caption?: string;
+  alternativeText?: string;
+  credit?: string;
+  publicId?: string;
+}
+
 export interface ArticleFormFields {
   title: string;
   summary: string;
@@ -27,14 +36,22 @@ export interface ArticleFormFields {
   content: string;
   keywords: string[];
   bibliography: BibliographyItem[];
+  metadata?: Record<string, any>;
+  media?: { type: 'image' | 'video'; data: ArticleMedia };
 }
 
 export interface SubmissionFormFields extends ArticleFormFields {
   author_email: string;
 }
 
-export function buildArticleMetadata(bibliography: BibliographyItem[]) {
-  return { bibliography };
+export function buildArticleMetadata(
+  bibliography: BibliographyItem[],
+  media?: ArticleFormFields['media']
+) {
+  return {
+    bibliography,
+    ...(media ? { [media.type]: media.data } : {}),
+  };
 }
 
 export function validateSubmissionForm(fields: SubmissionFormFields): string[] {
@@ -71,7 +88,33 @@ export function validateSubmissionForm(fields: SubmissionFormFields): string[] {
   return errors;
 }
 
+// ── Função auxiliar para gerar o slug a partir do título ──
+function generateSlug(text: string) {
+  return text
+    .toString()
+    .normalize('NFD') // Remove acentos
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-') // Troca espaços por hifens
+    .replace(/[^\w-]+/g, '') // Remove caracteres especiais
+    .replace(/--+/g, '-'); // Evita hifens duplos
+}
+
 export function buildSubmissionPayload(fields: SubmissionFormFields): CreateArticleSubmissionPayload {
+  // Pega o metadata que vem do form (nascimento, ocupação, etc) ou cria um padrão
+  const baseMetadata = fields.metadata || buildArticleMetadata(fields.bibliography);
+
+  // Monta o JSON completo com os campos estruturais esperados
+  const fullMetadata = {
+    slug: generateSlug(fields.title),
+    type: fields.category,
+    themes: fields.keywords, // Usa as palavras-chave como temas
+    sections: [], // Inicializa vazio para edição futura
+    source: "Submissão de Usuário",
+    ...baseMetadata, // Aqui entram a bibliografia, birth, death, etc.
+  };
+
   return {
     title: fields.title.trim(),
     summary: fields.summary.trim(),
@@ -81,7 +124,8 @@ export function buildSubmissionPayload(fields: SubmissionFormFields): CreateArti
     author_institution: fields.author_institution.trim() || undefined,
     content: fields.content.trim(),
     keywords: fields.keywords,
-    metadata: buildArticleMetadata(fields.bibliography),
+    metadata: fullMetadata,
+    metadata: buildArticleMetadata(fields.bibliography, fields.media),
     submit_for_review: true,
   };
 }
