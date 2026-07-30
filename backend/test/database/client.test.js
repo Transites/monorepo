@@ -1,3 +1,12 @@
+// Integration tests below run only when TEST_DATABASE_URL is set.
+if (!process.env.TEST_DATABASE_URL) {
+  console.warn('Skipping integration DB tests; set TEST_DATABASE_URL to run them.');
+  test.skip('integration tests skipped', () => {});
+} 
+
+const { Pool } = require('pg');
+const fs = require('fs').promises;
+const path = require('path');
 const { Pool } = require('pg');
 const fs = require('fs').promises;
 const path = require('path');
@@ -12,7 +21,7 @@ jest.mock('../../config/services', () => ({
   }
 }));
 
-// Importar o cliente após o mock
+// Importar o cliente
 const client = require('../../database/client');
 
 describe('Database Client Tests', () => {
