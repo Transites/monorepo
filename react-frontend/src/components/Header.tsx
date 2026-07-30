@@ -66,17 +66,18 @@ const Header = () => {
           </a>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden md:flex items-center space-x-5">
             <a href="#inicio" onClick={(e) => handleNavClick(e, 'inicio')} className="text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer">Início</a>
             <a href="#pesquisar" onClick={(e) => handleNavClick(e, 'pesquisar')} className="text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer">Pesquisar</a>
             <a href="#sobre" onClick={(e) => handleNavClick(e, 'sobre')} className="text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer">Sobre</a>
             <a href="#contato" onClick={(e) => handleNavClick(e, 'contato')} className="text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer">Contato</a>
+            <Link to="/minhas-submissoes" className="text-sm font-medium text-foreground hover:text-primary transition-colors">Meus Artigos</Link> 
             <Link to="/submissao/nova" className="text-sm font-medium text-foreground hover:text-primary transition-colors">Submeter</Link> 
             {isAdmin && (
               <Link to="/admin/home">
                 <Button size="sm" className="bg-black text-white hover:bg-black/90">
                   <LockOpen className="h-4 w-4" />
-                  Área do Administrador
+                  Admin
                 </Button>
               </Link>
             )}
