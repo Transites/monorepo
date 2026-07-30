@@ -21,10 +21,6 @@ interface MediaUploadRequest extends Request {
     file?: Express.Multer.File;
 }
 
-interface AuthenticatedRequest extends Request {
-    user?: { id: string; email: string; name?: string };
-}
-
 class SubmissionController {
     /**
      * POST /api/submissions
@@ -162,8 +158,9 @@ class SubmissionController {
      * PUT /api/author/submissions/:id/image
      * Define a imagem de destaque de uma submissão (autor)
      */
-    async setImageAsAuthor(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> {
+    async setImageAsAuthor(req: Request, res: Response, next: NextFunction): Promise<any> {
         try {
+            const authorEmail = (req as any).user?.email;
             const { url, publicId, caption, alternativeText } = req.body || {};
             if (!url || typeof url !== 'string' || !publicId || typeof publicId !== 'string') {
                 throw new ValidationException('Dados inválidos', ['Os campos "url" e "publicId" são obrigatórios']);
@@ -171,13 +168,13 @@ class SubmissionController {
 
             const submission = await submissionService.setSubmissionImage(req.params.id, {
                 url, publicId, caption, alternativeText
-            }, req.user!.email);
+            }, authorEmail);
 
             return responses.success(res, { submission }, 'Imagem atualizada com sucesso');
         } catch (error: any) {
             return handleControllerError(error, res, next, {
                 submissionId: req.params.id,
-                authorEmail: req.user?.email,
+                authorEmail: (req as any).user?.email,
                 operation: 'setImageAsAuthor'
             });
         }
@@ -187,14 +184,15 @@ class SubmissionController {
      * DELETE /api/author/submissions/:id/image
      * Remove a imagem de destaque de uma submissão (autor)
      */
-    async removeImageAsAuthor(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<any> {
+    async removeImageAsAuthor(req: Request, res: Response, next: NextFunction): Promise<any> {
         try {
-            const submission = await submissionService.removeSubmissionImage(req.params.id, req.user!.email);
+            const authorEmail = (req as any).user?.email;
+            const submission = await submissionService.removeSubmissionImage(req.params.id, authorEmail);
             return responses.success(res, { submission }, 'Imagem removida com sucesso');
         } catch (error: any) {
             return handleControllerError(error, res, next, {
                 submissionId: req.params.id,
-                authorEmail: req.user?.email,
+                authorEmail: (req as any).user?.email,
                 operation: 'removeImageAsAuthor'
             });
         }
