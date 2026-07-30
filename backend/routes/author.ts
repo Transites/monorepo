@@ -10,17 +10,6 @@ const suggestionsController = resolve<SubmissionSuggestionsController>('Submissi
 
 router.use(authMiddleware.requireAuthAsAuthor);
 
-// DEBUG TEMPORÁRIO — remover depois
-router.use((req, res, next) => {
-  console.log('=== AUTHOR ROUTE DEBUG ===');
-  console.log('Method:', req.method);
-  console.log('Path:', req.path);
-  console.log('Content-Type:', req.headers['content-type']);
-  console.log('Body:', JSON.stringify(req.body));
-  console.log('Body keys:', Object.keys(req.body || {}));
-  next();
-});
-
 // Lista todas as submissões do autor logado
 router.get('/submissions',
   errorHandler.asyncHandler(submissionController.getAuthorSubmissions)
@@ -45,4 +34,5 @@ router.post('/submissions/:id/suggestions/:suggestionId/counter',
 router.get('/submissions/:id/versions',
   errorHandler.asyncHandler(suggestionsController.getSubmissionVersions)
 );
+
 module.exports = router;

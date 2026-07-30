@@ -274,11 +274,12 @@ describe('SubmissionService.createSubmission', () => {
     beforeEach(() => jest.clearAllMocks());
 
     it('creates submission and returns row from DB', async () => {
-        const newRow = { id: 'new-id', title: 'Artigo', author_email: 'a@b.com', token: 'tok' };
+        const newRow = { id: 'new-id', title: 'Artigo', author_email: 'a@b.com', token: 'tok', content_html: '<p>Conteúdo</p>' };
         mockClient.query
             .mockResolvedValueOnce({ rows: [newRow] })      // INSERT submission
             .mockResolvedValueOnce({ rows: [{ next_version: 1 }] }) // version count
-            .mockResolvedValueOnce({ rows: [newRow] });     // INSERT version
+            .mockResolvedValueOnce({ rows: [newRow] })    // INSERT version
+            .mockResolvedValueOnce({ rows: [] });     // admins
 
         const result = await submissionService.createSubmission(validSubmissionData());
 
