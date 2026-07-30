@@ -331,25 +331,6 @@ export default function SubmissionDetail() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold tracking-tight">{submission?.title ?? 'Carregando…'}</h1>
           <p className="text-muted-foreground mt-2">Revisão editorial</p>
-          {submission?.metadata?.video?.url ? (
-            <div className="mt-4">
-              <video src={submission.metadata.video.url} controls className="max-h-64 rounded-md border" />
-              {submission.metadata.video.caption && (
-                <p className="text-xs text-muted-foreground italic mt-1">{submission.metadata.video.caption}</p>
-              )}
-            </div>
-          ) : submission?.metadata?.image?.url ? (
-            <div className="mt-4">
-              <img
-                src={submission.metadata.image.url}
-                alt={submission.metadata.image.alternativeText || submission.title}
-                className="max-h-64 rounded-md border"
-              />
-              {submission.metadata.image.caption && (
-                <p className="text-xs text-muted-foreground italic mt-1">{submission.metadata.image.caption}</p>
-              )}
-            </div>
-          ) : null}
         </div>
 
         {/* Abas */}
