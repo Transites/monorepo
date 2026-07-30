@@ -23,6 +23,22 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
   const [authorInst,  setAuthorInst]  = useState(article.author_institution ?? '');
   const [content,     setContent]     = useState(article.content     ?? '');
 
+  // ── Novos Estados (Metadata) ────────────────────────────────
+  const meta = article.metadata || {};
+  const [birthDate, setBirthDate] = useState(meta.birth?.date ?? '');
+  const [birthPlace, setBirthPlace] = useState(meta.birth?.place ?? '');
+  const [deathDate, setDeathDate] = useState(meta.death?.date ?? '');
+  const [deathPlace, setDeathPlace] = useState(meta.death?.place ?? '');
+  
+  const [occupations, setOccupations] = useState<string[]>(meta.occupation ?? []);
+  const [newOccupation, setNewOccupation] = useState('');
+  
+  const [organizations, setOrganizations] = useState<string[]>(meta.organizations ?? []);
+  const [newOrganization, setNewOrganization] = useState('');
+  
+  const [alternativeNames, setAlternativeNames] = useState<string[]>(meta.alternativeNames ?? []);
+  const [newAlternativeName, setNewAlternativeName] = useState('');
+
   // Cada item da bibliografia tem esses campos — igual ao que está no banco
   interface BibItem {
     year:      string;
@@ -32,10 +48,11 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
     publisher?: string;
   }
 
-// Iniciamos com a bibliografia atual do artigo, ou array vazio se não tiver
-const [bibliography, setBibliography] = useState<BibItem[]>(
-  article.metadata?.bibliography ?? []
-);
+  // Iniciamos com a bibliografia atual do artigo, ou array vazio se não tiver
+  const [bibliography, setBibliography] = useState<BibItem[]>(
+    article.metadata?.bibliography ?? []
+  );
+  
   // Keywords são um array — precisam de lógica especial
   const [keywords,    setKeywords]    = useState<string[]>(article.keywords ?? []);
   const [newKeyword,  setNewKeyword]  = useState('');
@@ -49,50 +66,91 @@ const [bibliography, setBibliography] = useState<BibItem[]>(
   const [isAssigningDoi, setIsAssigningDoi] = useState(false);
   const [doiError, setDoiError] = useState('');
 
-  // ── Funções de keywords ────────────────────────────────────
+  // ── Funções de Arrays (Keywords e Metadata) ──────────────────
   const addKeyword = () => {
     const kw = newKeyword.trim();
-    // Não adiciona se vazio ou duplicado
-    if (kw && !keywords.includes(kw)) {
-      setKeywords([...keywords, kw]);
-    }
+    if (kw && !keywords.includes(kw)) setKeywords([...keywords, kw]);
     setNewKeyword('');
   };
+  const removeKeyword = (kw: string) => setKeywords(keywords.filter(k => k !== kw));
 
-  const removeKeyword = (kw: string) => {
-    // filter: cria novo array sem o item removido
-    setKeywords(keywords.filter(k => k !== kw));
+  const addOccupation = () => {
+    const occ = newOccupation.trim();
+    if (occ && !occupations.includes(occ)) setOccupations([...occupations, occ]);
+    setNewOccupation('');
   };
+  const removeOccupation = (occ: string) => setOccupations(occupations.filter((o) => o !== occ));
+
+  const addOrganization = () => {
+    const org = newOrganization.trim();
+    if (org && !organizations.includes(org)) setOrganizations([...organizations, org]);
+    setNewOrganization('');
+  };
+  const removeOrganization = (org: string) => setOrganizations(organizations.filter((o) => o !== org));
+
+  const addAlternativeName = () => {
+    const an = newAlternativeName.trim();
+    if (an && !alternativeNames.includes(an)) setAlternativeNames([...alternativeNames, an]);
+    setNewAlternativeName('');
+  };
+  const removeAlternativeName = (an: string) => setAlternativeNames(alternativeNames.filter((a) => a !== an));
   
-  // Adiciona um item vazio — o admin preenche os campos depois
+  // ── Bibliografia ───────────────────────────────────────────
   const addBibItem = () => {
-    setBibliography([...bibliography, {
-      year: '', title: '', author: '', location: '', publisher: ''
-    }]);
+    setBibliography([...bibliography, { year: '', title: '', author: '', location: '', publisher: '' }]);
   };
-
-  // Atualiza um campo específico de um item específico da lista.
-  // index: qual item (0, 1, 2...), field: qual campo, value: novo valor
   const updateBibItem = (index: number, field: keyof BibItem, value: string) => {
-    // map: percorre o array e retorna um novo array com o item alterado
-    const updated = bibliography.map((item, i) =>
-      i === index ? { ...item, [field]: value } : item
-      //              ↑ spread: copia todos os campos, depois sobrescreve só o alterado
-    );
+    const updated = bibliography.map((item, i) => i === index ? { ...item, [field]: value } : item);
     setBibliography(updated);
   };
-
-  // Remove um item pelo índice
   const removeBibItem = (index: number) => {
     setBibliography(bibliography.filter((_, i) => i !== index));
   };
+
   // ── Salvar ─────────────────────────────────────────────────
   const handleSave = async () => {
     setIsSaving(true);
     setSaveError('');
 
     try {
-      // Monta só os campos que mudaram — evita sobrescrever dados desnecessariamente
+      const formatLifeEvent = (dateStr: string, placeStr: string) => {
+        let formattedDate = '';
+        if (dateStr) {
+          const [y, m, d] = dateStr.split('-');
+          const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+          if (y && m && d) formattedDate = `${parseInt(d, 10)} de ${months[parseInt(m, 10) - 1]} de ${y}`;
+        }
+        return [formattedDate, placeStr].filter(Boolean).join(', ');
+      };
+
+      const updatedMetadata: any = {
+        ...article.metadata,
+        bibliography: bibliography.length > 0 ? bibliography : undefined,
+        occupation: occupations.length > 0 ? occupations : undefined,
+        organizations: organizations.length > 0 ? organizations : undefined,
+        alternativeNames: alternativeNames.length > 0 ? alternativeNames : undefined,
+      };
+
+      if (category === 'pessoa') {
+        if (birthDate || birthPlace) {
+          updatedMetadata.birth = { date: birthDate || undefined, place: birthPlace || undefined, formatted: formatLifeEvent(birthDate, birthPlace) || undefined };
+        } else {
+          delete updatedMetadata.birth;
+        }
+        if (deathDate || deathPlace) {
+          updatedMetadata.death = { date: deathDate || undefined, place: deathPlace || undefined, formatted: formatLifeEvent(deathDate, deathPlace) || undefined };
+        } else {
+          delete updatedMetadata.death;
+        }
+      } else {
+        delete updatedMetadata.birth;
+        delete updatedMetadata.death;
+      }
+
+      // Limpa as chaves vazias explicitamente
+      Object.keys(updatedMetadata).forEach(key => updatedMetadata[key] === undefined && delete updatedMetadata[key]);
+
+      // Monta só os campos que mudaram
       const updateData: ArticleUpdateData = {
         title,
         summary,
@@ -101,10 +159,7 @@ const [bibliography, setBibliography] = useState<BibItem[]>(
         author_institution: authorInst,
         content,
         keywords,
-        metadata: {
-        ...article.metadata,
-          bibliography,
-        },
+        metadata: updatedMetadata,
       };
 
       const updated = await updateArticle(article.id, updateData);
@@ -210,11 +265,12 @@ const [bibliography, setBibliography] = useState<BibItem[]>(
               value={summary}
               onChange={e => setSummary(e.target.value)}
               rows={4}
+              maxLength={1000}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
             />
             <div className="text-right text-xs text-muted-foreground mt-1">
                 {summary.length}/1000
-              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -253,6 +309,95 @@ const [bibliography, setBibliography] = useState<BibItem[]>(
               value={authorInst}
               onChange={e => setAuthorInst(e.target.value)}
             />
+          </div>
+
+          <Separator />
+
+          {/* ── Nascimento, Morte ── */}
+          {category === 'pessoa' && (
+            <div className="space-y-6 pt-2 pb-2">
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">Nascimento</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Data de Nascimento</Label>
+                    <Input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Local de Nascimento</Label>
+                    <Input value={birthPlace} onChange={(e) => setBirthPlace(e.target.value)} placeholder="Ex: São Paulo, Brasil" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">Morte</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Data de Morte</Label>
+                    <Input type="date" value={deathDate} onChange={(e) => setDeathDate(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Local de Morte</Label>
+                    <Input value={deathPlace} onChange={(e) => setDeathPlace(e.target.value)} placeholder="Ex: São Paulo, Brasil" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-3 mt-4">
+            <Label>Ocupação</Label>
+            <div className="flex flex-wrap gap-2">
+              {occupations.map((occ) => (
+                <Badge key={occ} variant="secondary" className="gap-1 pr-1">
+                  {occ}
+                  <button type="button" onClick={() => removeOccupation(occ)} className="ml-1 hover:text-destructive">
+                    <X size={12} />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Input placeholder="Ex: jornalista, advogado..." value={newOccupation} onChange={(e) => setNewOccupation(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addOccupation(); } }} />
+              <Button variant="outline" onClick={addOccupation} type="button"><Plus size={16} /></Button>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <Label>Organizações</Label>
+            <div className="flex flex-wrap gap-2">
+              {organizations.map((org) => (
+                <Badge key={org} variant="secondary" className="gap-1 pr-1">
+                  {org}
+                  <button type="button" onClick={() => removeOrganization(org)} className="ml-1 hover:text-destructive">
+                    <X size={12} />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Input placeholder="Ex: O Estado de S. Paulo..." value={newOrganization} onChange={(e) => setNewOrganization(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addOrganization(); } }} />
+              <Button variant="outline" onClick={addOrganization} type="button"><Plus size={16} /></Button>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <Label>Nomes Alternativos</Label>
+            <div className="flex flex-wrap gap-2">
+              {alternativeNames.map((an) => (
+                <Badge key={an} variant="secondary" className="gap-1 pr-1">
+                  {an}
+                  <button type="button" onClick={() => removeAlternativeName(an)} className="ml-1 hover:text-destructive">
+                    <X size={12} />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <Input placeholder="Ex: Paulo Alfeu Junqueira..." value={newAlternativeName} onChange={(e) => setNewAlternativeName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addAlternativeName(); } }} />
+              <Button variant="outline" onClick={addAlternativeName} type="button"><Plus size={16} /></Button>
+            </div>
           </div>
 
           <Separator />
@@ -302,6 +447,7 @@ const [bibliography, setBibliography] = useState<BibItem[]>(
               value={content}
               onChange={e => setContent(e.target.value)}
               rows={20}
+              maxLength={10000}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
             />
             <div className="text-right text-xs text-muted-foreground mt-1">
@@ -309,7 +455,7 @@ const [bibliography, setBibliography] = useState<BibItem[]>(
               </div>
           </div>
 
-                    <Separator />
+          <Separator />
            
           {/* ── Bibliografia ──────────────────────────────── */}
           <div className="space-y-4">
@@ -390,8 +536,6 @@ const [bibliography, setBibliography] = useState<BibItem[]>(
               </div>
             ))}
           </div>
-
-
 
         </div>
 

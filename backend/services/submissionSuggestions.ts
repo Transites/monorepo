@@ -2,8 +2,6 @@ import untypedLogger from '../middleware/logging';
 import { LoggerWithAudit } from '../types/migration';
 import { DatabaseException, SubmissionNotFoundException, ValidationException } from '../utils/exceptions';
 import submissionService from '../services/submission';
-import zenodoService from './zenodo';
-
 const logger = untypedLogger as unknown as LoggerWithAudit;
 
 export interface SuggestionData {
@@ -63,7 +61,8 @@ class SubmissionSuggestionsService {
          WHERE submission_id = $1 AND admin_id = $2 AND status = 'pending'`,
         [submissionId, adminId]
       );
-
+      
+      // Adiciona a nova sugestão na tabela submission_suggestions
       const result = await this.db.query(
         `INSERT INTO submission_suggestions (
           submission_id, admin_id, created_by,
@@ -85,6 +84,7 @@ class SubmissionSuggestionsService {
       );
 
       // Atualiza status da submissão para CHANGES_REQUESTED
+      // 
       await this.db.query(
         `UPDATE submissions SET status = 'CHANGES_REQUESTED', updated_at = NOW() WHERE id = $1`,
         [submissionId]
@@ -129,15 +129,16 @@ class SubmissionSuggestionsService {
 
       return await this.db.transaction(async (client: any) => {
         
-        // Rejeita a sugestão original (Ver se é uma boa ideia apagar)
+        // Rejeita a sugestão original 
         await client.query(
           `UPDATE submission_suggestions
            SET status = 'rejected', resolved_at = NOW()
            WHERE id = $1 AND submission_id = $2`,
           [originalSuggestionId, submissionId]
         );
-
-        // Atualiza a submissão original (Rascunho Oficial)
+ 
+        // Atualiza a submissão original na tabela submissions
+        // 
         const updatedSubmissionResult = await client.query(
           `UPDATE submissions 
            SET title = COALESCE($1, title),
@@ -145,9 +146,10 @@ class SubmissionSuggestionsService {
                content = COALESCE($3, content),
                category = COALESCE($4, category),
                keywords = COALESCE($5, keywords),
-               status = 'UNDER_REVIEW',
+               metadata = COALESCE($6, metadata),
+               status = 'UNDER_REVIEW',     
                updated_at = NOW()
-           WHERE id = $6
+           WHERE id = $7
            RETURNING *`,
           [
             data.suggested_title ?? null,
@@ -155,13 +157,14 @@ class SubmissionSuggestionsService {
             data.suggested_content ?? null,
             data.suggested_category ?? null,
             data.suggested_keywords ?? null,
+            data.suggested_metadata ?? null,
             submissionId
           ]
         );
 
         const updatedSubmission = updatedSubmissionResult.rows[0];
 
-        // Cria uma nova versão!
+        // Cria uma nova versão na tabela submission_versions com os campos atualizados
         await submissionService.createVersionSnapshot(submissionId, {
             title: updatedSubmission.title,
             summary: updatedSubmission.summary,
@@ -336,11 +339,7 @@ class SubmissionSuggestionsService {
       const submission = submissionResult.rows[0];
       const suggestions = await this.getSuggestionsBySubmission(submissionId);
 
-      return {
-        submission,
-        suggestions,
-        zenodoEnabled: zenodoService.isEnabled(),
-      };
+      return { submission, suggestions };
     } catch (error: any) {
       logger.error('Error getting submission for review', { submissionId, error: error?.message });
       if (error instanceof SubmissionNotFoundException) throw error;

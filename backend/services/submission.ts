@@ -114,14 +114,15 @@ class SubmissionService {
             if (!validation.isValid) {
                 throw new ValidationException('Dados inválidos', validation.errors);
             }
+            const contentHtml = formatContentToHtml(submissionData.content || '');
 
             // Iniciar transação
             return await db.transaction(async (client: any) => {
                 // Criar submissão
                 const submission = await client.query(`
                     INSERT INTO submissions (token, status, author_name, author_email, author_institution,
-                                             title, summary, content, keywords, category, metadata)
-                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                                             title, summary, content, keywords, category, metadata, content_html)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                     RETURNING *
                 `, [
                     await tokenService.generateSecureToken(),
@@ -134,7 +135,8 @@ class SubmissionService {
                     submissionData.content || '',
                     submissionData.keywords || [],
                     submissionData.category || null,
-                    submissionData.metadata || {}
+                    submissionData.metadata || {},
+                    contentHtml,
                 ]);
 
                 const newSubmission = submission.rows[0];
@@ -149,13 +151,21 @@ class SubmissionService {
                 }, client);
 
                 // Enviar email com token (async - não bloqueia)
+                const adminsResult = await client.query(
+                    'SELECT email FROM admins WHERE is_active = TRUE'
+                );
+                const adminEmails = adminsResult.rows.map((admin: { email: string; }) => admin.email);
+
                 setImmediate(async () => {
                     try {
                         await emailService.sendSubmissionToken(
                             newSubmission.author_email,
                             newSubmission,
-                            newSubmission.token
                         );
+
+                        if(adminEmails.length > 0) {
+                            await emailService.notifyAdminNewSubmission(newSubmission, adminEmails);
+                        }
                     } catch (emailError: any) {
                         logger.error('Failed to send submission token email', {
                             submissionId: newSubmission.id,
@@ -1008,12 +1018,12 @@ class SubmissionService {
             );
 
             const nextVersion = versionResult.rows[0].next_version;
-
+            const contentHtml = formatContentToHtml(versionData.content || '');
             // Inserir nova versão
             const result = await dbClient.query(`
                 INSERT INTO submission_versions (submission_id, version_number, title, summary, content,
-                                                 metadata, created_by, change_summary)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                                                 metadata, created_by, change_summary, content_html)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                 RETURNING *
             `, [
                 submissionId,
@@ -1023,7 +1033,8 @@ class SubmissionService {
                 versionData.content,
                 versionData.metadata || {},
                 versionData.created_by || 'author',
-                versionData.change_summary || 'Versão automática'
+                versionData.change_summary || 'Versão automática',
+                contentHtml,
             ]);
 
             return result.rows[0];
@@ -1431,6 +1442,19 @@ class SubmissionService {
             throw new DatabaseException('Erro ao listar submissões', error);
         }
     }
+}
+
+function formatContentToHtml(content) {
+    if (!content) return '';
+    
+    // Converte formatações básicas de texto para HTML
+    let processed = content
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+
+    return `<p>${processed}</p>`;
 }
 
 export default new SubmissionService();

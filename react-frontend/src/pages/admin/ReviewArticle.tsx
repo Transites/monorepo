@@ -54,6 +54,7 @@ interface Suggestion {
   suggested_content?: string;
   suggested_category?: string;
   suggested_keywords?: string[];
+  suggested_metadata?: Record<string, any>;
   notes: string;
   status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
@@ -88,6 +89,14 @@ async function adminFetch<T>(path: string, options: RequestInit = {}): Promise<T
   return json.data as T;
 }
 
+const getMeta = (data: any) => {
+  if (!data) return {};
+  if (typeof data === 'string') {
+    try { return JSON.parse(data); } catch { return {}; }
+  }
+  return data;
+};
+
 // ─── componente principal ─────────────────────────────────────────────────────
 type Tab = 'current' | 'editing' | 'versions';
 
@@ -107,7 +116,7 @@ export default function ReviewArticle() {
   }>({ open: false, action: null });
   const [depositToZenodo, setDepositToZenodo] = useState(true);
 
-  // campos editáveis
+  // campos editáveis básicos
   const [title, setTitle] = useState('');
   const [summary, setSummary] = useState('');
   const [content, setContent] = useState('');
@@ -118,6 +127,18 @@ export default function ReviewArticle() {
   const [newKeyword, setNewKeyword] = useState('');
   const [bibliography, setBibliography] = useState<BibItem[]>([]);
   const [notes, setNotes] = useState('');
+
+  // campos editáveis de metadados
+  const [birthDate, setBirthDate] = useState('');
+  const [birthPlace, setBirthPlace] = useState('');
+  const [deathDate, setDeathDate] = useState('');
+  const [deathPlace, setDeathPlace] = useState('');
+  const [occupations, setOccupations] = useState<string[]>([]);
+  const [newOccupation, setNewOccupation] = useState('');
+  const [organizations, setOrganizations] = useState<string[]>([]);
+  const [newOrganization, setNewOrganization] = useState('');
+  const [alternativeNames, setAlternativeNames] = useState<string[]>([]);
+  const [newAlternativeName, setNewAlternativeName] = useState('');
 
   // ── buscar submissão ───────────────────────────────────────
   const { user, isAdmin, loading: authLoading } = useAuth();
@@ -148,18 +169,52 @@ export default function ReviewArticle() {
       setAuthorName(sub.author_name ?? '');
       setAuthorInst(sub.author_institution ?? '');
       setKeywords(pending?.suggested_keywords ?? sub.keywords ?? []);
-      setBibliography(sub.metadata?.bibliography ?? []);
       setNotes(pending?.notes ?? '');
+
+      // Resgata o metadata apropriado (da sugestão pendente ou da submissão original)
+      const hasSuggestedMeta = pending?.suggested_metadata !== undefined && pending?.suggested_metadata !== null;
+      const meta = hasSuggestedMeta ? getMeta(pending.suggested_metadata) : getMeta(sub.metadata);
+
+      setBibliography(meta.bibliography ?? []);
+      setBirthDate(meta.birth?.date ?? '');
+      setBirthPlace(meta.birth?.place ?? '');
+      setDeathDate(meta.death?.date ?? '');
+      setDeathPlace(meta.death?.place ?? '');
+      setOccupations(meta.occupation ?? []);
+      setOrganizations(meta.organizations ?? []);
+      setAlternativeNames(meta.alternativeNames ?? []);
+
       setFormReady(true);
       }, [data, formReady]);
 
-  // ── keywords ──────────────────────────────────────────────
+  // ── funções de array ──────────────────────────────────────────────
   const addKeyword = () => {
     const kw = newKeyword.trim();
     if (kw && !keywords.includes(kw)) setKeywords([...keywords, kw]);
     setNewKeyword('');
   };
   const removeKeyword = (kw: string) => setKeywords(keywords.filter(k => k !== kw));
+
+  const addOccupation = () => {
+    const occ = newOccupation.trim();
+    if (occ && !occupations.includes(occ)) setOccupations([...occupations, occ]);
+    setNewOccupation('');
+  };
+  const removeOccupation = (occ: string) => setOccupations(occupations.filter((o) => o !== occ));
+
+  const addOrganization = () => {
+    const org = newOrganization.trim();
+    if (org && !organizations.includes(org)) setOrganizations([...organizations, org]);
+    setNewOrganization('');
+  };
+  const removeOrganization = (org: string) => setOrganizations(organizations.filter((o) => o !== org));
+
+  const addAlternativeName = () => {
+    const an = newAlternativeName.trim();
+    if (an && !alternativeNames.includes(an)) setAlternativeNames([...alternativeNames, an]);
+    setNewAlternativeName('');
+  };
+  const removeAlternativeName = (an: string) => setAlternativeNames(alternativeNames.filter((a) => a !== an));
 
   // ── bibliografia ──────────────────────────────────────────
   const addBibItem = () =>
@@ -179,7 +234,49 @@ export default function ReviewArticle() {
       if (content !== sub?.content) payload.suggested_content = content;
       if (category !== sub?.category) payload.suggested_category = category;
       if (JSON.stringify(keywords) !== JSON.stringify(sub?.keywords)) payload.suggested_keywords = keywords;
+      
+      const formatLifeEvent = (dateStr: string, placeStr: string) => {
+        let formattedDate = '';
+        if (dateStr) {
+          const [y, m, d] = dateStr.split('-');
+          const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+          if (y && m && d) formattedDate = `${parseInt(d, 10)} de ${months[parseInt(m, 10) - 1]} de ${y}`;
+        }
+        return [formattedDate, placeStr].filter(Boolean).join(', ');
+      };
 
+      const baseMetadata = getMeta(sub?.metadata);
+
+      // 2. Mescla o metadata antigo com a bibliografia e novos campos sugeridos
+      const newMetadata: any = {
+        ...baseMetadata,
+        bibliography: bibliography.length > 0 ? bibliography : undefined,
+        occupation: occupations.length > 0 ? occupations : undefined,
+        organizations: organizations.length > 0 ? organizations : undefined,
+        alternativeNames: alternativeNames.length > 0 ? alternativeNames : undefined,
+      };
+
+      if (category === 'pessoa') {
+        if (birthDate || birthPlace) {
+          newMetadata.birth = { date: birthDate || undefined, place: birthPlace || undefined, formatted: formatLifeEvent(birthDate, birthPlace) || undefined };
+        } else {
+          delete newMetadata.birth;
+        }
+        if (deathDate || deathPlace) {
+          newMetadata.death = { date: deathDate || undefined, place: deathPlace || undefined, formatted: formatLifeEvent(deathDate, deathPlace) || undefined };
+        } else {
+          delete newMetadata.death;
+        }
+      } else {
+        delete newMetadata.birth;
+        delete newMetadata.death;
+      }
+
+      // Limpa as chaves vazias
+      Object.keys(newMetadata).forEach(key => newMetadata[key] === undefined && delete newMetadata[key]);
+
+      // 3. Força o envio do metadata na requisição
+      payload.suggested_metadata = newMetadata;     
       return adminFetch(`/admin/review/submissions/${id}/suggestions`, {
         method: 'POST',
         body: JSON.stringify(payload),
@@ -213,7 +310,6 @@ export default function ReviewArticle() {
   PUBLISHED: 'Publicado'
 };
 
-// Função auxiliar que tenta traduzir o status para um rótulo legível, ou retorna o status original se não houver mapeamento
 const formatStatus = (status: string) => {
   return statusLabelMap[status.toUpperCase()] || status;
 };
@@ -260,7 +356,6 @@ const formatStatus = (status: string) => {
   const isApproved = sub.status.toUpperCase() === 'APPROVED';
   const isPublished = sub.status.toUpperCase() === 'PUBLISHED';
 
-  // Lógica para o banner da Contra-proposta
   const latestVersion = versions?.[0];
   const isLatestFromAuthor = latestVersion?.created_by === 'author' && latestVersion?.version_number > 1;
 
@@ -611,6 +706,95 @@ const formatStatus = (status: string) => {
               <div className="space-y-2">
                 <Label htmlFor="r-institution">Instituição do autor</Label>
                 <Input id="r-institution" value={authorInst} onChange={e => setAuthorInst(e.target.value)} />
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Nascimento, Morte ── */}
+            {category === 'pessoa' && (
+              <div className="space-y-6 pt-2 pb-2">
+                <div className="space-y-3">
+                  <Label className="text-base font-semibold">Nascimento</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Data de Nascimento</Label>
+                      <Input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Local de Nascimento</Label>
+                      <Input value={birthPlace} onChange={(e) => setBirthPlace(e.target.value)} placeholder="Ex: São Paulo, Brasil" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Label className="text-base font-semibold">Morte</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Data de Morte</Label>
+                      <Input type="date" value={deathDate} onChange={(e) => setDeathDate(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Local de Morte</Label>
+                      <Input value={deathPlace} onChange={(e) => setDeathPlace(e.target.value)} placeholder="Ex: São Paulo, Brasil" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-3 mt-4">
+              <Label>Ocupação</Label>
+              <div className="flex flex-wrap gap-2">
+                {occupations.map((occ) => (
+                  <Badge key={occ} variant="secondary" className="gap-1 pr-1">
+                    {occ}
+                    <button type="button" onClick={() => removeOccupation(occ)} className="ml-1 hover:text-destructive">
+                      <X size={12} />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input placeholder="Ex: jornalista, advogado..." value={newOccupation} onChange={(e) => setNewOccupation(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addOccupation(); } }} />
+                <Button variant="outline" onClick={addOccupation} type="button"><Plus size={16} /></Button>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Organizações</Label>
+              <div className="flex flex-wrap gap-2">
+                {organizations.map((org) => (
+                  <Badge key={org} variant="secondary" className="gap-1 pr-1">
+                    {org}
+                    <button type="button" onClick={() => removeOrganization(org)} className="ml-1 hover:text-destructive">
+                      <X size={12} />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input placeholder="Ex: O Estado de S. Paulo..." value={newOrganization} onChange={(e) => setNewOrganization(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addOrganization(); } }} />
+                <Button variant="outline" onClick={addOrganization} type="button"><Plus size={16} /></Button>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Nomes Alternativos</Label>
+              <div className="flex flex-wrap gap-2">
+                {alternativeNames.map((an) => (
+                  <Badge key={an} variant="secondary" className="gap-1 pr-1">
+                    {an}
+                    <button type="button" onClick={() => removeAlternativeName(an)} className="ml-1 hover:text-destructive">
+                      <X size={12} />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <Input placeholder="Ex: Paulo Alfeu Junqueira..." value={newAlternativeName} onChange={(e) => setNewAlternativeName(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addAlternativeName(); } }} />
+                <Button variant="outline" onClick={addAlternativeName} type="button"><Plus size={16} /></Button>
               </div>
             </div>
 

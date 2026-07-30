@@ -112,34 +112,28 @@ class EmailTemplates {
     /**
      * Template: Token de submissão
      */
-    submissionToken({authorName, submissionTitle, tokenUrl, expiresAt, supportEmail}) {
-        const expiryDate = new Date(expiresAt).toLocaleDateString('pt-BR');
-
+    submissionToken({authorName, submissionTitle, submissionUrl, supportEmail}) {
         const content = `
             <h2>Sua submissão foi criada com sucesso!</h2>
             <p>Olá <strong>${authorName}</strong>,</p>
-            <p>Sua submissão "<strong>${submissionTitle}</strong>" foi criada e está pronta para edição.</p>
+            <p>Sua submissão "<strong>${submissionTitle}</strong>" foi criada com sucesso e já está na fila de revisão da nossa equipe de curadoria.</p>
 
             <div class="info-box">
-                <p><strong>🔗 Link de acesso:</strong></p>
-                <a href="${tokenUrl}" class="button">Editar Submissão</a>
+                <p><strong>Acompanhe o status:</strong></p>
+                <p>Você pode acompanhar o andamento da revisão ou visualizar o texto enviado acessando o seu painel de autor.</p>
+                <a href="${submissionUrl}" class="button">Acessar Minhas Submissões</a>
             </div>
 
-            <p><strong>⚠️ Importante:</strong></p>
+            <h3>Como funciona agora?</h3>
             <ul>
-                <li>Este link é pessoal e intransferível</li>
-                <li>Salve este email para acessar sua submissão</li>
-                <li>O link expira em <strong>${expiryDate}</strong></li>
-                <li>Você pode editar sua submissão quantas vezes quiser até enviá-la para revisão</li>
+                <li>Um dos nossos curadores lerá o seu texto.</li>
+                <li>Você receberá um email caso o curador sugira alterações, ajustes de bibliografia ou revisões no conteúdo.</li>
+                <li>Você poderá aceitar as sugestões do curador ou fazer uma contra-proposta diretamente pelo painel.</li>
+                <li>Quando tudo estiver alinhado, seu artigo será aprovado e publicado na Enciclopédia!</li>
             </ul>
 
-            <h3>Próximos passos:</h3>
-            <ol>
-                <li>Clique no link acima para acessar o formulário</li>
-                <li>Complete todos os campos obrigatórios</li>
-                <li>Revise seu conteúdo</li>
-                <li>Clique em "Enviar para Revisão" quando estiver pronto</li>
-            </ol>
+            <p>Agradecemos a sua contribuição.</p>
+            <p>Em caso de dúvidas, entre em contato pelo email <a href="mailto:${supportEmail}">${supportEmail}</a></p>
 
             <p>Em caso de dúvidas, entre em contato pelo email <a href="mailto:${supportEmail}">${supportEmail}</a></p>
         `;
