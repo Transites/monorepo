@@ -147,6 +147,16 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold tracking-tight">Fila de Revisões de Artigos</h2>
+          
+        <Button asChild >
+          <Link to="/admin/fila-de-revisao">
+            Verificar Fila de Revisão 
+          </Link>
+        </Button>
+        </div>
+
         {/* Section 1: list all admins in the system*/}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold tracking-tight">Administradores Atuais</h2>
