@@ -8,9 +8,9 @@ import TableOfContents from "@/components/TableOfContents";
 import ArticleContent from "@/components/ArticleContent";
 import { Button } from "@/components/ui/button";
 import { getSubmissionById } from "@/lib/api";
-import { useAdminAuth }            from "@/hooks/use-admin-auth";
 import { AdminPasswordDialog }     from "@/components/AdminPasswordDialog";
 import { ArticleEditor }           from "@/components/ArticleEditor";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Article = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,10 +18,7 @@ const Article = () => {
   const queryClient    = useQueryClient();
 
     // Hook de autenticação temporária
-  const { isAuthenticated, login, logout } = useAdminAuth();
-
-  // Controla se o modal de senha está aberto
-  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const { isAuthenticated, login, isAdmin, logout } = useAuth();
   // Controla se o editor está aberto
   const [isEditing, setIsEditing] = useState(false);
 
@@ -43,15 +40,9 @@ const Article = () => {
       // Já autenticado — abre direto o editor
       setIsEditing(true);
     } else {
-      // Não autenticado — pede a senha primeiro
-      setShowPasswordDialog(true);
+      if (isAdmin) setIsEditing(true);
+      else setIsEditing(false); 
     }
-  };
-
-  // Chamado quando digita a senha correta no modal
-  const handlePasswordSuccess = () => {
-    setShowPasswordDialog(false);
-    setIsEditing(true);
   };
 
   // Chamado quando salva no editor
@@ -120,12 +111,10 @@ const Article = () => {
             Voltar
           </Button>
 
-          {/* Botão do lápis — sempre visível, mas pede senha se não autenticado */}
+          {/* Botão do lápis — visivel apenas quando é admin, mas pede senha se não autenticado */}
           <div className="flex items-center gap-2">
-            {isAuthenticated && (
-              <span className="text-xs text-muted-foreground">Modo admin</span>
-            )}
-            <Button
+            {isAdmin && (
+              <Button
               variant="outline"
               size="sm"
               onClick={handleEditClick}
@@ -133,11 +122,6 @@ const Article = () => {
               <Pencil size={14} className="mr-1" />
               Editar artigo
             </Button>
-            {/* Botão de sair do modo admin — só aparece se autenticado */}
-            {isAuthenticated && (
-              <Button variant="ghost" size="sm" onClick={logout}>
-                Sair
-              </Button>
             )}
           </div>
         </div>
@@ -152,14 +136,6 @@ const Article = () => {
         </div>
       </main>
       <Footer />
-
-      {/* Modal de senha */}
-      <AdminPasswordDialog
-        open={showPasswordDialog}
-        onClose={() => setShowPasswordDialog(false)}
-        onSuccess={handlePasswordSuccess}
-        onLogin={login}
-      />
 
       {/* Editor — renderiza por cima de tudo quando isEditing = true */}
       {isEditing && article && (
