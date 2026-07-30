@@ -15,6 +15,7 @@ cloudinary.config({
 export interface SubmissionMediaUploadResult {
     url: string;
     resourceType: 'image' | 'video';
+    publicId: string;
 }
 
 class MediaService {
@@ -45,8 +46,30 @@ class MediaService {
 
         return {
             url: uploadResult.secure_url || uploadResult.url,
-            resourceType
+            resourceType,
+            publicId: uploadResult.public_id
         };
+    }
+
+    /**
+     * Remove a previously uploaded submission image/video from Cloudinary.
+     */
+    public async deleteSubmissionMedia(publicId: string, resourceType: 'image' | 'video'): Promise<void> {
+        await new Promise<void>((resolve, reject) => {
+            cloudinary.uploader.destroy(
+                publicId,
+                { resource_type: resourceType },
+                (error: UploadApiErrorResponse | undefined, result: { result: string } | undefined) => {
+                    if (error) {
+                        reject(new Error(`Cloudinary delete failed: ${error.message}`));
+                    } else if (result && (result.result === 'ok' || result.result === 'not found')) {
+                        resolve();
+                    } else {
+                        reject(new Error(`Cloudinary delete failed: ${result?.result}`));
+                    }
+                }
+            );
+        });
     }
 
     private determineResourceType(filename: string): 'image' | 'video' {

@@ -115,6 +115,96 @@ class SubmissionController {
     }
 
     /**
+     * PUT /api/admin/review/submissions/:id/media
+     * Define a imagem/vídeo de destaque de uma submissão (admin)
+     */
+    async setMedia(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+            const { type, url, publicId, caption, alternativeText } = req.body || {};
+            if (type !== 'image' && type !== 'video') {
+                throw new ValidationException('Dados inválidos', ['O campo "type" deve ser "image" ou "video"']);
+            }
+            if (!url || typeof url !== 'string' || !publicId || typeof publicId !== 'string') {
+                throw new ValidationException('Dados inválidos', ['Os campos "url" e "publicId" são obrigatórios']);
+            }
+
+            const submission = await submissionService.setSubmissionMedia(req.params.id, type, {
+                url, publicId, caption, alternativeText
+            });
+
+            return responses.success(res, { submission }, 'Mídia atualizada com sucesso');
+        } catch (error: any) {
+            return handleControllerError(error, res, next, {
+                submissionId: req.params.id,
+                operation: 'setMedia'
+            });
+        }
+    }
+
+    /**
+     * DELETE /api/admin/review/submissions/:id/media
+     * Remove a imagem/vídeo de destaque de uma submissão (admin)
+     */
+    async removeMedia(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+            const submission = await submissionService.removeSubmissionMedia(req.params.id);
+            return responses.success(res, { submission }, 'Mídia removida com sucesso');
+        } catch (error: any) {
+            return handleControllerError(error, res, next, {
+                submissionId: req.params.id,
+                operation: 'removeMedia'
+            });
+        }
+    }
+
+    /**
+     * PUT /api/author/submissions/:id/media
+     * Define a imagem/vídeo de destaque de uma submissão (autor)
+     */
+    async setMediaAsAuthor(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+            const authorEmail = (req as any).user?.email;
+            const { type, url, publicId, caption, alternativeText } = req.body || {};
+            if (type !== 'image' && type !== 'video') {
+                throw new ValidationException('Dados inválidos', ['O campo "type" deve ser "image" ou "video"']);
+            }
+            if (!url || typeof url !== 'string' || !publicId || typeof publicId !== 'string') {
+                throw new ValidationException('Dados inválidos', ['Os campos "url" e "publicId" são obrigatórios']);
+            }
+
+            const submission = await submissionService.setSubmissionMedia(req.params.id, type, {
+                url, publicId, caption, alternativeText
+            }, authorEmail);
+
+            return responses.success(res, { submission }, 'Mídia atualizada com sucesso');
+        } catch (error: any) {
+            return handleControllerError(error, res, next, {
+                submissionId: req.params.id,
+                authorEmail: (req as any).user?.email,
+                operation: 'setMediaAsAuthor'
+            });
+        }
+    }
+
+    /**
+     * DELETE /api/author/submissions/:id/media
+     * Remove a imagem/vídeo de destaque de uma submissão (autor)
+     */
+    async removeMediaAsAuthor(req: Request, res: Response, next: NextFunction): Promise<any> {
+        try {
+            const authorEmail = (req as any).user?.email;
+            const submission = await submissionService.removeSubmissionMedia(req.params.id, authorEmail);
+            return responses.success(res, { submission }, 'Mídia removida com sucesso');
+        } catch (error: any) {
+            return handleControllerError(error, res, next, {
+                submissionId: req.params.id,
+                authorEmail: (req as any).user?.email,
+                operation: 'removeMediaAsAuthor'
+            });
+        }
+    }
+
+    /**
      * GET /api/submissions/id/:id
      * Buscar submissão por ID
      */

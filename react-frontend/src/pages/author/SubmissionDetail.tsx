@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Loader2, AlertCircle, CheckCircle, Edit3, X, Plus, Save, History, MessageSquare, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertCircle, CheckCircle, Edit3, X, Plus, Save, History, MessageSquare, Trash2, ImagePlus } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,10 @@ import {
   acceptSuggestion,
   counterSuggestion,
   getSubmissionById,
+  uploadSubmissionMedia,
+  authorSetSubmissionMedia,
+  authorRemoveSubmissionMedia,
+  ApiError,
   type SubmissionSuggestion,
   type SubmissionVersion,
 } from '@/lib/api';
@@ -97,6 +101,7 @@ export default function SubmissionDetail() {
   const [keywords, setKeywords]   = useState<string[]>([]);
   const [newKeyword, setNewKeyword] = useState('');
   const [authorNotes, setAuthorNotes] = useState('');
+  const [imageError, setImageError] = useState<string | null>(null);
 
   // ── Novos Estados (Metadata) ────────────────────────────────
   const [birthDate, setBirthDate] = useState('');
@@ -206,6 +211,46 @@ export default function SubmissionDetail() {
       alert(error.message || 'Erro ao enviar. Tente novamente.');
     },
   });
+
+  const setImageMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const uploaded = await uploadSubmissionMedia(file);
+      await authorSetSubmissionMedia(id!, {
+        type: uploaded.resourceType,
+        url: uploaded.url,
+        publicId: uploaded.publicId,
+      });
+    },
+    onSuccess: () => {
+      setImageError(null);
+      queryClient.invalidateQueries({ queryKey: ['submission', id] });
+    },
+    onError: (error: any) => {
+      setImageError(error instanceof ApiError ? error.message : 'Falha ao enviar a imagem/vídeo. Tente novamente.');
+    },
+  });
+
+  const removeImageMutation = useMutation({
+    mutationFn: () => authorRemoveSubmissionMedia(id!),
+    onSuccess: () => {
+      setImageError(null);
+      queryClient.invalidateQueries({ queryKey: ['submission', id] });
+    },
+    onError: (error: any) => {
+      setImageError(error instanceof ApiError ? error.message : 'Falha ao remover a imagem/vídeo. Tente novamente.');
+    },
+  });
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      setImageError('Selecione um arquivo de imagem ou vídeo válido.');
+      return;
+    }
+    setImageMutation.mutate(file);
+  };
 
   const handleStartCounter = (s: SubmissionSuggestion) => {
     setTitle(s.suggested_title ?? submission?.title ?? '');
@@ -500,6 +545,79 @@ export default function SubmissionDetail() {
             </div>
 
             <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Imagem ou vídeo de destaque</Label>
+                <p className="text-xs text-muted-foreground">
+                  É preciso remover a mídia atual antes de enviar uma nova. Apenas um arquivo (imagem ou vídeo) por artigo.
+                </p>
+
+                {submission?.metadata?.video?.url ? (
+                  <div className="relative inline-block">
+                    <video src={submission.metadata.video.url} controls className="max-h-64 rounded-md border" />
+                    <button
+                      type="button"
+                      onClick={() => removeImageMutation.mutate()}
+                      disabled={removeImageMutation.isPending}
+                      className="absolute -top-2 -right-2 rounded-full bg-destructive text-destructive-foreground p-1 shadow disabled:opacity-50"
+                      aria-label="Remover vídeo"
+                    >
+                      {removeImageMutation.isPending ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <X size={14} />
+                      )}
+                    </button>
+                  </div>
+                ) : submission?.metadata?.image?.url ? (
+                  <div className="relative inline-block">
+                    <img
+                      src={submission.metadata.image.url}
+                      alt={submission.metadata.image.alternativeText || submission.title}
+                      className="max-h-64 rounded-md border"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImageMutation.mutate()}
+                      disabled={removeImageMutation.isPending}
+                      className="absolute -top-2 -right-2 rounded-full bg-destructive text-destructive-foreground p-1 shadow disabled:opacity-50"
+                      aria-label="Remover imagem"
+                    >
+                      {removeImageMutation.isPending ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <X size={14} />
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <label
+                      htmlFor="counter-image"
+                      className="flex flex-col items-center justify-center gap-2 rounded-md border border-dashed border-input px-4 py-8 text-sm text-muted-foreground cursor-pointer hover:border-primary/50"
+                    >
+                      {setImageMutation.isPending ? (
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                      ) : (
+                        <ImagePlus className="h-6 w-6" />
+                      )}
+                      Clique para selecionar uma imagem ou vídeo
+                    </label>
+                    <input
+                      id="counter-image"
+                      type="file"
+                      accept="image/*,video/*"
+                      onChange={handleImageChange}
+                      disabled={setImageMutation.isPending}
+                      className="hidden"
+                    />
+                  </>
+                )}
+
+                {imageError && <p className="text-sm text-destructive">{imageError}</p>}
+              </div>
+
+              <Separator />
+
               <div className="space-y-2">
                 <Label>Título</Label>
                 <Input value={title} onChange={e => setTitle(e.target.value)} />

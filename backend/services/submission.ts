@@ -2,6 +2,7 @@
 import db from '../database/client';
 import tokenService from './tokens';
 import emailService from './email';
+import mediaService from './media';
 import constants from '../utils/constants';
 import {generateSlug} from '../utils/url';
 import {
@@ -680,6 +681,85 @@ class SubmissionService {
         logger.audit('Suggestion rejected by author', { submissionId, suggestionId, authorEmail });
 
         return { success: true, message: 'Sugestão rejeitada' };
+    }
+
+    /**
+     * Define a mídia de destaque (imagem OU vídeo) da submissão — só permitido se não
+     * houver imagem/vídeo atual. Os dois tipos são mutuamente exclusivos.
+     */
+    async setSubmissionMedia(
+        submissionId: string,
+        mediaType: 'image' | 'video',
+        media: { url: string; publicId: string; caption?: string; alternativeText?: string },
+        authorEmail?: string
+    ): Promise<any> {
+        const submission = await db.findById('submissions', submissionId);
+        if (!submission) {
+            throw new SubmissionNotFoundException('Submissão não encontrada');
+        }
+
+        if (authorEmail !== undefined && submission.author_email !== authorEmail) {
+            throw new ValidationException('Acesso negado', ['Você não é o autor desta submissão']);
+        }
+
+        if (submission.metadata?.image || submission.metadata?.video) {
+            throw new ValidationException(
+                'Já existe uma imagem ou vídeo cadastrado',
+                ['Remova a mídia atual antes de enviar uma nova']
+            );
+        }
+
+        const metadata = { ...(submission.metadata || {}), [mediaType]: media };
+
+        const result = await db.query(
+            'UPDATE submissions SET metadata = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+            [metadata, submissionId]
+        );
+
+        logger.audit('Submission media set', { submissionId, mediaType, authorEmail });
+
+        return result.rows[0];
+    }
+
+    /**
+     * Remove a mídia de destaque (imagem ou vídeo, o que estiver presente) da submissão —
+     * apaga do Cloudinary e limpa o metadata
+     */
+    async removeSubmissionMedia(submissionId: string, authorEmail?: string): Promise<any> {
+        const submission = await db.findById('submissions', submissionId);
+        if (!submission) {
+            throw new SubmissionNotFoundException('Submissão não encontrada');
+        }
+
+        if (authorEmail !== undefined && submission.author_email !== authorEmail) {
+            throw new ValidationException('Acesso negado', ['Você não é o autor desta submissão']);
+        }
+
+        const mediaType: 'image' | 'video' | undefined = submission.metadata?.image
+            ? 'image'
+            : submission.metadata?.video
+                ? 'video'
+                : undefined;
+
+        if (!mediaType) {
+            throw new ValidationException('Nenhuma mídia para remover', ['Esta submissão não possui imagem ou vídeo cadastrado']);
+        }
+
+        const media = submission.metadata[mediaType];
+
+        await mediaService.deleteSubmissionMedia(media.publicId, mediaType);
+
+        const metadata = { ...(submission.metadata || {}) };
+        delete metadata[mediaType];
+
+        const result = await db.query(
+            'UPDATE submissions SET metadata = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+            [metadata, submissionId]
+        );
+
+        logger.audit('Submission media removed', { submissionId, mediaType, authorEmail });
+
+        return result.rows[0];
     }
 
     // TODO: mover função para dentro do serviço de upload.

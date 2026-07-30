@@ -27,6 +27,13 @@ interface BibItem {
   publisher?: string;
 }
 
+interface SubmissionImage {
+  url: string;
+  caption?: string;
+  alternativeText?: string;
+  publicId?: string;
+}
+
 interface Submission {
   id: string;
   title: string;
@@ -42,6 +49,8 @@ interface Submission {
   status: string;
   metadata?: {
     bibliography?: BibItem[];
+    image?: SubmissionImage;
+    video?: SubmissionImage;
     [key: string]: unknown;
   };
 }
@@ -287,6 +296,17 @@ export default function ReviewArticle() {
     },
   });
 
+  // ── remover imagem/vídeo ──────────────────────────────────────────
+  const removeImageMutation = useMutation({
+    mutationFn: () =>
+      adminFetch(`/admin/review/submissions/${id}/media`, {
+        method: 'DELETE',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'review-detail', id] });
+    },
+  });
+
   // ── atualizar status (aprovar/rejeitar) ────────────────────
   const statusMutation = useMutation({
     mutationFn: (newStatus: 'approved' | 'rejected') =>
@@ -451,6 +471,25 @@ const formatStatus = (status: string) => {
                 {sub.summary && <CardDescription>{sub.summary}</CardDescription>}
               </CardHeader>
               <CardContent className="space-y-4">
+                {sub.metadata?.image?.url && (
+                  <img
+                    src={sub.metadata.image.url}
+                    alt={sub.metadata.image.alternativeText || sub.title}
+                    className="w-full max-h-80 object-cover rounded-md border"
+                  />
+                )}
+                {sub.metadata?.video?.url && (
+                  <video
+                    src={sub.metadata.video.url}
+                    controls
+                    className="w-full max-h-80 rounded-md border"
+                  />
+                )}
+                {(sub.metadata?.image?.caption || sub.metadata?.video?.caption) && (
+                  <p className="text-xs text-muted-foreground italic">
+                    {sub.metadata.image?.caption || sub.metadata.video?.caption}
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
                   {sub.category && <span className="font-medium">{sub.category}</span>}
                   {sub.author_name && <span>· {sub.author_name}</span>}
@@ -661,6 +700,54 @@ const formatStatus = (status: string) => {
                 Ao salvar, ela será substituída pela sua versão.
               </div>
             )}
+
+            {/* Imagem/Vídeo */}
+            <div className="space-y-3">
+              <Label>Imagem ou vídeo de destaque</Label>
+              <p className="text-xs text-muted-foreground">
+                Curadores só podem remover a mídia atual — apenas o autor pode enviar uma nova.
+              </p>
+              {sub.metadata?.image?.url || sub.metadata?.video?.url ? (
+                <div className="relative inline-block">
+                  {sub.metadata?.video?.url ? (
+                    <video
+                      src={sub.metadata.video.url}
+                      controls
+                      className="max-h-64 rounded-md border"
+                    />
+                  ) : (
+                    <img
+                      src={sub.metadata?.image!.url}
+                      alt={sub.metadata?.image!.alternativeText || sub.title}
+                      className="max-h-64 rounded-md border"
+                    />
+                  )}
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() => removeImageMutation.mutate()}
+                    disabled={removeImageMutation.isPending}
+                  >
+                    {removeImageMutation.isPending ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Removendo…</>
+                    ) : (
+                      <><X className="h-4 w-4 mr-2" />Remover mídia</>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">Nenhuma imagem ou vídeo cadastrado.</p>
+              )}
+              {removeImageMutation.isError && (
+                <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
+                  {removeImageMutation.error instanceof ApiError ? removeImageMutation.error.message : 'Erro ao remover mídia.'}
+                </p>
+              )}
+            </div>
+
+            <Separator />
 
             {/* Campos básicos */}
             <div className="space-y-4">

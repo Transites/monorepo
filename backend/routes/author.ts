@@ -35,4 +35,14 @@ router.get('/submissions/:id/versions',
   errorHandler.asyncHandler(suggestionsController.getSubmissionVersions)
 );
 
+// Autor define a imagem ou vídeo de destaque da submissão
+router.put('/submissions/:id/media',
+  errorHandler.asyncHandler(submissionController.setMediaAsAuthor)
+);
+
+// Autor remove a imagem ou vídeo de destaque da submissão
+router.delete('/submissions/:id/media',
+  errorHandler.asyncHandler(submissionController.removeMediaAsAuthor)
+);
+
 module.exports = router;
