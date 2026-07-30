@@ -148,13 +148,21 @@ export default function AdminDashboard() {
         )}
 
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold tracking-tight">Fila de Revisões de Artigos</h2>
-          
-        <Button asChild >
-          <Link to="/admin/fila-de-revisao">
-            Verificar Fila de Revisão 
-          </Link>
-        </Button>
+          <h2 className="text-lg font-semibold tracking-tight">Revisão de Artigos</h2>
+
+          <div className="flex items-start gap-3">
+            <Button asChild >
+            <Link to="/admin/fila-de-revisao">
+              Verificar Fila de Revisão 
+            </Link>
+          </Button>
+
+          <Button asChild >
+            <Link to="/admin/minhas-revisoes">
+              Verificar Minhas Revisões
+            </Link>
+          </Button>
+          </div>  
         </div>
 
         {/* Section 1: list all admins in the system*/}
