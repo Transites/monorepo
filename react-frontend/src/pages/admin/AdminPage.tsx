@@ -36,7 +36,7 @@ export default function AdminDashboard() {
   
   const [targetPage, setTargetPage] = useState<string>('');
 
-  const { isAdmin, loading: authLoading } = useAuth();
+  const { isAdmin, isSuperAdmin, loading: authLoading } = useAuth();
 
   const { data: admins = [], isLoading: isLoadingAdmins } = useQuery({
     queryKey: ['admins'],
@@ -165,61 +165,66 @@ export default function AdminDashboard() {
           </div>  
         </div>
 
-        {/* Section 1: list all admins in the system*/}
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold tracking-tight">Administradores Atuais</h2>
-          
-          {isLoadingAdmins ? (
-            <div className="flex items-center justify-center p-6 border rounded-lg">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <div className="border rounded-lg bg-card max-h-[416px] overflow-y-auto relative">
-              <table className="w-full text-left border-collapse text-sm">
-                <thead>
-                  <tr className="bg-muted/50">
-                    <th className="sticky top-0 bg-muted/90 backdrop-blur-sm p-3 font-medium z-10 border-b shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
-                      Nome
-                    </th>
-                    <th className="sticky top-0 bg-muted/90 backdrop-blur-sm p-3 font-medium z-10 border-b shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
-                      E-mail
-                    </th>
-                    <th className="sticky top-0 bg-muted/90 backdrop-blur-sm p-3 font-medium z-10 border-b shadow-[0_1px_0_0_rgba(0,0,0,0.05)] text-right">
-                      Ações
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {admins.map((admin) => (
-                    <tr key={admin.id} className="hover:bg-muted/30">
-                      <td className="p-3 font-medium">{admin.name}</td>
-                      <td className="p-3 text-muted-foreground">{admin.email}</td>
-                      <td className="p-3 text-right">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 px-2"
-                          onClick={() => {
-                            if (confirm(`Tem certeza que deseja remover os privilégios de ${admin.name}?`)) {
-                              removeAdminMutation.mutate(admin.id);
-                            }
-                          }}
-                          disabled={removeAdminMutation.isPending}
-                        >
-                          <UserX size={16} className="mr-1" /> Remover
-                        </Button>
-                      </td>
+        {isSuperAdmin && ( 
+          <>
+          {/* list all admins in the system*/}
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold tracking-tight">Administradores Atuais</h2>
+            
+            {isLoadingAdmins ? (
+              <div className="flex items-center justify-center p-6 border rounded-lg">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <div className="border rounded-lg bg-card max-h-[416px] overflow-y-auto relative">
+                <table className="w-full text-left border-collapse text-sm">
+                  <thead>
+                    <tr className="bg-muted/50">
+                      <th className="sticky top-0 bg-muted/90 backdrop-blur-sm p-3 font-medium z-10 border-b shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
+                        Nome
+                      </th>
+                      <th className="sticky top-0 bg-muted/90 backdrop-blur-sm p-3 font-medium z-10 border-b shadow-[0_1px_0_0_rgba(0,0,0,0.05)]">
+                        E-mail
+                      </th>
+                      <th className="sticky top-0 bg-muted/90 backdrop-blur-sm p-3 font-medium z-10 border-b shadow-[0_1px_0_0_rgba(0,0,0,0.05)] text-right">
+                        Ações
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+                  </thead>
+                  <tbody className="divide-y">
+                    {admins.map((admin) => (
+                      <tr key={admin.id} className="hover:bg-muted/30">
+                        <td className="p-3 font-medium">{admin.name}</td>
+                        <td className="p-3 text-muted-foreground">{admin.email}</td>
+                        <td className="p-3 text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 px-2"
+                            onClick={() => {
+                              if (confirm(`Tem certeza que deseja remover os privilégios de ${admin.name}?`)) {
+                                removeAdminMutation.mutate(admin.id);
+                              }
+                            }}
+                            disabled={removeAdminMutation.isPending}
+                          >
+                            <UserX size={16} className="mr-1" /> Remover
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+          </div>
+          </>
+        )} 
 
         <Separator />
 
-        {/* Section 2: add a new admin in the system */}
+        {/* add a new admin in the system */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold tracking-tight">Adicionar Novo Administrador</h2>
           <form onSubmit={handleAddAdmin} className="space-y-4 p-4 border rounded-lg bg-card">
@@ -263,7 +268,7 @@ export default function AdminDashboard() {
 
         <Separator />
 
-        {/* section 3: block or suspend a user or a page */}
+        {/* block or suspend a user or a page */}
         <div className="space-y-6">
           <h2 className="text-lg font-semibold tracking-tight">Controle de Moderação</h2>
 
