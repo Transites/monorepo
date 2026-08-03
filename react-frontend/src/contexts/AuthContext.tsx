@@ -12,8 +12,9 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
   loading: boolean;
-  adminLoading: boolean; // NOVO: Estado dedicado para a checagem de admin
+  adminLoading: boolean; 
   isAuthenticated: boolean;
   createUser: (email: string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
@@ -30,9 +31,10 @@ export const AuthProvider = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [adminLoading, setAdminLoading] = useState(true); // Inicia como true para proteger a rota desde o começo
+  const [adminLoading, setAdminLoading] = useState(true); 
 
   const applySession = useCallback((session: Session | null) => {
     setSession(session);
@@ -40,21 +42,27 @@ export const AuthProvider = ({
   }, []);
 
   const checkAdminStatus = useCallback(async () => {
-    setAdminLoading(true); // Inicia o loading de admin
+    setAdminLoading(true); 
     try {
-      const { data, error } = await supabase.rpc('is_admin');
+      const [adminRes, superAdminRes] = await Promise.all([
+        supabase.rpc('is_admin'),
+        supabase.rpc('is_superadmin')
+      ]);
       
-      if (error) throw error;
+      if (adminRes.error) throw adminRes.error;
+      if (superAdminRes.error) throw superAdminRes.error;
 
-      setIsAdmin(Boolean(data));
+      setIsAdmin(Boolean(adminRes.data));
+      setIsSuperAdmin(Boolean(superAdminRes.data)); 
     } catch (err) {
-      console.error('Error checking admin status:', err);
+      console.error('Error checking admin/superadmin status:', err);
       setIsAdmin(false);
+      setIsSuperAdmin(false); // ✨ ADDED
     } finally {
-      setAdminLoading(false); // Finaliza o loading independente de sucesso ou erro
+      setAdminLoading(false); 
     }
   }, []);
-
+  
   const createUser = async (email: string, password: string) => {
     if (user) throw new Error('Already logged in.');
 
@@ -140,6 +148,7 @@ export const AuthProvider = ({
           console.error(error);
           applySession(null);
           setIsAdmin(false);
+          setIsSuperAdmin(false);
           setAdminLoading(false);
           return;
         }
@@ -162,6 +171,7 @@ export const AuthProvider = ({
 
         applySession(null);
         setIsAdmin(false);
+        setIsSuperAdmin(false);
         setAdminLoading(false);
         setLoading(false);
       }
@@ -193,6 +203,7 @@ export const AuthProvider = ({
         case 'USER_DELETED':
           applySession(null);
           setIsAdmin(false);
+          setIsSuperAdmin(false);
           setAdminLoading(false); // Limpa o estado ao sair
           break;
       }
@@ -210,6 +221,7 @@ export const AuthProvider = ({
         user,
         session,
         isAdmin,
+        isSuperAdmin,
         loading,
         adminLoading, // NOVO
         isAuthenticated: !!user,

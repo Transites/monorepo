@@ -71,8 +71,12 @@ const Header = () => {
             <a href="#pesquisar" onClick={(e) => handleNavClick(e, 'pesquisar')} className="text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer">Pesquisar</a>
             <a href="#sobre" onClick={(e) => handleNavClick(e, 'sobre')} className="text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer">Sobre</a>
             <a href="#contato" onClick={(e) => handleNavClick(e, 'contato')} className="text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer">Contato</a>
-            <Link to="/minhas-submissoes" className="text-sm font-medium text-foreground hover:text-primary transition-colors">Meus Artigos</Link> 
-            <Link to="/submissao/nova" className="text-sm font-medium text-foreground hover:text-primary transition-colors">Submeter</Link> 
+            {isAuthenticated && ( 
+              <>
+              <Link to="/minhas-submissoes" className="text-sm font-medium text-foreground hover:text-primary transition-colors">Meus Artigos</Link> 
+              <Link to="/submissao/nova" className="text-sm font-medium text-foreground hover:text-primary transition-colors">Submeter</Link> 
+              </>
+            )} 
             {isAdmin && (
               <Link to="/admin/home">
                 <Button size="sm" className="bg-black text-white hover:bg-black/90">
@@ -123,7 +127,12 @@ const Header = () => {
                 <a href="#pesquisar" onClick={(e) => handleNavClick(e, 'pesquisar')} className="text-lg font-medium">Pesquisar</a>
                 <a href="#sobre" onClick={(e) => handleNavClick(e, 'sobre')} className="text-lg font-medium">Sobre</a>
                 <a href="#contato" onClick={(e) => handleNavClick(e, 'contato')} className="text-lg font-medium">Contato</a>
-                <Link to="/submissao/nova" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium">Submeter</Link>
+                {isAuthenticated && (
+                  <> 
+                    <Link to="/minhas-submissoes" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium">Meus Artigos</Link>
+                    <Link to="/submissao/nova" onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-medium">Submeter</Link>
+                  </>
+                )} 
                 {isAdmin && (
                   <Link to="/admin/home" onClick={() => setIsMobileMenuOpen(false)}>
                     <Button className="w-full justify-start bg-black text-white hover:bg-black/90">
