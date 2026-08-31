@@ -197,7 +197,6 @@ class EmailService {
     async sendSubmissionToken(authorEmail, submission) {
         try {
             const submissionUrl = `${config.app.frontendUrl}/minhas-submissoes/${submission.id}`;
-
             const html = emailTemplates.submissionToken({
                 authorName: submission.author_name,
                 submissionTitle: submission.title,
@@ -339,6 +338,268 @@ class EmailService {
                 submissionId: submission.id,
                 feedbackId: feedback.id,
                 error: error.message
+            });
+            return { success: false, errorMessage: error.message };
+        }
+    }
+
+    async sendApprovalNotification(submission, adminName) {
+        try {
+            const html = `
+                <h2>🎉 Sua submissão foi aprovada</h2>
+                <p>Olá <strong>${submission.author_name}</strong>,</p>
+                <p>Sua submissão <strong>${submission.title}</strong> foi aprovada pelo curador <strong>${adminName}</strong>.</p>
+                <p>Agora ela pode seguir para publicação na Enciclopédia Transitos.</p>
+                <p>Em caso de dúvidas, entre em contato pelo email <a href="mailto:${this.replyTo}">${this.replyTo}</a>.</p>
+            `;
+
+            const result = await this.sendEmail({
+                to: submission.author_email,
+                subject: `[Transitos] Sua submissão foi aprovada - ${submission.title}`,
+                html,
+            });
+
+            if (!result.success) {
+                logger.error('Failed to send approval notification', {
+                    submissionId: submission.id,
+                    error: result.errorMessage,
+                    statusCode: result.statusCode,
+                });
+                return result;
+            }
+
+            logger.audit('Approval notification sent to author', {
+                submissionId: submission.id,
+                authorEmail: submission.author_email,
+                adminName,
+            });
+
+            return { success: true };
+        } catch (error) {
+            logger.error('Failed to send approval notification', {
+                submissionId: submission.id,
+                error: error.message,
+            });
+            return { success: false, errorMessage: error.message };
+        }
+    }
+
+    async sendRejectionNotification(submission, adminName) {
+        try {
+            const html = `
+                <h2>⚠️ Sua submissão foi recusada</h2>
+                <p>Olá <strong>${submission.author_name}</strong>,</p>
+                <p>O curador <strong>${adminName}</strong> avaliou sua submissão <strong>${submission.title}</strong> e decidiu não aprová-la neste momento.</p>
+                <p>Você pode revisar os comentários e, se necessário, submeter uma nova versão ou entrar em contato com a equipe.</p>
+                <p>Para dúvidas, escreva para <a href="mailto:${this.replyTo}">${this.replyTo}</a>.</p>
+            `;
+
+            const result = await this.sendEmail({
+                to: submission.author_email,
+                subject: `[Transitos] Sua submissão não foi aprovada - ${submission.title}`,
+                html,
+            });
+
+            if (!result.success) {
+                logger.error('Failed to send rejection notification', {
+                    submissionId: submission.id,
+                    error: result.errorMessage,
+                    statusCode: result.statusCode,
+                });
+                return result;
+            }
+
+            logger.audit('Rejection notification sent to author', {
+                submissionId: submission.id,
+                authorEmail: submission.author_email,
+                adminName,
+            });
+
+            return { success: true };
+        } catch (error) {
+            logger.error('Failed to send rejection notification', {
+                submissionId: submission.id,
+                error: error.message,
+            });
+            return { success: false, errorMessage: error.message };
+        }
+    }
+
+/**
+ * @param {any} submission
+ * @param {string} adminEmail
+ * @param {string} authorEmail
+ * @param {string | null} [suggestionTitle]
+ */
+    async sendSuggestionAcceptedToAuthor(submission, authorEmail, adminName = 'Curador') {
+        try {
+            const html = `
+                <h2>✅ Sua sugestão foi aceita</h2>
+                <p>Olá <strong>${submission.author_name || authorEmail}</strong>,</p>
+                <p>Você aceitou a sugestão de revisão enviada pelo curador <strong>${adminName}</strong> para a submissão <strong>${submission.title}</strong>.</p>
+                <p>O sistema já aplicou as alterações e a submissão voltou para revisão.</p>
+                <p>Se precisar de ajuda, fale com a equipe em <a href="mailto:${this.replyTo}">${this.replyTo}</a>.</p>
+            `;
+
+            const result = await this.sendEmail({
+                to: authorEmail,
+                subject: `[Transitos] Sugestão aceita - ${submission.title}`,
+                html,
+            });
+
+            if (!result.success) {
+                logger.error('Failed to send suggestion accepted email to author', {
+                    submissionId: submission.id,
+                    authorEmail,
+                    error: result.errorMessage,
+                    statusCode: result.statusCode,
+                });
+                return result;
+            }
+
+            logger.audit('Suggestion accepted email sent to author', {
+                submissionId: submission.id,
+                authorEmail,
+            });
+
+            return { success: true };
+        } catch (error) {
+            logger.error('Failed to send suggestion accepted email to author', {
+                submissionId: submission.id,
+                authorEmail,
+                error: error.message,
+            });
+            return { success: false, errorMessage: error.message };
+        }
+    }
+
+    async sendCounterProposalReceivedToAuthor(submission, authorEmail, adminName = 'Curador') {
+        try {
+            const html = `
+                <h2>📝 Sua contra-proposta foi enviada</h2>
+                <p>Olá <strong>${submission.author_name || authorEmail}</strong>,</p>
+                <p>Sua contra-proposta foi enviada com sucesso para o curador <strong>${adminName}</strong> na submissão <strong>${submission.title}</strong>.</p>
+                <p>A equipe vai analisar sua nova versão e responder em seguida.</p>
+                <p>Para dúvidas, escreva para <a href="mailto:${this.replyTo}">${this.replyTo}</a>.</p>
+            `;
+
+            const result = await this.sendEmail({
+                to: authorEmail,
+                subject: `[Transitos] Contra-proposta enviada - ${submission.title}`,
+                html,
+            });
+
+            if (!result.success) {
+                logger.error('Failed to send counter proposal confirmation to author', {
+                    submissionId: submission.id,
+                    authorEmail,
+                    error: result.errorMessage,
+                    statusCode: result.statusCode,
+                });
+                return result;
+            }
+
+            logger.audit('Counter proposal confirmation sent to author', {
+                submissionId: submission.id,
+                authorEmail,
+            });
+
+            return { success: true };
+        } catch (error) {
+            logger.error('Failed to send counter proposal confirmation to author', {
+                submissionId: submission.id,
+                authorEmail,
+                error: error.message,
+            });
+            return { success: false, errorMessage: error.message };
+        }
+    }
+
+    async notifyCuratorOnSuggestionAccepted(submission, adminEmail, authorEmail, suggestionTitle = null) {
+        try {
+            const html = `
+                <h2>✅ Autor aceitou a sugestão</h2>
+                <p>Olá,</p>
+                <p>O autor <strong>${authorEmail}</strong> aceitou a sugestão de revisão para a submissão <strong>${submission.title}</strong>.</p>
+                ${suggestionTitle ? `<p>Sugestão: <strong>${suggestionTitle}</strong></p>` : ''}
+                <p>Você pode acompanhar o andamento no painel da revisão.</p>
+            `;
+
+            const result = await this.sendEmail({
+                to: adminEmail,
+                subject: `[Transitos] Autor aceitou a sugestão - ${submission.title}`,
+                html,
+            });
+
+            if (!result.success) {
+                logger.error('Failed to send author accepted suggestion email', {
+                    submissionId: submission.id,
+                    adminEmail,
+                    error: result.errorMessage,
+                    statusCode: result.statusCode,
+                });
+                return result;
+            }
+
+            logger.audit('Author accepted suggestion notification sent to curator', {
+                submissionId: submission.id,
+                adminEmail,
+                authorEmail,
+            });
+
+            return { success: true };
+        } catch (error) {
+            logger.error('Failed to send author accepted suggestion email', {
+                submissionId: submission.id,
+                error: error.message,
+            });
+            return { success: false, errorMessage: error.message };
+        }
+    }
+
+/**
+ * @param {any} submission
+ * @param {string} adminEmail
+ * @param {string} authorEmail
+ * @param {string | null} [notes]
+ */
+    async notifyCuratorOnCounterProposal(submission, adminEmail, authorEmail, notes = null) {
+        try {
+            const html = `
+                <h2>📝 Autor enviou contra-proposta</h2>
+                <p>Olá,</p>
+                <p>O autor <strong>${authorEmail}</strong> enviou uma contra-proposta para a submissão <strong>${submission.title}</strong>.</p>
+                ${notes ? `<div><p><strong>Observações:</strong></p><p>${notes}</p></div>` : ''}
+                <p>Por favor, revise a nova versão no painel de curadoria.</p>
+            `;
+
+            const result = await this.sendEmail({
+                to: adminEmail,
+                subject: `[Transitos] Contra-proposta do autor - ${submission.title}`,
+                html,
+            });
+
+            if (!result.success) {
+                logger.error('Failed to send counter proposal email', {
+                    submissionId: submission.id,
+                    adminEmail,
+                    error: result.errorMessage,
+                    statusCode: result.statusCode,
+                });
+                return result;
+            }
+
+            logger.audit('Counter proposal notification sent to curator', {
+                submissionId: submission.id,
+                adminEmail,
+                authorEmail,
+            });
+
+            return { success: true };
+        } catch (error) {
+            logger.error('Failed to send counter proposal email', {
+                submissionId: submission.id,
+                error: error.message,
             });
             return { success: false, errorMessage: error.message };
         }

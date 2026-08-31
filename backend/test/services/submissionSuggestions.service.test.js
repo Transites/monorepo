@@ -40,6 +40,17 @@ jest.mock('../../services/submission', () => ({
 }));
 const submissionService = require('../../services/submission');
 
+jest.mock('../../services/email', () => ({
+  __esModule: true,
+  default: {
+    notifyCuratorOnSuggestionAccepted: jest.fn().mockResolvedValue({ success: true }),
+    notifyCuratorOnCounterProposal: jest.fn().mockResolvedValue({ success: true }),
+    sendSuggestionAcceptedToAuthor: jest.fn().mockResolvedValue({ success: true }),
+    sendCounterProposalReceivedToAuthor: jest.fn().mockResolvedValue({ success: true }),
+  },
+}));
+
+const emailService = require('../../services/email').default;
 const SubmissionSuggestionsService = require('../../services/submissionSuggestions').default;
 const service = new SubmissionSuggestionsService(mockDb);
 
@@ -153,13 +164,20 @@ describe('SubmissionSuggestionsService', () => {
         .mockResolvedValueOnce({ rows: [mockSubmissionRow] }) // Check owner
         .mockResolvedValueOnce({ rows: [mockSuggestion] }) // Check suggestion pendente
         .mockResolvedValueOnce({ rows: [] }) // Update submissions (applies fields)
-        .mockResolvedValueOnce({ rows: [] }); // Update suggestions (accepted)
+        .mockResolvedValueOnce({ rows: [] }) // Update suggestions (accepted)
+        .mockResolvedValueOnce({ rows: [{ email: 'curador@test.com', name: 'Curador Teste' }] }); // Admin lookup for email notification
 
       const result = await service.acceptSuggestion(SUBMISSION_ID, mockSuggestion.id, AUTHOR_EMAIL);
 
       expect(result).toEqual({ success: true });
-      expect(mockDb.query).toHaveBeenCalledTimes(4);
-      
+      expect(mockDb.query).toHaveBeenCalledTimes(5);
+      expect(emailService.notifyCuratorOnSuggestionAccepted).toHaveBeenCalled();
+      expect(emailService.sendSuggestionAcceptedToAuthor).toHaveBeenCalledWith(
+        mockSubmissionRow,
+        AUTHOR_EMAIL,
+        'Curador Teste'
+      );
+
       const updateSubCall = mockDb.query.mock.calls[2][0];
       expect(updateSubCall).toContain('UPDATE submissions SET');
       expect(updateSubCall).toContain('title = $1');
@@ -182,10 +200,12 @@ describe('SubmissionSuggestionsService', () => {
       mockDb.query
         .mockResolvedValueOnce({ rows: [mockSubmissionRow] }) 
         .mockResolvedValueOnce({ rows: [suggestionSemCampos] }) 
-        .mockResolvedValueOnce({ rows: [] }); // Só roda o update da suggestion (accepted)
+        .mockResolvedValueOnce({ rows: [] }) // Só roda o update da suggestion (accepted)
+        .mockResolvedValueOnce({ rows: [{ email: 'curador@test.com', name: 'Curador Teste' }] }); // Admin lookup for email notification
 
       await service.acceptSuggestion(SUBMISSION_ID, mockSuggestion.id, AUTHOR_EMAIL);
-      expect(mockDb.query).toHaveBeenCalledTimes(3); // Pulou o UPDATE submissions
+      expect(mockDb.query).toHaveBeenCalledTimes(4); // Pulou o UPDATE submissions, mas mantém a busca do curador
+      expect(emailService.sendSuggestionAcceptedToAuthor).toHaveBeenCalled();
     });
   });
 

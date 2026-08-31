@@ -2,6 +2,7 @@ import untypedLogger from '../middleware/logging';
 import { LoggerWithAudit } from '../types/migration';
 import { DatabaseException, SubmissionNotFoundException, ValidationException } from '../utils/exceptions';
 import submissionService from '../services/submission';
+import emailService from './email';
 const logger = untypedLogger as unknown as LoggerWithAudit;
 
 export interface SuggestionData {
@@ -180,6 +181,28 @@ class SubmissionSuggestionsService {
           originalSuggestionId
         });
 
+        try {
+          const adminResult = await this.db.query(
+            'SELECT email FROM admins WHERE id = $1',
+            [updatedSubmissionResult.rows[0]?.admin_id ?? (await this.db.query('SELECT admin_id FROM submission_suggestions WHERE id = $1', [originalSuggestionId])).rows[0]?.admin_id]
+          );
+          const adminEmail = adminResult.rows[0]?.email;
+          if (adminEmail) {
+            await emailService.notifyCuratorOnCounterProposal(
+              updatedSubmission,
+              adminEmail,
+              authorEmail,
+              data.notes
+            );
+          }
+        } catch (emailError: any) {
+          logger.error('Error notifying curator about counter-proposal', {
+            submissionId,
+            authorEmail,
+            error: emailError?.message,
+          });
+        }
+
         return updatedSubmission;
       });
     } catch (error: any) {
@@ -265,6 +288,35 @@ class SubmissionSuggestionsService {
          WHERE id = $1`,
         [suggestionId]
       );
+
+      try {
+        const adminResult = await this.db.query(
+          'SELECT email, name FROM admins WHERE id = $1',
+          [s.admin_id]
+        );
+        const adminEmail = adminResult.rows[0]?.email;
+        const adminName = adminResult.rows[0]?.name || 'Curador';
+        if (adminEmail) {
+          await emailService.notifyCuratorOnSuggestionAccepted(
+            submissionResult.rows[0],
+            adminEmail,
+            authorEmail,
+            s.suggested_title || s.notes
+          );
+        }
+        await emailService.sendSuggestionAcceptedToAuthor(
+          submissionResult.rows[0],
+          authorEmail,
+          adminName
+        );
+      } catch (emailError: any) {
+        logger.error('Error notifying curator about accepted suggestion', {
+          submissionId,
+          suggestionId,
+          authorEmail,
+          error: emailError?.message,
+        });
+      }
 
       logger.audit('Suggestion accepted by author', { submissionId, suggestionId, authorEmail });
 
