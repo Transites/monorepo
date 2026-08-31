@@ -1,10 +1,10 @@
 jest.resetModules();
 
-const smtpSendMock = jest.fn();
+const mockSmtpSend = jest.fn();
 
 // Mocks
 jest.mock('nodemailer', () => ({
-  createTransport: jest.fn(() => ({ sendMail: smtpSendMock }))
+  createTransport: jest.fn(() => ({ sendMail: mockSmtpSend }))
 }));
 
 jest.mock('resend', () => {
@@ -16,7 +16,8 @@ jest.mock('resend', () => {
 jest.mock('../../middleware/logging', () => ({
   audit: jest.fn(),
   error: jest.fn(),
-  info: jest.fn()
+  info: jest.fn(),
+  warn: jest.fn()
 }));
 
 jest.mock('../../config/services', () => ({
@@ -43,6 +44,12 @@ const emailService = require('../../services/email');
 describe('EmailService (unit)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockSmtpSend.mockReset();
+    if (global.__RESEND_SEND_MOCK) {
+      global.__RESEND_SEND_MOCK.mockReset();
+    }
+    emailService.retryDelay = 0;
+    emailService.smtpAccounts = [];
   });
 
   test('sendEmail - success response from Resend', async () => {
@@ -64,17 +71,42 @@ describe('EmailService (unit)', () => {
     expect(global.__RESEND_SEND_MOCK).toHaveBeenCalledWith(expect.objectContaining({ text: 'plain text' }));
   });
 
-  test('sendEmail tries the next Gmail account when the first SMTP account fails', async () => {
-    smtpSendMock
-      .mockRejectedValueOnce(new Error('quota exceeded'))
-      .mockResolvedValueOnce({ messageId: 'smtp-message-2' });
+  test('sendEmail retries after SMTP and Resend failure', async () => {
+    mockSmtpSend.mockRejectedValue(new Error('smtp down'));
+    global.__RESEND_SEND_MOCK.mockRejectedValue(new Error('resend down'));
 
-    const res = await emailService.sendEmail({ to: 'a@test', subject: 'Hi', html: '<b>ok</b>' });
+    const originalAttempts = emailService.retryAttempts;
+    emailService.retryAttempts = 1;
+
+    await expect(emailService.sendEmail({ to: 'a@test', subject: 'Hi', html: '<b>ok</b>' }))
+      .rejects.toThrow(/Falha ao enviar email/);
+
+    emailService.retryAttempts = originalAttempts;
+    expect(logging.error).toHaveBeenCalled();
+  });
+
+  test('sendViaSmtp tries the next Gmail account when the first SMTP account fails', async () => {
+    const firstSmtpSend = jest.fn().mockRejectedValueOnce(new Error('quota exceeded'));
+    const secondSmtpSend = jest.fn().mockResolvedValueOnce({ messageId: 'smtp-message-2' });
+
+    emailService.smtpAccounts = [
+      { user: 'first@test', transporter: { sendMail: firstSmtpSend } },
+      { user: 'second@test', transporter: { sendMail: secondSmtpSend } },
+    ];
+
+    const res = await emailService.sendViaSmtp({
+      to: ['a@test'],
+      subject: 'Hi',
+      html: '<b>ok</b>',
+      from: 'Test <noreply@test>',
+      replyTo: 'support@test',
+    });
 
     expect(res.success).toBe(true);
     expect(res.provider).toBe('smtp');
-    expect(smtpSendMock).toHaveBeenCalledTimes(2);
-  });
+    expect(firstSmtpSend).toHaveBeenCalledTimes(1);
+    expect(secondSmtpSend).toHaveBeenCalledTimes(1);
+  }, 10000);
 
   test('sendEmail - throws and retries until exhausted', async () => {
     // Make resend throw to exercise retry path

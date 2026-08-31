@@ -4,11 +4,17 @@ jest.mock('../../services/articles', () => ({
     listArticles:   jest.fn(),
     getArticleById: jest.fn(),
     updateArticle:  jest.fn(),
+    assignDoi:      jest.fn(),
   }
 }));
 
 jest.mock('../../middleware/errors', () => ({
   asyncHandler: fn => fn,
+}));
+
+jest.mock('../../middleware/auth', () => ({
+  requireAuth: (req, res, next) => next(),
+  requireAuthAsAuthor: (req, res, next) => next(),
 }));
 
 const request        = require('supertest');
@@ -22,6 +28,7 @@ const articlesService = require('../../services/articles').default;
 const mockedList   = /** @type {jest.Mock} */ (articlesService.listArticles);
 const mockedGetById = /** @type {jest.Mock} */ (articlesService.getArticleById);
 const mockedUpdate  = /** @type {jest.Mock} */ (articlesService.updateArticle);
+const mockedAssignDoi = /** @type {jest.Mock} */ (articlesService.assignDoi);
 
 const app = express();
 app.use(express.json());
@@ -159,7 +166,8 @@ describe('ArticlesController', () => {
 
       expect(mockedUpdate).toHaveBeenCalledWith(
         validUUID,
-        { title: 'Novo', summary: 'Resumo novo' }
+        { title: 'Novo', summary: 'Resumo novo' },
+        { allowPublishedEdit: false }
       );
     });
 
@@ -184,8 +192,37 @@ describe('ArticlesController', () => {
           metadata: expect.objectContaining({
             bibliography: novasBibliografias
           })
-        })
+        }),
+        { allowPublishedEdit: false }
       );
+    });
+  });
+
+  describe('POST /api/articles/:id/assign-doi', () => {
+    const validUUID = 'be197e0e-b498-4759-abfa-a419061b49bb';
+
+    test('deve atribuir DOI com sucesso', async () => {
+      mockedAssignDoi.mockResolvedValue({
+        id: validUUID,
+        doi: '10.1234/teste',
+      });
+
+      const response = await request(app)
+        .post(`/api/articles/${validUUID}/assign-doi`)
+        .send();
+
+      expect(response.status).toBe(200);
+      expect(response.body.data.submission.doi).toBe('10.1234/teste');
+      expect(mockedAssignDoi).toHaveBeenCalledWith(validUUID);
+    });
+
+    test('deve retornar 400 para UUID inválido ao atribuir DOI', async () => {
+      const response = await request(app)
+        .post('/api/articles/id-invalido/assign-doi')
+        .send();
+
+      expect(response.status).toBe(400);
+      expect(mockedAssignDoi).not.toHaveBeenCalled();
     });
   });
 });

@@ -93,14 +93,13 @@ describe('Services Configuration', () => {
     // Reset modules for next test
     jest.resetModules();
 
-    // Set DATABASE_URL but remove RESEND_API_KEY
+    // Resend is optional when SMTP is configured, so it should not block load
     process.env.DATABASE_URL = 'postgresql://user:pass@localhost:5432/db';
     delete process.env.RESEND_API_KEY;
 
-    // Importing the module should throw an error
     expect(() => {
       require('../../config/services');
-    }).toThrow('Missing required environment variables for Resend: RESEND_API_KEY');
+    }).not.toThrow();
   });
 
   test('should load dotenv if environment variables are not set', () => {
