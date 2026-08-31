@@ -93,6 +93,13 @@ router.delete('/submissions/:id/media',
     errorHandler.asyncHandler(submissionController.removeMedia)
 );
 
+// DELETE /api/admin/review/submissions/:id
+// Excluir submissão rejeitada da fila de revisão
+router.delete('/submissions/:id',
+    authMiddleware.logAdminAction('delete_rejected_submission'),
+    errorHandler.asyncHandler(adminReviewController.deleteRejectedSubmission)
+);
+
 // PUT /api/admin/review/submissions/:id/status
 // Atualizar status de submissão (aprovar/rejeitar)
 router.put('/submissions/:id/status',

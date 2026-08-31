@@ -196,6 +196,42 @@ class AdminReviewService {
     }
 
     /**
+     * Excluir submissão rejeitada da fila de revisão
+     */
+    public async deleteRejectedSubmission(submissionId: string, adminId: string): Promise<void> {
+        const submission = await this.getSubmissionById(submissionId);
+        if (!submission) {
+            throw new Error('Submissão não encontrada');
+        }
+
+        if (submission.status !== 'REJECTED') {
+            throw new Error('Só é possível excluir submissões com status REJECTED');
+        }
+
+        const result = await this.db.query(
+            `DELETE FROM submissions
+             WHERE id = $1 AND status = 'REJECTED'
+             RETURNING id`,
+            [submissionId]
+        );
+
+        if (result.rows.length === 0) {
+            throw new Error('Submissão rejeitada não encontrada para exclusão');
+        }
+
+        await this.logAdminAction(adminId, 'delete_rejected_submission', 'submission', submissionId, {
+            title: submission.title,
+            authorEmail: submission.author_email
+        });
+
+        this.logger.audit('Rejected submission deleted from queue', {
+            submissionId,
+            adminId,
+            title: submission.title
+        });
+    }
+
+    /**
      * Revisar submissão (aprovar/rejeitar/solicitar mudanças)
      */
     public async reviewSubmission(

@@ -188,6 +188,24 @@ describe('ArticlesService', () => {
       expect(sqlCalled).toContain('title =');
     });
 
+    test('deve atualizar content_html quando o conteúdo for alterado', async () => {
+      mockedQuery.mockResolvedValueOnce({
+        rows: [{
+          id: 'uuid-123',
+          title: 'Título',
+          content: 'Texto **importante**',
+          content_html: '<p>Texto <strong>importante</strong></p>'
+        }]
+      });
+
+      await articlesService.updateArticle('uuid-123', {
+        content: 'Texto **importante**',
+      });
+
+      const sqlCalled = mockedQuery.mock.calls[0][0];
+      expect(sqlCalled).toContain('content_html =');
+    });
+
     test('deve atualizar metadata preservando campos existentes', async () => {
       const metadataCompleta = {
         image:       { url: 'https://cloudinary.com/foto.jpg' },

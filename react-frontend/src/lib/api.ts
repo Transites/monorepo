@@ -333,7 +333,7 @@ export interface FeaturedContentResponse {
  */
 export async function getFeaturedContent(): Promise<FeaturedContentResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/featured-content`);
+    const response = await fetch(`${API_BASE_URL}/featured-content`, { cache: 'no-store' });
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -693,6 +693,13 @@ export async function unassignSubmission(submissionId: string): Promise<AdminSub
     { method: 'POST' }
   );
   return response.data.submission;
+}
+
+export async function deleteRejectedSubmission(submissionId: string): Promise<void> {
+  await adminRequest<{ deleted: boolean; submissionId: string }>(
+    `/admin/review/submissions/${submissionId}`,
+    { method: 'DELETE' }
+  );
 }
 
 // Autor

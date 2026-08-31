@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Loader2, AlertCircle, Inbox, UserPlus, Clock } from 'lucide-react';
+import { Loader2, AlertCircle, Inbox, UserPlus, Clock, Trash2 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   getReviewQueue,
   assignSubmission,
+  deleteRejectedSubmission,
   ApiError,
   type AdminSubmission,
 } from '@/lib/api';
@@ -50,11 +51,15 @@ const STATUS_MAP: Record<TabStatus, string[]> = {
 function SubmissionCard({
   submission,
   onAssign,
+  onDelete,
   isAssigning,
+  isDeleting,
 }: {
   submission: AdminSubmission;
   onAssign: (id: string) => void;
+  onDelete: (id: string) => void;
   isAssigning: boolean;
+  isDeleting: boolean;
 }) {
   const navigate = useNavigate();
 
@@ -74,11 +79,30 @@ function SubmissionCard({
               {submission.authorInstitution && ` · ${submission.authorInstitution}`}
             </CardDescription>
           </div>
-          {submission.category && (
-            <Badge variant="secondary" className="shrink-0">
-              {submission.category}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2 shrink-0">
+            {submission.category && (
+              <Badge variant="secondary" className="shrink-0">
+                {submission.category}
+              </Badge>
+            )}
+            {submission.status?.toUpperCase() === 'REJECTED' && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                aria-label={`Excluir artigo rejeitado ${submission.title}`}
+                title="Excluir artigo rejeitado"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(submission.id);
+                }}
+                disabled={isDeleting}
+              >
+                {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -92,7 +116,6 @@ function SubmissionCard({
               Enviado em {formatDate(submission.createdAt)}
             </p>
             {submission.assignedToName && (
-              //console.log(submission.assignedToName);
               <p className="text-xs text-muted-foreground bg-secondary/50 px-2 py-1 rounded-md inline-block w-fit">
                 Responsável: <span className="font-medium text-foreground">{submission.assignedToName}</span>
               </p>
@@ -122,6 +145,7 @@ export default function ReviewQueue() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabStatus>('NO_REVIEW');
   const [assigningId, setAssigningId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // ──────────────────────────────────
   const { user, isAdmin, loading: authLoading } = useAuth();
@@ -143,14 +167,21 @@ export default function ReviewQueue() {
     onMutate: (id: string) => setAssigningId(id),
     onSettled: () => setAssigningId(null),
     onSuccess: () => {
-      // Invalida a busca atual para atualizar a lista
       queryClient.invalidateQueries({ queryKey: ['admin', 'review-queue'] });
       queryClient.invalidateQueries({ queryKey: ['admin', 'my-reviews'] });
     },
   });
 
-  // Não precisamos mais daquele "filteredSubmissions" gigante. 
-  // O backend já nos entrega a lista pronta e mastigada.
+  const deleteMutation = useMutation({
+    mutationFn: deleteRejectedSubmission,
+    onMutate: (id: string) => setDeletingId(id),
+    onSettled: () => setDeletingId(null),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin', 'review-queue'] });
+      queryClient.invalidateQueries({ queryKey: ['admin', 'my-reviews'] });
+    },
+  });
+
   const submissions = data?.submissions ?? [];
 
   return (
@@ -223,7 +254,9 @@ export default function ReviewQueue() {
               key={submission.id}
               submission={submission}
               onAssign={(id) => assignMutation.mutate(id)}
+              onDelete={(id) => deleteMutation.mutate(id)}
               isAssigning={assigningId === submission.id}
+              isDeleting={deletingId === submission.id}
             />
           ))}
         </div>

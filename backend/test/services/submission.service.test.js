@@ -613,6 +613,20 @@ describe('SubmissionService.updateSubmission', () => {
         expect(typeof result.title).toBe('string');
         expect(mockClient.query).toHaveBeenCalled();
     });
+
+    it('recalculates content_html when the textual content changes', async () => {
+        const existing = completeSubmission({ status: 'DRAFT', content: 'Conteúdo antigo' });
+        mockDb.findById.mockResolvedValueOnce(existing);
+        mockClient.query
+            .mockResolvedValueOnce({ rows: [{ ...existing, content: 'Conteúdo **novo**', updated_at: new Date() }] })
+            .mockResolvedValueOnce({ rows: [{ next_version: 1 }] })
+            .mockResolvedValueOnce({ rows: [{ id: 'version-1' }] });
+
+        await submissionService.updateSubmission('sub-uuid', { content: 'Conteúdo **novo**' }, 'a@b.com');
+
+        const sqlCalled = mockClient.query.mock.calls[0][0];
+        expect(sqlCalled).toContain('content_html =');
+    });
 });
 
 // ─── getSubmissionSuggestions / accept / reject ─────────────────────────────

@@ -490,6 +490,32 @@ class AdminReviewController {
 		}
 	};
 
+	public deleteRejectedSubmission = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+		try {
+			const { id: submissionId } = req.params;
+			const adminId = req.user!.id.toString();
+
+			await this.adminReviewService.deleteRejectedSubmission(submissionId, adminId);
+
+			this.logger.audit('Rejected submission deleted from queue via API', {
+				submissionId,
+				adminId
+			});
+
+			this.responses.success(res, {
+				deleted: true,
+				submissionId
+			}, 'Submissão rejeitada removida da fila com sucesso');
+		} catch (error) {
+			this.logger.error('Error deleting rejected submission', {
+				submissionId: req.params.id,
+				adminId: req.user?.id,
+				error: error instanceof Error ? error.message : String(error)
+			});
+			next(error);
+		}
+	};
+
 	// =============================================================================
 	// MÉTODOS PRIVADOS
 	// =============================================================================

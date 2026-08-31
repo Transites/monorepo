@@ -364,8 +364,12 @@ class SubmissionService {
                 let paramCount = 1;
 
                 // Campos que podem ser atualizados
+                if (updateData.content !== undefined) {
+                    updateData.content_html = formatContentToHtml(updateData.content);
+                }
+
                 const updatableFields = [
-                    'title', 'summary', 'content', 'keywords',
+                    'title', 'summary', 'content', 'content_html', 'keywords',
                     'category', 'author_institution', 'metadata'
                 ];
 

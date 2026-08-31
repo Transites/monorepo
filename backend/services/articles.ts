@@ -9,6 +9,18 @@ interface ListArticlesParams {
       limit: number;
 }
 
+function formatContentToHtml(content: string | undefined) {
+      if (!content) return '';
+
+      const processed = content
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n\n/g, '</p><p>')
+            .replace(/\n/g, '<br>');
+
+      return `<p>${processed}</p>`;
+}
+
 class ArticlesService {
 
       async listArticles({ search, category, page, limit }: ListArticlesParams){
@@ -101,6 +113,10 @@ class ArticlesService {
       }
 
       async updateArticle(id: string, data: any) {
+      if (data.content !== undefined) {
+            data.content_html = formatContentToHtml(data.content);
+      }
+
       // Campos permitidos — evita que alguém atualize status ou token
       const allowed = [
       'title', 'summary', 'content', 'content_html',
