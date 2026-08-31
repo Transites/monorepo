@@ -39,9 +39,6 @@ const MediaSection = () => {
           <h2 className="text-2xl font-bold text-foreground mb-2">
             Conteúdo em destaque
           </h2>
-          <p className="text-muted-foreground">
-            Conteúdo selecionado em História, Política e Cultura
-          </p>
         </div>
         
         <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">

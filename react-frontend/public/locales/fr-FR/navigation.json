@@ -1,7 +1,14 @@
 {
   "home": "Accueil",
-  "search": "Rechercher", 
+  "search": "Rechercher",
   "about": "À propos",
   "contact": "Contact",
-  "team": "Qui sommes-nous"
+  "team": "Qui sommes-nous",
+  "myArticles": "Mes articles",
+  "submit": "Soumettre",
+  "admin": "Admin",
+  "adminArea": "Espace administrateur",
+  "login": "Connexion",
+  "register": "S'inscrire",
+  "logout": "Déconnexion"
 }

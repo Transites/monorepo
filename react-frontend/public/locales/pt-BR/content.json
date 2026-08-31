@@ -2,45 +2,50 @@
   "hero": {
     "title": "Enciclopédia Digital das Relações Brasil-França",
     "period": "(1880-1990)",
-    "description": "Explore um século de relações culturais, artísticas e intelectuais entre o Brasil e a França. Uma plataforma acadêmica dedicada aos trânsitos, trocas e influências mútuas que moldaram nossa história."
+    "description": "Explore um século de deslocamentos, migrações e de transferências culturais, artísticas e intelectuais entre o Brasil e a França. Uma plataforma acadêmica dedicada aos trânsitos, trocas e influências mútuas que moldaram nossa história."
   },
   "categories": {
     "title": "Explore por categoria",
     "description": "Conheça os diferentes tipos de entradas organizadas em sete categorias principais",
+    "todos": {
+      "title": "Verbetes",
+      "description": "Explore toda a coleção da Enciclopédia Trânsitos|circulations",
+      "examples": "Pessoas, obras, eventos, conceitos e mais"
+    },  
     "pessoas": {
       "title": "Pessoas",
-      "description": "Indivíduos que participaram dos intercâmbios culturais",
-      "examples": "Escritores, artistas, acadêmicos, diplomatas"
+      "description": "Indivíduos que circularam entre os dois países",
+      "examples": "Personagens dos mais diversos perfis e profissões"
     },
     "obras": {
       "title": "Obras",
-      "description": "Produções artísticas, literárias e intelectuais",
+      "description": "Os mais diversos frutos da criação e do trabalho em trânsito",
       "examples": "Livros, pinturas, esculturas, manuscritos"
     },
     "instituicoes": {
       "title": "Instituições",
-      "description": "Organizações que promoveram os intercâmbios",
-      "examples": "Universidades, museus, bibliotecas, fundações"
+      "description": "Organismos que promoveram ou se antepuseram aos trânsitos",
+      "examples": "Órgãos estatais, organizações civis, públicas e privadas"
     },
     "empresas": {
       "title": "Empresas", 
-      "description": "Empresas envolvidas nos intercâmbios comerciais",
-      "examples": "Editoras, galerias, importadoras, consultorias"
+      "description": "Iniciativas ligadas às relações financeiras e comerciais e aos investimentos de imigrantes",
+      "examples": "Estabelecimentos comerciais, de importação e exportação, filiais de bancos e indústrias"
     },
     "agrupamentos": {
       "title": "Agrupamentos",
-      "description": "Grupos e coletivos que participaram dos intercâmbios", 
-      "examples": "Associações, movimentos, círculos, redes"
+      "description": "Grupos e coletivos que participaram das circulações bi-nacionais", 
+      "examples": "Associações, movimentos, sociedades, círculos, redes"
     },
     "eventos": {
       "title": "Eventos",
-      "description": "Acontecimentos significativos nos intercâmbios",
-      "examples": "Exposições, conferências, festivais, congressos"
+      "description": "Acontecimentos significativos nas circulações bi-nacionais",
+      "examples": "Exposições, conferências, festivais, congressos, fóruns"
     },
     "conceitos": {
       "title": "Conceitos",
-      "description": "Ideias e conceitos centrais dos intercâmbios",
-      "examples": "Modernismo, cosmopolitismo, identidade, circulação"
+      "description": "Ideias e conceitos centrais nos trânsitos Brasil-França",
+      "examples": "Termos que acompanham, atravessam, explicam e complexificam os trânsitos Brasil-França"
     }
   },
   "about": {
@@ -53,6 +58,6 @@
     "coordinators": "Coordenadores",
     "teamMembers": "Equipe", 
     "development": "Desenvolvimento",
-    "developmentText": "O site foi desenvolvido pelos alunos do curso de Matemática Aplicada Gyovanna Marques Kwasinei e Gustavo Araújo, sob a orientação de Alfredo Goldman (USP)."
+    "developmentText": "O site foi desenvolvido pelos alunos do curso de Matemática Aplicada, Gyovanna Marques Kwasinei e Gustavo Araújo, e de Ciência da Computação, João Pedro Barioni Agostini, Naili Lucia Marques, e Vinícius Gomes Paz, sob a orientação de Alfredo Goldman (USP)."
   }
 }

@@ -2,57 +2,62 @@
   "hero": {
     "title": "Encyclopédie Numérique des Relations France-Brésil",
     "period": "(1880-1990)",
-    "description": "Explorez un siècle de relations culturelles, artistiques et intellectuelles entre la France et le Brésil. Une plateforme académique dédiée aux transits, échanges et influences mutuelles qui ont façonné notre histoire."
+    "description": "Explorez un siècle de déplacements, migrations et transferts culturels, artistiques et intellectuels entre la France et le Brésil. Une plateforme académique dédiée aux circulations, échanges et influences réciproques qui ont façonné notre histoire."
   },
   "categories": {
     "title": "Explorer par catégorie",
-    "description": "Découvrez les différents types d'entrées organisées en sept catégories principales",
+    "description": "Découvrez les différents types d'entrées organisés en sept catégories principales",
+    "todos": {
+      "title": "Entrées",
+      "description": "Explorez toute la collection de l'Encyclopédie Trânsitos|circulations",
+      "examples": "Personnes, œuvres, événements, concepts et plus"
+    },
     "pessoas": {
       "title": "Personnes",
-      "description": "Individus qui ont participé aux échanges culturels",
-      "examples": "Écrivains, artistes, universitaires, diplomates"
+      "description": "Individus ayant circulé entre les deux pays",
+      "examples": "Personnages aux profils et métiers les plus divers"
     },
     "obras": {
       "title": "Œuvres",
-      "description": "Productions artistiques, littéraires et intellectuelles",
-      "examples": "Livres, peintures, sculptures, manuscrits"
+      "description": "Les fruits les plus divers de la création et du travail marqués par les circulations",
+      "examples": "Livres, peintures, sculptures, manuscrits, outils, machines, produits agricoles et industriels"
     },
     "instituicoes": {
       "title": "Institutions",
-      "description": "Organisations qui ont promu les échanges",
-      "examples": "Universités, musées, bibliothèques, fondations"
+      "description": "Organisations qui ont promu les échanges ou qui s'y sont opposées",
+      "examples": "Organismes publics ou privés, organisations de la société civile"
     },
     "empresas": {
       "title": "Entreprises",
-      "description": "Entreprises impliquées dans les échanges commerciaux",
-      "examples": "Les échanges commerciaux et industriels"
+      "description": "Des initiatives liées aux relations financières et commerciales et aux investissements des immigrés",
+      "examples": "Établissements commerciaux, d'importation et d'exportation, filialesde banques et d'industries"
     },
     "agrupamentos": {
       "title": "Groupements",
-      "description": "Groupes et collectifs qui ont participé aux échanges",
-      "examples": "Associations, mouvements, cercles, réseaux"
+      "description": "Groupes et collectifs ayant participé aux circulations bi-nationales",
+      "examples": "Associations, mouvements, sociétés, cercles, réseaux"
     },
     "eventos": {
       "title": "Événements",
-      "description": "Événements significatifs dans les échanges",
-      "examples": "Expositions, conférences, festivals, congrès"
+      "description": "Des faits significatifs dans le cadre des circulations bi-nationales",
+      "examples": "Expositions, conférences, festivals, congrès, forums"
     },
     "conceitos": {
       "title": "Concepts",
-      "description": "Idées et concepts centraux des échanges",
-      "examples": "Modernisme, cosmopolitaine, identité, circulation, transferts culturels"
+      "description": "Des idées et des concepts centraux pour les circulations France-Brésil",
+      "examples": "Des termes qui accompagnent, traversent, expliquent et complexifient les circulations France-Brésil"
     }
   },
   "about": {
     "title": "À propos du projet Trânsitos | Circulations",
-    "intro": "Trânsitos | <em>Circulations</em> est une encyclopédie numérique, interactive et bilingue qui vise à cartographier, systématiser et encourager les recherches sur les relations franco-brésiliennes, avec un focus sur les personnes, œuvres, institutions, entreprises, groupements, événements et concepts, de 1880 à 1990.",
-    "expanded": "Des personnes, groupes et œuvres ont circulé dans les deux sens de l'Atlantique. Ce sont ces transits que nous cherchons à récupérer et les mouvements que nous entendons redessiner, dans différentes sphères de la société, depuis les coopérations intellectuelles, scientifiques et artistiques jusqu'aux, ou principalement, les migrations motivées par des questions économiques, politiques ou religieuses. L'Encyclopédie a un double objectif : a) développer des travaux inédits, à partir d'une approche transdisciplinaire ; b) réfléchir sur les usages de la technologie pour la recherche, mais aussi développer des outils propres qui potentialisent les bases de données et l'interaction avec les lecteurs."
+    "intro": "Trânsitos | <em>Circulations</em> est une encyclopédie numérique, interactive et bilingue qui vise à cartographier, systématiser et encourager les recherches sur les relations franco-brésiliennes, en mettant l'accent sur les personnes, les œuvres, les institutions, les entreprises, les groupements, les événements et les concepts, pour la période allant de 1880 à 1990.",
+    "expanded": "Des personnes, des groupes et des œuvres ont circulé dans les deux sens de l'Atlantique. Ce sont ces circulations que nous cherchons à retrouver et ces mouvements que nous entendons retracer, dans différentes sphères de la société, depuis les coopérations intellectuelles, scientifiques et artistiques jusqu'aux migrations, notamment celles motivées par des questions économiques, politiques ou religieuses. L'Encyclopédie poursuit un double objectif : a) développer des travaux inédits à partir d'une approche transdisciplinaire ; b) réfléchir aux usages de la technologie pour la recherche, tout en développant des outils propres permettant de valoriser les bases de données et de renforcer l'interaction avec les lecteurs."
   },
   "team": {
     "title": "Qui sommes-nous",
     "coordinators": "Coordinateurs",
     "teamMembers": "Équipe",
     "development": "Développement",
-    "developmentText": "Le site a été développé par les étudiants du cours de Mathématiques Appliquées Gyovanna Marques Kwasinei et Gustavo Araújo, sous la direction d'Alfredo Goldman (USP)."
+    "developmentText": "Le site a été développé par les étudiants du cours de Mathématiques appliquées, Gyovanna Marques Kwasinei et Gustavo Araújo, et d'Informatique, João Pedro Barioni Agostini, Naili Lucia Marques, et Vinícius Gomes Paz, sous la direction d'Alfredo Goldman (USP)."
   }
 }

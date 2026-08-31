@@ -13,11 +13,11 @@ const CategoriesSection = () => {
 
     {
       id: 'todos',
-      title: 'Todos os Artigos',
-      description: 'Explore toda a coleção da Enciclopédia Trânsitos',
+      title: t('content:categories.todos.title'),
+      description: t('content:categories.todos.description'),
       icon: Library,
       color: 'primary',
-      examples: 'Pessoas, obras, eventos, conceitos e mais',
+      examples: t('content:categories.todos.examples'),
       categoryParam: '',
     },
     {

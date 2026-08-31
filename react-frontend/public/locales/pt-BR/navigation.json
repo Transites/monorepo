@@ -3,5 +3,12 @@
   "search": "Pesquisar",
   "about": "Sobre",
   "contact": "Contato",
-  "team": "Quem somos"
+  "team": "Quem somos",
+  "myArticles": "Meus Artigos",
+  "submit": "Submeter",
+  "admin": "Admin",
+  "adminArea": "Área do Administrador",
+  "login": "Entrar",
+  "register": "Registre-se",
+  "logout": "Sair"
 }
