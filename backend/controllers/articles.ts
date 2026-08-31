@@ -2,6 +2,9 @@ import { Request, Response, NextFunction  } from 'express';
 import articlesService from '../services/articles';
 import responses from '../utils/responses';
 import { handleControllerError } from '../utils/errorHandler';
+import untypedLogger from '../middleware/logging';
+
+const logger = untypedLogger as any;
 
 class ArticleController {
 
@@ -71,7 +74,40 @@ class ArticleController {
             }
 
             const isAdmin = Boolean((req as any).user?.id || (req as any).user?.email);
-            const updated = await articlesService.updateArticle(id, req.body, {
+            const payload = req.body && typeof req.body === 'object' && !Array.isArray(req.body) && req.body.data && typeof req.body.data === 'object'
+                  ? req.body.data
+                  : req.body;
+
+            // Diagnostic logging to help debug cases where payload appears empty
+            try {
+                  const contentType = req.headers['content-type'] || req.get('Content-Type');
+                  const contentLength = req.headers['content-length'] || req.get('Content-Length');
+                  const bodyType = typeof req.body;
+                  const isArrayBody = Array.isArray(req.body);
+                  let bodyPreview = '';
+                  try {
+                        bodyPreview = JSON.stringify(req.body);
+                        if (bodyPreview.length > 1000) bodyPreview = bodyPreview.slice(0, 1000) + '...';
+                  } catch (e) {
+                        bodyPreview = String(req.body);
+                  }
+
+                  logger.info('updateArticle called', {
+                        operation: 'updateArticle',
+                        articleId: id,
+                        requester: (req as any).user?.email || (req as any).user?.id || req.ip,
+                        contentType,
+                        contentLength,
+                        bodyType,
+                        isArrayBody,
+                        payloadKeys: Object.keys(payload || {}),
+                        bodyPreview
+                  });
+            } catch (e) {
+                  // ignore logging errors
+            }
+
+            const updated = await articlesService.updateArticle(id, payload, {
                   allowPublishedEdit: isAdmin,
             });
             return responses.success(res, { submission: updated }, 'Artigo atualizado com sucesso');

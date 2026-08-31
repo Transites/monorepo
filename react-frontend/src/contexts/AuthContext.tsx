@@ -66,9 +66,14 @@ export const AuthProvider = ({
   const createUser = async (email: string, password: string) => {
     if (user) throw new Error('Already logged in.');
 
+    const redirectUrl = `${window.location.origin}/login`;
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: redirectUrl,
+      },
     });
 
     if (error) throw error;
@@ -113,23 +118,21 @@ export const AuthProvider = ({
     setLoading(false);
   };
 
-  const getAuthErrorMessage = (error: AuthError): string => {
-    switch (error.message) {
-      case 'invalid_credentials':
-        return 'E-mail ou senha incorretos.';
-      case 'email_not_confirmed':
-        return 'Por favor, confirme seu e-mail antes de fazer login.';
-      case 'user_not_found':
-        return 'Usuário não encontrado.';
-      case 'email_exists':
-        return 'Este e-mail já está em uso.';
-      case 'weak_password':
-        return 'A senha fornecida é muito fraca.';
-      case 'over_request_rate_limit':
-        return 'Muitas tentativas seguidas. Por favor, tente novamente mais tarde.';
-      default:
-        return 'Erro na autenticação. Verifique os dados.';
-    }
+  const getAuthErrorMessage = (error: AuthError | any): string => {
+    const raw = (error && (error.message || error.error_description || error.msg)) || '';
+    const msg = String(raw).toLowerCase();
+
+    if (!raw) return 'Erro na autenticação. Verifique os dados.';
+
+    if (msg.includes('invalid') && msg.includes('credentials')) return 'E-mail ou senha incorretos.';
+    if (msg.includes('confirm') || msg.includes('email_not_confirmed') || msg.includes('please confirm')) return 'Por favor, confirme seu e-mail antes de fazer login.';
+    if (msg.includes('user not found') || msg.includes('not_found') || msg.includes('user_not_found')) return 'Usuário não encontrado.';
+    if ((msg.includes('already') && msg.includes('registered')) || msg.includes('email exists') || msg.includes('duplicate')) return 'Este e-mail já está em uso.';
+    if (msg.includes('weak') && msg.includes('password')) return 'A senha fornecida é muito fraca.';
+    if (msg.includes('rate') || msg.includes('too many') || msg.includes('over_request_rate_limit')) return 'Muitas tentativas seguidas. Por favor, tente novamente mais tarde.';
+
+    // Fallback: if Supabase provides a readable message, show it; otherwise generic message
+    return raw || 'Erro na autenticação. Verifique os dados.';
   };
 
   useEffect(() => {

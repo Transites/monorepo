@@ -422,6 +422,24 @@ describe('SubmissionService.submitForReview', () => {
 
         expect(result.status).toBe('SUBMITTED');
     });
+
+    it('renews the submission token when sending for review', async () => {
+        const sub = completeSubmission();
+        mockDb.findById.mockResolvedValueOnce(sub);
+
+        const updatedRow = { ...sub, status: 'SUBMITTED', submitted_at: new Date() };
+        mockClient.query
+            .mockResolvedValueOnce({ rows: [updatedRow] })
+            .mockResolvedValueOnce({ rows: [{ next_version: 2 }] })
+            .mockResolvedValueOnce({ rows: [updatedRow] })
+            .mockResolvedValueOnce({ rows: [{ email: 'admin@enc.com' }] });
+
+        const renewSpy = jest.spyOn(require('../../services/tokens'), 'renewToken').mockResolvedValue({ success: true, newExpiresAt: new Date(), additionalDays: 30 });
+
+        await submissionService.submitForReview('sub-uuid', 'a@b.com');
+
+        expect(renewSpy).toHaveBeenCalledWith('sub-uuid', 30);
+    });
 });
 
 // ─── addAttachment ────────────────────────────────────────────────────────────

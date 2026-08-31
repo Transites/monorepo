@@ -108,8 +108,16 @@ class SecurityMiddleware {
             return obj;
         };
 
-        if (req.body) {
-            req.body = sanitizeObject({ ...req.body });
+        if (req.body && typeof req.body === 'object') {
+            req.body = sanitizeObject(req.body);
+        } else if (typeof req.body === 'string') {
+            // If body is a JSON string (e.g., sent as text/plain), try to parse and sanitize
+            try {
+                const parsed = JSON.parse(req.body);
+                req.body = sanitizeObject(parsed);
+            } catch (e) {
+                // not JSON — leave as-is (sanitization of raw strings isn't spreading into objects)
+            }
         }
 
         if (req.query) {

@@ -498,8 +498,8 @@ class SubmissionService {
 
                 const updatedSubmission = result.rows[0];
 
-                // Renovar token automaticamente (30 dias adicionais)
-               // await tokenService.renewToken(submissionId, 30);
+                // Renovar token automaticamente para evitar links expirados do autor
+                await tokenService.renewToken(submissionId, 30);
 
                 // Buscar emails dos admins
                 // Expected adminsResult = { rows: [{ email: string }] }

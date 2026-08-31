@@ -22,7 +22,12 @@ class Server {
             const db = require('./database/client');
             const healthCheck = await db.healthCheck();
             if (healthCheck.status !== 'healthy') {
-                throw new Error(`Database unhealthy: ${healthCheck.error}`);
+                const errMsg = `Database unhealthy: ${healthCheck.error}`;
+                if (process.env.NODE_ENV === 'production') {
+                    throw new Error(errMsg);
+                } else {
+                    logger.error(errMsg);
+                }
             }
 
             // Iniciar jobs automáticos somente em produção (evita jobs durante testes)

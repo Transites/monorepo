@@ -69,6 +69,31 @@ app.use(cors(corsOptions));
 app.use(compression());
 app.use(express.json({limit: '10mb'}));
 app.use(express.urlencoded({extended: true, limit: '10mb'}));
+// Parse text bodies (some clients send JSON with text/plain content-type)
+app.use(express.text({ type: ['text/plain', 'application/*+json'], limit: '10mb' }));
+
+// Convert plain-text JSON bodies into JS objects when possible
+app.use((req, res, next) => {
+    try {
+        if (req.headers['content-type'] && typeof req.body === 'string') {
+            const ct = req.headers['content-type'];
+            // If body looks like JSON, try to parse it
+            if (ct.includes('text/') || ct.includes('application/') ) {
+                const trimmed = req.body.trim();
+                if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                    try {
+                        req.body = JSON.parse(trimmed);
+                    } catch (e) {
+                        // If parse fails, leave body as string
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        // ignore conversion errors
+    }
+    next();
+});
 
 // HTTP request logging - disabled in test environment
 if (process.env.NODE_ENV !== 'development') {

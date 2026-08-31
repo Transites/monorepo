@@ -157,6 +157,26 @@ describe('ArticlesService', () => {
       expect(result.title).toBe('Título Novo');
     });
 
+    test('deve aceitar payload normalizado quando os campos chegam em um objeto aninhado', async () => {
+      const mockUpdated = {
+        id: 'uuid-123',
+        title: 'Título Novo',
+        updated_at: new Date(),
+      };
+
+      mockedQuery
+        .mockResolvedValueOnce({ rows: [{ id: 'uuid-123', status: 'DRAFT' }] })
+        .mockResolvedValueOnce({ rows: [mockUpdated] });
+
+      const result = await articlesService.updateArticle('uuid-123', {
+        data: {
+          title: 'Título Novo',
+        },
+      });
+
+      expect(result.title).toBe('Título Novo');
+    });
+
     test('deve lançar erro quando nenhum campo é enviado', async () => {
       await expect(
         articlesService.updateArticle('uuid-123', {})

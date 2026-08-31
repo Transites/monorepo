@@ -17,6 +17,8 @@ services:
     build:
       context: ./backend
       target: 'base'
+    dns:
+    - 8.8.8.8
     ports:
     - '1337:1337'
     volumes:

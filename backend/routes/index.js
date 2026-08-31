@@ -36,4 +36,5 @@ router.use('/author', authorRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/featured-content', featuredContentRoutes);
 router.use('/articles', articleRoutes );
+
 module.exports = router;

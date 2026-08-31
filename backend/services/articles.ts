@@ -115,6 +115,18 @@ class ArticlesService {
       async updateArticle(id: string, data: any, options: { allowPublishedEdit?: boolean } = {}) {
       const { allowPublishedEdit = false } = options;
 
+      const payload = (() => {
+            if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                  return {};
+            }
+
+            if (data.data && typeof data.data === 'object' && !Array.isArray(data.data)) {
+                  return data.data;
+            }
+
+            return data;
+      })();
+
       // Campos permitidos — evita que alguém atualize status ou token
       const allowed = [
       'title', 'summary', 'content', 'content_html',
@@ -122,7 +134,7 @@ class ArticlesService {
       'author_institution', 'metadata'
       ];
 
-      const hasAllowedField = Object.keys(data || {}).some((field) => allowed.includes(field));
+      const hasAllowedField = Object.keys(payload || {}).some((field) => allowed.includes(field) && payload[field] !== undefined);
       if (!hasAllowedField) {
             throw new Error('Nenhum campo para atualizar');
       }
@@ -140,8 +152,8 @@ class ArticlesService {
             throw new Error('Artigos publicados só podem ser editados por administradores');
       }
 
-      if (data.content !== undefined) {
-            data.content_html = formatContentToHtml(data.content);
+      if (payload.content !== undefined) {
+            payload.content_html = formatContentToHtml(payload.content);
       }
 
       // Monta o SET dinamicamente só com os campos enviados
@@ -150,9 +162,9 @@ class ArticlesService {
       let   i = 1;
 
       allowed.forEach(field => {
-      if (data[field] !== undefined) {
+      if (payload[field] !== undefined) {
             fields.push(`${field} = $${i}`);
-            values.push(data[field]);
+            values.push(payload[field]);
             i++;
       }
       });
