@@ -69,17 +69,17 @@ function SubmissionCard({
   };
 
   return (
-    <Card onClick={handleCardClick} className="cursor-pointer hover:border-primary/50 transition-colors">
+    <Card onClick={handleCardClick} className="cursor-pointer hover:border-primary/50 transition-colors overflow-hidden">
       <CardHeader>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <CardTitle className="text-lg">{submission.title}</CardTitle>
-            <CardDescription className="mt-1">
+        <div className="flex items-start justify-between gap-4 min-w-0">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-lg break-all max-w-full">{submission.title}</CardTitle>
+            <CardDescription className="mt-1 break-all max-w-full">
               {submission.authorName}
               {submission.authorInstitution && ` · ${submission.authorInstitution}`}
             </CardDescription>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 min-w-0">
             {submission.category && (
               <Badge variant="secondary" className="shrink-0">
                 {submission.category}
@@ -106,7 +106,7 @@ function SubmissionCard({
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground line-clamp-2">
+        <p className="text-sm text-muted-foreground line-clamp-2 break-all max-w-full min-w-0">
           {submission.summary}
         </p>
         <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

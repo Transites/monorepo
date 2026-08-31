@@ -3,10 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { getCategoryColor } from "@/lib/categoryColors";
 import { useFeaturedContent } from "@/hooks/use-featured-content";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const MediaSection = () => {
   const { data: featuredContent, isLoading, error } = useFeaturedContent();
   const navigate = useNavigate();
+  const { t } = useTranslation(["content"]);
 
   // Loading state
   if (isLoading) {
@@ -15,10 +17,10 @@ const MediaSection = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-2xl font-bold text-foreground mb-2">
-              Conteúdo em destaque
+              {t("content:featured.title")}
             </h2>
             <p className="text-muted-foreground">
-              Carregando conteúdo em destaque...
+              {t("content:featured.loading")}
             </p>
           </div>
         </div>
@@ -37,7 +39,7 @@ const MediaSection = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-2xl font-bold text-foreground mb-2">
-            Conteúdo em destaque
+            {t("content:featured.title")}
           </h2>
         </div>
         
@@ -71,11 +73,11 @@ const MediaSection = () => {
                     {item.title}
                   </h3>
                   <p className="text-sm text-muted-foreground line-clamp-3">
-                    {item.summary || 'Resumo não disponível.'}
+                    {item.summary || t("content:featured.noSummary")}
                   </p>
                   {item.author_name && (
                     <p className="text-xs text-muted-foreground mt-2">
-                      Por {item.author_name}
+                      {t("content:featured.byAuthor", { author: item.author_name })}
                     </p>
                   )}
                 </CardContent>

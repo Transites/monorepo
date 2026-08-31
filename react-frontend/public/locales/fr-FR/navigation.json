@@ -6,9 +6,20 @@
   "team": "Qui sommes-nous",
   "myArticles": "Mes articles",
   "submit": "Soumettre",
-  "admin": "Admin",
-  "adminArea": "Espace administrateur",
-  "login": "Connexion",
-  "register": "S'inscrire",
-  "logout": "Déconnexion"
+  "admin": "Accès réservé",
+  "adminArea": "Accès réservé",
+  "login": "Entrer",
+  "register": "Inscrivez-vous",
+  "logout": "Quitter",
+  "footer": {
+    "digitalEncyclopedia": "Encyclopédie numérique",
+    "importantLinks": "Liens importants",
+    "aboutProject": "À propos du projet",
+    "whoWeAre": "Qui sommes-nous",
+    "categories": "Catégories",
+    "featuredContent": "Contenu en vedette",
+    "contact": "Contact",
+    "initiative": "Une initiative académique dédiée à la préservation de la mémoire culturelle Brésil-France",
+    "rights": "© {{year}} Projet Trânsitos. Tous droits réservés."
+  }
 }

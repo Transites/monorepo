@@ -105,14 +105,20 @@ export function buildSubmissionPayload(fields: SubmissionFormFields): CreateArti
   // Pega o metadata que vem do form (nascimento, ocupação, etc) ou cria um padrão
   const baseMetadata = fields.metadata || buildArticleMetadata(fields.bibliography);
 
+  const mediaMetadata = fields.media ? {
+    [fields.media.type]: fields.media.data,
+  } : {};
+
   // Monta o JSON completo com os campos estruturais esperados
   const fullMetadata = {
     slug: generateSlug(fields.title),
     type: fields.category,
-    themes: fields.keywords, // Usa as palavras-chave como temas
-    sections: [], // Inicializa vazio para edição futura
-    source: "Submissão de Usuário",
-    ...baseMetadata, // Aqui entram a bibliografia, birth, death, etc.
+    themes: fields.keywords,
+    sections: [],
+    source: 'Submissão de Usuário',
+    bibliography: fields.bibliography,
+    ...baseMetadata,
+    ...mediaMetadata,
   };
 
   return {
@@ -125,7 +131,6 @@ export function buildSubmissionPayload(fields: SubmissionFormFields): CreateArti
     content: fields.content.trim(),
     keywords: fields.keywords,
     metadata: fullMetadata,
-    metadata: buildArticleMetadata(fields.bibliography, fields.media),
     submit_for_review: true,
   };
 }

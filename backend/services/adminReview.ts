@@ -442,6 +442,7 @@ class AdminReviewService {
                 await this.db.query(
                     `UPDATE submissions
                      SET status = $1,
+                         published_at = NOW(),
                          updated_at = NOW(),
                          doi = $2
                      WHERE id = $3`,
@@ -449,7 +450,7 @@ class AdminReviewService {
                 );
             } else {
                 await this.db.query(
-                    'UPDATE submissions SET status = $1, updated_at = NOW() WHERE id = $2',
+                    'UPDATE submissions SET status = $1, published_at = NOW(), updated_at = NOW() WHERE id = $2',
                     ['PUBLISHED', submissionId]
                 );
             }

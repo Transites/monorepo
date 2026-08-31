@@ -2,6 +2,7 @@ import express from 'express';
 import articlesController from '../controllers/articles';
 
 const errorHandler = require('../middleware/errors');
+const authMiddleware = require('../middleware/auth');
 const router = express.Router();
 
 router.get(
@@ -16,11 +17,13 @@ router.get(
 
 router.patch(
   '/:id',
+  authMiddleware.requireAuth,
   errorHandler.asyncHandler(articlesController.updateArticle)
 );
 
 router.post(
   '/:id/assign-doi',
+  authMiddleware.requireAuth,
   errorHandler.asyncHandler(articlesController.assignDoi)
 );
 

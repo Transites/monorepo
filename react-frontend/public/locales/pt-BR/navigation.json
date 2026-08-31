@@ -10,5 +10,16 @@
   "adminArea": "Área do Administrador",
   "login": "Entrar",
   "register": "Registre-se",
-  "logout": "Sair"
+  "logout": "Sair",
+  "footer": {
+    "digitalEncyclopedia": "Enciclopédia Digital",
+    "importantLinks": "Links importantes",
+    "aboutProject": "Sobre o projeto",
+    "whoWeAre": "Quem somos",
+    "categories": "Categorias",
+    "featuredContent": "Conteúdo em destaque",
+    "contact": "Contato",
+    "initiative": "Uma iniciativa acadêmica dedicada à preservação da memória cultural Brasil-França",
+    "rights": "© {{year}} Projeto Trânsitos. Todos os direitos reservados."
+  }
 }

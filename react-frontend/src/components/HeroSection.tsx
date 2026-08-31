@@ -8,8 +8,9 @@ import { SearchResults } from "@/components/SearchResults";
 import { useTranslation } from "react-i18next";
 
 const HeroSection = () => {
-  const { t } = useTranslation(["common", "content"]);
+  const { t, i18n } = useTranslation(["common", "content"]);
   const [showResults, setShowResults] = useState(false);
+  const isFrench = i18n.resolvedLanguage?.startsWith('fr');
   
   const {
     query,
@@ -58,7 +59,7 @@ const HeroSection = () => {
         <div className="max-w-4xl mx-auto text-center">
           {/* New branding text above title */}
           <div className="text-red-500 text-2xl sm:text-3xl font-bold mb-4">
-            Trânsitos | Circulations
+            Trânsitos | {isFrench ? 'circulations' : 'Circulations'}
           </div>
           
           {/* Updated title with color styling */}

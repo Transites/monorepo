@@ -726,6 +726,43 @@ describe('AdminReviewService', () => {
         //     }));
         // });
 
+        test('deve registrar data de publicação ao publicar submissão aprovada', async () => {
+            const submissionId = 'sub-123';
+            const adminId = 'admin-123';
+            const publishRequest = {
+                submissionId,
+                publishNotes: 'Notas para publicação'
+            };
+
+            const mockSubmission = {
+                id: submissionId,
+                status: 'APPROVED',
+                title: 'Test Submission',
+                author_email: 'autor@example.com',
+                summary: 'Resumo',
+                content: 'Conteúdo',
+                keywords: ['teste'],
+                category: 'pessoa',
+                metadata: {}
+            };
+
+            db.query.mockResolvedValueOnce({ rows: [mockSubmission] });
+            db.query.mockResolvedValueOnce({ rows: [{ id: submissionId }] });
+            db.query.mockResolvedValueOnce({ rows: [{}] });
+
+            const result = await adminReviewService.publishSubmission(
+                submissionId,
+                adminId,
+                publishRequest
+            );
+
+            expect(result.success).toBe(true);
+            expect(db.query).toHaveBeenCalledWith(
+                expect.stringContaining('published_at'),
+                expect.arrayContaining(['PUBLISHED', submissionId])
+            );
+        });
+
         test('deve rejeitar publicação de submissão não aprovada', async () => {
             // Setup
             const submissionId = 'sub-123';

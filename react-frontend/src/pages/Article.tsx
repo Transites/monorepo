@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Pencil } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -28,20 +28,20 @@ const Article = () => {
     enabled: !!id,
   });
 
+  useEffect(() => {
     if (!id) {
-    navigate('/404');
+      navigate('/404', { replace: true });
+    }
+  }, [id, navigate]);
+
+  if (!id) {
     return null;
   }
 
-
-     // Chamado quando o admin clica no lápis
+  // Chamado quando o admin clica no lápis
   const handleEditClick = () => {
-    if (isAuthenticated) {
-      // Já autenticado — abre direto o editor
+    if (isAuthenticated || isAdmin) {
       setIsEditing(true);
-    } else {
-      if (isAdmin) setIsEditing(true);
-      else setIsEditing(false); 
     }
   };
 

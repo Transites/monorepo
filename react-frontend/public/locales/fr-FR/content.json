@@ -1,6 +1,6 @@
 {
   "hero": {
-    "title": "Encyclopédie Numérique des Relations France-Brésil",
+    "title": "Encyclopédie numérique des relations France-Brésil",
     "period": "(1880-1990)",
     "description": "Explorez un siècle de déplacements, migrations et transferts culturels, artistiques et intellectuels entre la France et le Brésil. Une plateforme académique dédiée aux circulations, échanges et influences réciproques qui ont façonné notre histoire."
   },
@@ -47,6 +47,12 @@
       "description": "Des idées et des concepts centraux pour les circulations France-Brésil",
       "examples": "Des termes qui accompagnent, traversent, expliquent et complexifient les circulations France-Brésil"
     }
+  },
+  "featured": {
+    "title": "Contenu en vedette",
+    "loading": "Chargement du contenu en vedette...",
+    "noSummary": "Résumé non disponible.",
+    "byAuthor": "Par {{author}}"
   },
   "about": {
     "title": "À propos du projet Trânsitos | Circulations",

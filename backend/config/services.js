@@ -27,12 +27,14 @@ const validateRequiredVars = (requiredVars, serviceName) => {
 // Validate required environment variables for each service
 const validateConfig = () => {
     validateRequiredVars(['DATABASE_URL', 'SUPABASE_URL', 'SUPABASE_ANON_KEY'], 'Supabase');
-    validateRequiredVars(['RESEND_API_KEY', 'FROM_EMAIL'], 'Resend');
     validateRequiredVars(['CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET', 'CLOUDINARY_CLOUD_NAME'], 'Storage');
 };
 
 // Validate configuration on module load
 validateConfig();
+
+const smtpPrimaryUser = process.env.GMAIL_SMTP_USER_PRIMARY || 'enciclopedia.iea.usp@gmail.com';
+const smtpSecondaryUser = process.env.GMAIL_SMTP_USER_SECONDARY || 'enciclopediaprojeto@gmail.com';
 
 // Export configuration organized by service
 module.exports = {
@@ -46,9 +48,27 @@ module.exports = {
     },
     email: {
         apiKey: process.env.RESEND_API_KEY,
-        fromEmail: process.env.FROM_EMAIL,
+        fromEmail: process.env.FROM_EMAIL || smtpPrimaryUser,
+        smtpFromEmail: process.env.SMTP_FROM_EMAIL || process.env.FROM_EMAIL || smtpPrimaryUser,
+        resendFromEmail: process.env.RESEND_FROM_EMAIL || 'noreply@enciclopedia.iea.usp.br',
         fromName: process.env.FROM_NAME || 'Enciclopédia Transitos',
         replyTo: process.env.REPLY_TO || 'contato@enciclopedia.iea.usp.br',
+        smtp: {
+            enabled: process.env.SMTP_ENABLED !== 'false',
+            host: process.env.SMTP_HOST || 'smtp.gmail.com',
+            port: parseInt(process.env.SMTP_PORT || '587', 10),
+            secure: process.env.SMTP_SECURE === 'true',
+            accounts: [
+                {
+                    user: smtpPrimaryUser,
+                    pass: process.env.GMAIL_SMTP_PASS_PRIMARY || '',
+                },
+                {
+                    user: smtpSecondaryUser,
+                    pass: process.env.GMAIL_SMTP_PASS_SECONDARY || '',
+                },
+            ],
+        },
     },
     storage: {
         cloudName: process.env.CLOUDINARY_CLOUD_NAME,

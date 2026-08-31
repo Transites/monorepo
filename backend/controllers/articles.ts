@@ -70,7 +70,10 @@ class ArticleController {
                   return responses.badRequest(res, 'ID inválido', ['ID deve ser um UUID válido']);
             }
 
-            const updated = await articlesService.updateArticle(id, req.body);
+            const isAdmin = Boolean((req as any).user?.id || (req as any).user?.email);
+            const updated = await articlesService.updateArticle(id, req.body, {
+                  allowPublishedEdit: isAdmin,
+            });
             return responses.success(res, { submission: updated }, 'Artigo atualizado com sucesso');
 
             } catch (error: any) {

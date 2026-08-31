@@ -1,22 +1,103 @@
+const nodemailer = require('nodemailer');
 const { Resend } = require('resend');
 const logger = require('../middleware/logging');
 const config = require('../config/services');
 const emailTemplates = require('./emailTemplates');
 
-// TODO: Update to rely on error response from the API rather than exceptions.
-//  Resend responses do not throw exceptions, so it is TERRIBLY wrong to always return success: true when exceptions do not happen.
 class EmailService {
     constructor() {
-        this.resend = new Resend(config.email.apiKey);
-        this.fromEmail = process.env.NODE_ENV !== 'production' ? "onboarding@resend.dev" : config.email.fromEmail;
-        this.fromName = process.env.NODE_ENV !== 'production' ? "Acme" : config.email.fromName;
+        this.resend = config.email.apiKey ? new Resend(config.email.apiKey) : null;
+        this.fromEmail = config.email.fromEmail || 'enciclopedia.iea.usp@gmail.com';
+        this.smtpFromEmail = config.email.smtpFromEmail || this.fromEmail;
+        this.resendFromEmail = config.email.resendFromEmail || 'noreply@enciclopedia.iea.usp.br';
+        this.fromName = config.email.fromName || 'Enciclopédia Transitos';
         this.replyTo = config.email.replyTo;
         this.retryAttempts = 3;
-        this.retryDelay = 1000; // 1 second base delay
+        this.retryDelay = 1000;
+        this.smtpAccounts = this.buildSmtpAccounts();
+    }
+
+    buildSmtpAccounts() {
+        const smtpConfig = config.email.smtp || {};
+        const accounts = (smtpConfig.accounts || []).filter(Boolean);
+
+        return accounts
+            .filter((account) => account.user && account.pass)
+            .map((account) => ({
+                ...account,
+                transporter: nodemailer.createTransport({
+                    host: smtpConfig.host || 'smtp.gmail.com',
+                    port: smtpConfig.port || 587,
+                    secure: smtpConfig.secure === true,
+                    auth: {
+                        user: account.user,
+                        pass: account.pass,
+                    },
+                    tls: {
+                        rejectUnauthorized: false,
+                    },
+                })
+            }));
+    }
+
+    async sendViaSmtp(emailData) {
+        if (!this.smtpAccounts.length) {
+            throw new Error('SMTP Gmail não configurado');
+        }
+
+        let lastError = null;
+
+        for (const account of this.smtpAccounts) {
+            try {
+                const smtpPayload = {
+                    ...emailData,
+                    from: `${this.fromName} <${this.smtpFromEmail || account.user}>`,
+                    replyTo: this.replyTo,
+                };
+
+                const info = await account.transporter.sendMail(smtpPayload);
+
+                return {
+                    success: true,
+                    messageId: info?.messageId || null,
+                    provider: 'smtp',
+                    account: account.user,
+                };
+            } catch (error) {
+                lastError = error;
+                logger.warn('SMTP Gmail delivery failed for account', {
+                    account: account.user,
+                    error: error.message,
+                    subject: emailData.subject,
+                    recipients: emailData.to,
+                });
+            }
+        }
+
+        throw lastError || new Error('SMTP Gmail indisponível para envio');
+    }
+
+    async sendViaResend(emailData) {
+        if (!this.resend) {
+            throw new Error('Resend não configurado');
+        }
+
+        const result = await this.resend.emails.send(emailData);
+
+        if (result?.error) {
+            const errorMessage = result.error?.message || 'Erro ao enviar via Resend';
+            throw new Error(errorMessage);
+        }
+
+        return {
+            success: true,
+            messageId: result?.data?.id || null,
+            provider: 'resend',
+        };
     }
 
     /**
-     * Enviar email com retry automático
+     * Enviar email com retry automático e fallback SMTP -> Resend
      */
     async sendEmail({ to, subject, html, text = null, retryCount = 0 }) {
         try {
@@ -25,67 +106,88 @@ class EmailService {
                 to: Array.isArray(to) ? to : [to],
                 subject,
                 html,
-                reply_to: this.replyTo
+                reply_to: this.replyTo,
             };
 
             if (text) {
                 emailData.text = text;
             }
 
-            const result = await this.resend.emails.send(emailData);
+            const smtpResult = await this.sendViaSmtp(emailData);
 
-            logger.audit("sendEmail", {
+            logger.audit('sendEmail', {
                 to: emailData.to,
                 subject,
-                messageId: result.data?.id,
+                messageId: smtpResult.messageId,
+                provider: 'smtp',
                 retryCount,
-                emailId: result?.id ?? null,
-                statusCode: result?.error?.statusCode || 200
-            })
-
-            // TODO: Tratamento de erro aqui está errado, pois o Resend não lança exceções para erros de envio.
-            //  Ele retorna um objeto com statusCode e error, que devem ser verificados.
+                statusCode: 200,
+            });
 
             return {
                 success: true,
-                messageId: result.data?.id,
-                retryCount
+                messageId: smtpResult.messageId,
+                retryCount,
+                provider: 'smtp',
             };
-
-        } catch (error) {
-            logger.error('Email sending failed', {
+        } catch (smtpError) {
+            logger.error('SMTP Gmail failed, falling back to Resend', {
                 to,
                 subject,
-                error: error.message,
-                retryCount
+                error: smtpError.message,
+                retryCount,
             });
 
-            // Retry logic
-            // TODO: retry logic only works if exception is thrown. however, resend failures aren't exceptions, they're returned as errors in the response body.
-            //  Therefore, this retry mechanism is NOT working!
-
-            if (retryCount < this.retryAttempts) {
-                const delay = this.retryDelay * Math.pow(2, retryCount); // Exponential backoff
-
-                logger.info(`Retrying email in ${delay}ms`, {
-                    to,
-                    subject,
-                    retryCount: retryCount + 1
+            try {
+                const resendResult = await this.sendViaResend({
+                    ...{
+                        from: `${this.fromName} <${this.resendFromEmail}>`,
+                        to: Array.isArray(to) ? to : [to],
+                        subject,
+                        html,
+                        reply_to: this.replyTo,
+                    },
+                    ...(text ? { text } : {}),
                 });
 
-                await this.sleep(delay);
-                return this.sendEmail({ to, subject, html, text, retryCount: retryCount + 1 });
+                logger.audit('sendEmail', {
+                    to: Array.isArray(to) ? to : [to],
+                    subject,
+                    messageId: resendResult.messageId,
+                    provider: 'resend',
+                    retryCount,
+                    statusCode: 200,
+                });
+
+                return {
+                    success: true,
+                    messageId: resendResult.messageId,
+                    retryCount,
+                    provider: 'resend',
+                };
+            } catch (resendError) {
+                logger.error('Email sending failed via SMTP and Resend', {
+                    to,
+                    subject,
+                    error: resendError.message,
+                    retryCount,
+                });
+
+                if (retryCount < this.retryAttempts) {
+                    const delay = this.retryDelay * Math.pow(2, retryCount);
+
+                    logger.info(`Retrying email in ${delay}ms`, {
+                        to,
+                        subject,
+                        retryCount: retryCount + 1,
+                    });
+
+                    await this.sleep(delay);
+                    return this.sendEmail({ to, subject, html, text, retryCount: retryCount + 1 });
+                }
+
+                throw new Error(`Falha ao enviar email após ${retryCount} tentativas: ${resendError.message}`);
             }
-
-            // All retries failed
-            logger.error('Email sending failed after all retries', {
-                to,
-                subject,
-                finalError: error.message,
-                totalRetries: retryCount
-            });
-
-            throw new Error(`Falha ao enviar email após ${retryCount} tentativas: ${error.message}`);
         }
     }
 

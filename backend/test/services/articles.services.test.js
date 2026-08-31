@@ -146,7 +146,9 @@ describe('ArticlesService', () => {
         updated_at: new Date(),
       };
 
-      mockedQuery.mockResolvedValueOnce({ rows: [mockUpdated] });
+      mockedQuery
+        .mockResolvedValueOnce({ rows: [{ id: 'uuid-123', status: 'DRAFT' }] })
+        .mockResolvedValueOnce({ rows: [mockUpdated] });
 
       const result = await articlesService.updateArticle('uuid-123', {
         title: 'Título Novo',
@@ -172,9 +174,13 @@ describe('ArticlesService', () => {
     });
 
     test('não deve atualizar campos não permitidos', async () => {
-      mockedQuery.mockResolvedValueOnce({
-        rows: [{ id: 'uuid-123', title: 'Teste', status: 'PUBLISHED' }]
-      });
+      mockedQuery
+        .mockResolvedValueOnce({
+          rows: [{ id: 'uuid-123', title: 'Teste', status: 'DRAFT' }]
+        })
+        .mockResolvedValueOnce({
+          rows: [{ id: 'uuid-123', title: 'Título OK', status: 'DRAFT' }]
+        });
 
       await articlesService.updateArticle('uuid-123', {
         title:  'Título OK',
@@ -182,27 +188,66 @@ describe('ArticlesService', () => {
         token:  'hack',
       });
 
-      const sqlCalled = mockedQuery.mock.calls[0][0];
+      const sqlCalled = mockedQuery.mock.calls[1][0];
       expect(sqlCalled).not.toContain('status =');
       expect(sqlCalled).not.toContain('token =');
       expect(sqlCalled).toContain('title =');
     });
 
-    test('deve atualizar content_html quando o conteúdo for alterado', async () => {
+    test('deve bloquear edição de artigo publicado para não-admin', async () => {
       mockedQuery.mockResolvedValueOnce({
         rows: [{
           id: 'uuid-123',
-          title: 'Título',
-          content: 'Texto **importante**',
-          content_html: '<p>Texto <strong>importante</strong></p>'
+          status: 'PUBLISHED',
+          title: 'Título publicado',
+          content: 'Conteúdo publicado',
         }]
       });
+
+      await expect(
+        articlesService.updateArticle('uuid-123', { title: 'Título novo' })
+      ).rejects.toThrow('Artigos publicados só podem ser editados por administradores');
+    });
+
+    test('deve permitir edição de artigo publicado para admin', async () => {
+      mockedQuery
+        .mockResolvedValueOnce({
+          rows: [{
+            id: 'uuid-123',
+            status: 'PUBLISHED',
+            title: 'Título publicado',
+            content: 'Conteúdo publicado',
+          }]
+        })
+        .mockResolvedValueOnce({
+          rows: [{ id: 'uuid-123', title: 'Título novo', status: 'PUBLISHED' }]
+        });
+
+      const result = await articlesService.updateArticle('uuid-123', { title: 'Título novo' }, {
+        allowPublishedEdit: true,
+      });
+
+      expect(result.title).toBe('Título novo');
+    });
+
+    test('deve atualizar content_html quando o conteúdo for alterado', async () => {
+      mockedQuery
+        .mockResolvedValueOnce({
+          rows: [{
+            id: 'uuid-123',
+            title: 'Título',
+            status: 'DRAFT',
+            content: 'Texto **importante**',
+            content_html: '<p>Texto <strong>importante</strong></p>'
+          }]
+        })
+        .mockResolvedValueOnce({ rows: [{ id: 'uuid-123', title: 'Título', status: 'DRAFT' }] });
 
       await articlesService.updateArticle('uuid-123', {
         content: 'Texto **importante**',
       });
 
-      const sqlCalled = mockedQuery.mock.calls[0][0];
+      const sqlCalled = mockedQuery.mock.calls[1][0];
       expect(sqlCalled).toContain('content_html =');
     });
 
@@ -213,9 +258,11 @@ describe('ArticlesService', () => {
         bibliography: [{ year: '2020', title: 'Livro Novo', author: 'Autor' }],
       };
 
-      mockedQuery.mockResolvedValueOnce({
-        rows: [{ id: 'uuid-123', metadata: metadataCompleta }]
-      });
+      mockedQuery
+        .mockResolvedValueOnce({
+          rows: [{ id: 'uuid-123', status: 'DRAFT', metadata: metadataCompleta }]
+        })
+        .mockResolvedValueOnce({ rows: [{ id: 'uuid-123', metadata: metadataCompleta }] });
 
       const result = await articlesService.updateArticle('uuid-123', {
         metadata: metadataCompleta,

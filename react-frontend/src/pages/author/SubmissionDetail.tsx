@@ -470,19 +470,19 @@ export default function SubmissionDetail() {
                         : 'border-border hover:border-primary/50'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium">Versão {v.version_number}</span>
-                      <Badge variant="outline" className="text-xs">
+                    <div className="flex items-center justify-between mb-1 gap-2">
+                      <span className="text-sm font-medium break-words max-w-full">Versão {v.version_number}</span>
+                      <Badge variant="outline" className="text-xs shrink-0">
                         {v.created_by === 'author' ? 'Autor' : 'Sistema'}
                       </Badge>
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground break-words max-w-full">
                       {new Date(v.created_at).toLocaleDateString('pt-BR', {
                         day: '2-digit', month: 'short', year: 'numeric'
                       })}
                     </p>
                     {v.change_summary && (
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2 break-words max-w-full">
                         {v.change_summary}
                       </p>
                     )}
@@ -492,33 +492,33 @@ export default function SubmissionDetail() {
 
               {/* Detalhe da versão selecionada */}
               {selectedVersion ? (
-                <Card>
+                <Card className="overflow-hidden">
                   <CardHeader>
-                    <CardTitle className="text-base">
+                    <CardTitle className="text-base break-words max-w-full">
                       Versão {selectedVersion.version_number}
                     </CardTitle>
                     {selectedVersion.change_summary && (
                       <div className="p-3 bg-muted/40 rounded-md border-l-4 border-primary mt-2">
                         <p className="text-xs font-medium text-muted-foreground mb-1">Notas</p>
-                        <p className="text-sm">{selectedVersion.change_summary}</p>
+                        <p className="text-sm break-words max-w-full">{selectedVersion.change_summary}</p>
                       </div>
                     )}
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="space-y-1">
+                    <div className="space-y-1 min-w-0">
                       <p className="text-xs font-medium text-muted-foreground">Título</p>
-                      <p className="text-sm">{selectedVersion.title}</p>
+                      <p className="text-sm break-words max-w-full overflow-wrap-anywhere">{selectedVersion.title}</p>
                     </div>
                     {selectedVersion.summary && (
-                      <div className="space-y-1">
+                      <div className="space-y-1 min-w-0">
                         <p className="text-xs font-medium text-muted-foreground">Resumo</p>
-                        <p className="text-sm">{selectedVersion.summary}</p>
+                        <p className="text-sm break-words max-w-full overflow-wrap-anywhere">{selectedVersion.summary}</p>
                       </div>
                     )}
                     {selectedVersion.content && (
-                      <div className="space-y-1">
+                      <div className="space-y-1 min-w-0">
                         <p className="text-xs font-medium text-muted-foreground">Conteúdo</p>
-                        <p className="text-sm whitespace-pre-wrap max-h-96 overflow-y-auto">
+                        <p className="text-sm whitespace-pre-wrap max-h-96 overflow-y-auto break-words max-w-full overflow-wrap-anywhere">
                           {selectedVersion.content}
                         </p>
                         <div className="text-right text-xs text-muted-foreground mt-1">

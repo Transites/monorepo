@@ -1,11 +1,11 @@
 import { useState }      from 'react';
-import { Save, X, Plus, Trash2 } from 'lucide-react';
+import { Save, X, Plus, Trash2, Image as ImageIcon, Video } from 'lucide-react';
 import { Button }        from '@/components/ui/button';
 import { Input }         from '@/components/ui/input';
 import { Label }         from '@/components/ui/label';
 import { Separator }     from '@/components/ui/separator';
 import { Badge }         from '@/components/ui/badge';
-import { Submission, ArticleUpdateData, updateArticle, assignDoi } from '@/lib/api';
+import { Submission, ArticleUpdateData, updateArticle, assignDoi, uploadSubmissionMedia } from '@/lib/api';
 
 interface ArticleEditorProps {
   article:   Submission;
@@ -57,6 +57,20 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
   const [keywords,    setKeywords]    = useState<string[]>(article.keywords ?? []);
   const [newKeyword,  setNewKeyword]  = useState('');
 
+  const currentMediaType = article.metadata?.image ? 'image' : article.metadata?.video ? 'video' : 'image';
+  const [mediaType, setMediaType] = useState<'image' | 'video'>(currentMediaType);
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaPreviewUrl, setMediaPreviewUrl] = useState<string | null>(null);
+  const [mediaCaption, setMediaCaption] = useState(
+    article.metadata?.image?.caption ?? article.metadata?.video?.caption ?? ''
+  );
+  const [mediaAlternativeText, setMediaAlternativeText] = useState(
+    article.metadata?.image?.alternativeText ?? article.metadata?.video?.alternativeText ?? ''
+  );
+  const [removeCurrentMedia, setRemoveCurrentMedia] = useState(false);
+  const [mediaUploading, setMediaUploading] = useState(false);
+  const [mediaError, setMediaError] = useState('');
+
   // Estado de salvamento
   const [isSaving,  setIsSaving]  = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -107,6 +121,46 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
     setBibliography(bibliography.filter((_, i) => i !== index));
   };
 
+  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setMediaError('');
+
+    if (mediaPreviewUrl) {
+      URL.revokeObjectURL(mediaPreviewUrl);
+    }
+
+    if (!file) {
+      setMediaFile(null);
+      setMediaPreviewUrl(null);
+      return;
+    }
+
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      setMediaError('Selecione uma imagem ou vídeo válido.');
+      setMediaFile(null);
+      setMediaPreviewUrl(null);
+      e.target.value = '';
+      return;
+    }
+
+    setMediaType(file.type.startsWith('video/') ? 'video' : 'image');
+    setMediaFile(file);
+    setMediaPreviewUrl(URL.createObjectURL(file));
+    setRemoveCurrentMedia(false);
+  };
+
+  const handleRemoveCurrentMedia = () => {
+    if (mediaPreviewUrl) {
+      URL.revokeObjectURL(mediaPreviewUrl);
+    }
+    setMediaFile(null);
+    setMediaPreviewUrl(null);
+    setMediaCaption('');
+    setMediaAlternativeText('');
+    setRemoveCurrentMedia(true);
+    setMediaError('');
+  };
+
   // ── Salvar ─────────────────────────────────────────────────
   const handleSave = async () => {
     setIsSaving(true);
@@ -150,6 +204,26 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
       // Limpa as chaves vazias explicitamente
       Object.keys(updatedMetadata).forEach(key => updatedMetadata[key] === undefined && delete updatedMetadata[key]);
 
+      if (removeCurrentMedia) {
+        delete updatedMetadata.image;
+        delete updatedMetadata.video;
+      }
+
+      if (mediaFile) {
+        setMediaUploading(true);
+        const uploaded = await uploadSubmissionMedia(mediaFile);
+        const mediaPayload = {
+          url: uploaded.url,
+          publicId: uploaded.publicId,
+          caption: mediaCaption.trim() || undefined,
+          alternativeText: mediaAlternativeText.trim() || undefined,
+        };
+
+        delete updatedMetadata.image;
+        delete updatedMetadata.video;
+        updatedMetadata[uploaded.resourceType] = mediaPayload;
+      }
+
       // Monta só os campos que mudaram
       const updateData: ArticleUpdateData = {
         title,
@@ -169,6 +243,7 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
       setSaveError(err.message || 'Erro ao salvar. Tente novamente.');
     } finally {
       setIsSaving(false);
+      setMediaUploading(false);
     }
   };
 
@@ -431,6 +506,102 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
                 <Plus size={16} />
               </Button>
             </div>
+          </div>
+
+          <Separator />
+
+          {/* ── Mídia do artigo ─────────────────────────────── */}
+          <div className="space-y-4 rounded-lg border bg-muted/20 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <Label className="text-base font-semibold">Imagem / vídeo principal</Label>
+              {(article.metadata?.image || article.metadata?.video) && !removeCurrentMedia && (
+                <Button type="button" variant="outline" size="sm" onClick={handleRemoveCurrentMedia}>
+                  <Trash2 size={14} className="mr-1" /> Remover mídia atual
+                </Button>
+              )}
+            </div>
+
+            {(article.metadata?.image || article.metadata?.video) && !removeCurrentMedia && !mediaPreviewUrl && (
+              <div className="overflow-hidden rounded-md border bg-background">
+                {article.metadata?.video ? (
+                  <video src={article.metadata.video.url} controls className="max-h-72 w-full object-cover" />
+                ) : (
+                  <img src={article.metadata.image?.url} alt={article.metadata.image?.alternativeText || article.title} className="max-h-72 w-full object-cover" />
+                )}
+              </div>
+            )}
+
+            {mediaPreviewUrl && (
+              <div className="overflow-hidden rounded-md border bg-background">
+                {mediaType === 'video' ? (
+                  <video src={mediaPreviewUrl} controls className="max-h-72 w-full object-cover" />
+                ) : (
+                  <img src={mediaPreviewUrl} alt={mediaAlternativeText || 'Preview da imagem'} className="max-h-72 w-full object-cover" />
+                )}
+              </div>
+            )}
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="article-media-file">Arquivo de imagem/vídeo</Label>
+                <Input
+                  id="article-media-file"
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={handleMediaChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Tipo de mídia</Label>
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    type="button"
+                    variant={mediaType === 'image' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setMediaType('image')}
+                  >
+                    <ImageIcon size={14} className="mr-1" /> Imagem
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={mediaType === 'video' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setMediaType('video')}
+                  >
+                    <Video size={14} className="mr-1" /> Vídeo
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="article-media-caption">Legenda</Label>
+                <Input
+                  id="article-media-caption"
+                  value={mediaCaption}
+                  onChange={(e) => setMediaCaption(e.target.value)}
+                  placeholder="Legenda da imagem/vídeo"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="article-media-alt">Texto alternativo</Label>
+                <Input
+                  id="article-media-alt"
+                  value={mediaAlternativeText}
+                  onChange={(e) => setMediaAlternativeText(e.target.value)}
+                  placeholder="Descrição para acessibilidade"
+                />
+              </div>
+            </div>
+
+            {mediaError && (
+              <p className="text-sm text-destructive bg-destructive/10 rounded-md p-2">{mediaError}</p>
+            )}
+
+            {removeCurrentMedia && (
+              <p className="text-sm text-muted-foreground">A mídia atual será removida ao salvar.</p>
+            )}
           </div>
 
           <Separator />

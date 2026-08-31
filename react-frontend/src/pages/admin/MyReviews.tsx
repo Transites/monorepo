@@ -64,12 +64,12 @@ function SubmissionCard({
   const canUnassign = status === 'UNDER_REVIEW' || status === 'CHANGES_REQUESTED';
 
   return (
-    <Card onClick={handleCardClick} className="cursor-pointer hover:border-primary/50 transition-colors">
+    <Card onClick={handleCardClick} className="cursor-pointer hover:border-primary/50 transition-colors overflow-hidden">
       <CardHeader>
         <div className="flex items-start justify-between gap-4">
-          <div>
-            <CardTitle className="text-lg">{submission.title}</CardTitle>
-            <CardDescription className="mt-1">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-lg break-words max-w-full">{submission.title}</CardTitle>
+            <CardDescription className="mt-1 break-words max-w-full">
               {submission.authorName}
               {submission.authorInstitution && ` · ${submission.authorInstitution}`}
             </CardDescription>
@@ -82,7 +82,7 @@ function SubmissionCard({
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground line-clamp-2">
+        <p className="text-sm text-muted-foreground line-clamp-2 break-words max-w-full">
           {submission.summary}
         </p>
         <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

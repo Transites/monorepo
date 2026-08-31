@@ -40,15 +40,15 @@ function SubmissionCard({ submission }: { submission: AuthorSubmission }) {
 
   return (
     <Card
-      className="cursor-pointer hover:border-primary/50 transition-colors"
+      className="cursor-pointer hover:border-primary/50 transition-colors overflow-hidden"
       onClick={() => navigate(`/minhas-submissoes/${submission.id}`)}
     >
       <CardHeader>
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg truncate">{submission.title}</CardTitle>
+            <CardTitle className="text-lg break-words max-w-full">{submission.title}</CardTitle>
             {submission.category && (
-              <CardDescription className="mt-1 capitalize">
+              <CardDescription className="mt-1 capitalize break-words max-w-full">
                 {submission.category}
               </CardDescription>
             )}

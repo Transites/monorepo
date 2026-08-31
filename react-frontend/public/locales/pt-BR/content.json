@@ -48,6 +48,12 @@
       "examples": "Termos que acompanham, atravessam, explicam e complexificam os trânsitos Brasil-França"
     }
   },
+  "featured": {
+    "title": "Conteúdo em destaque",
+    "loading": "Carregando conteúdo em destaque...",
+    "noSummary": "Resumo não disponível.",
+    "byAuthor": "Por {{author}}"
+  },
   "about": {
     "title": "Sobre o projeto Trânsitos | Circulations",
     "intro": "Trânsitos | <em>Circulations</em> é uma enciclopédia digital, interativa e bilíngue que se destina a mapear, sistematizar e fomentar pesquisas sobre as relações franco-brasileiras, com enfoque em pessoas, obras, instituições, empresas, agrupamentos, eventos e conceitos, no período de 1880 a 1990.",

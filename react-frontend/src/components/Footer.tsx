@@ -1,8 +1,10 @@
-import { Mail, ExternalLink } from "lucide-react";
+import { Mail } from "lucide-react";
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
+import { useTranslation } from "react-i18next";
 
 const Footer = () => {
   const { scrollToElement } = useSmoothScroll();
+  const { t } = useTranslation(["navigation", "common"]);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, elementId: string) => {
     e.preventDefault();
@@ -13,7 +15,6 @@ const Footer = () => {
     <footer className="bg-primary text-primary-foreground py-12">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid md:grid-cols-3 gap-8">
-          {/* Transitos branding with logo */}
           <div className="flex items-center gap-3">
             <img 
               src="/uploads/016cd4f1-53a9-4afa-bf7f-015c51ec76f6.png"
@@ -22,13 +23,12 @@ const Footer = () => {
             />
             <div>
               <h3 className="text-2xl font-bold">Trânsitos</h3>
-              <p className="text-sm text-primary-foreground/80">Enciclopédia Digital</p>
+              <p className="text-sm text-primary-foreground/80">{t("navigation:footer.digitalEncyclopedia")}</p>
             </div>
           </div>
 
-          {/* Links importantes */}
           <div>
-            <h4 className="font-semibold mb-4">Links importantes</h4>
+            <h4 className="font-semibold mb-4">{t("navigation:footer.importantLinks")}</h4>
             <ul className="space-y-2 text-sm">
               <li>
                 <a 
@@ -36,7 +36,7 @@ const Footer = () => {
                   onClick={(e) => handleNavClick(e, 'sobre')}
                   className="text-primary-foreground/80 hover:text-primary-foreground transition-colors cursor-pointer"
                 >
-                  Sobre o projeto
+                  {t("navigation:footer.aboutProject")}
                 </a>
               </li>
               <li>
@@ -45,7 +45,7 @@ const Footer = () => {
                   onClick={(e) => handleNavClick(e, 'sobre-nos')}
                   className="text-primary-foreground/80 hover:text-primary-foreground transition-colors cursor-pointer"
                 >
-                  Quem somos
+                  {t("navigation:footer.whoWeAre")}
                 </a>
               </li>
               <li>
@@ -54,7 +54,7 @@ const Footer = () => {
                   onClick={(e) => handleNavClick(e, 'categorias')}
                   className="text-primary-foreground/80 hover:text-primary-foreground transition-colors cursor-pointer"
                 >
-                  Categorias
+                  {t("navigation:footer.categories")}
                 </a>
               </li>
               <li>
@@ -63,22 +63,21 @@ const Footer = () => {
                   onClick={(e) => handleNavClick(e, 'destaque')}
                   className="text-primary-foreground/80 hover:text-primary-foreground transition-colors cursor-pointer"
                 >
-                  Conteúdo em destaque
+                  {t("navigation:footer.featuredContent")}
                 </a>
               </li>
             </ul>
           </div>
 
-          {/* Contact */}
           <div id="contato">
-            <h4 className="font-semibold mb-4">Contato</h4>
+            <h4 className="font-semibold mb-4">{t("navigation:footer.contact")}</h4>
             <div className="space-y-2 text-sm">
               <div className="flex items-center text-primary-foreground/80">
                 <Mail className="h-4 w-4 mr-2" />
-                  enciclopedia.iea.usp@gmail.com
+                enciclopedia.iea.usp@gmail.com
               </div>
               <p className="text-primary-foreground/60 text-xs mt-4">
-                Uma iniciativa acadêmica dedicada à preservação da memória cultural Brasil-França
+                {t("navigation:footer.initiative")}
               </p>
             </div>
           </div>
@@ -86,7 +85,7 @@ const Footer = () => {
 
         <div className="border-t border-primary-foreground/20 mt-8 pt-8 text-center">
           <p className="text-sm text-primary-foreground/60">
-              © {new Date().getFullYear()} Projeto Trânsitos. Todos os direitos reservados.
+            {t("navigation:footer.rights", { year: new Date().getFullYear() })}
           </p>
         </div>
       </div>

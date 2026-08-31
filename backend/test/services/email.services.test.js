@@ -1,6 +1,12 @@
 jest.resetModules();
 
+const smtpSendMock = jest.fn();
+
 // Mocks
+jest.mock('nodemailer', () => ({
+  createTransport: jest.fn(() => ({ sendMail: smtpSendMock }))
+}));
+
 jest.mock('resend', () => {
   const send = jest.fn();
   global.__RESEND_SEND_MOCK = send;
@@ -56,6 +62,18 @@ describe('EmailService (unit)', () => {
 
     expect(res.success).toBe(true);
     expect(global.__RESEND_SEND_MOCK).toHaveBeenCalledWith(expect.objectContaining({ text: 'plain text' }));
+  });
+
+  test('sendEmail tries the next Gmail account when the first SMTP account fails', async () => {
+    smtpSendMock
+      .mockRejectedValueOnce(new Error('quota exceeded'))
+      .mockResolvedValueOnce({ messageId: 'smtp-message-2' });
+
+    const res = await emailService.sendEmail({ to: 'a@test', subject: 'Hi', html: '<b>ok</b>' });
+
+    expect(res.success).toBe(true);
+    expect(res.provider).toBe('smtp');
+    expect(smtpSendMock).toHaveBeenCalledTimes(2);
   });
 
   test('sendEmail - throws and retries until exhausted', async () => {

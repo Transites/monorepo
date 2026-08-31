@@ -519,11 +519,11 @@ const formatStatus = (status: string) => {
         
                 {sub.content_html ? (
                   <div
-                    className="prose prose-sm dark:prose-invert max-w-none"
+                    className="article-content w-full max-w-full min-w-0"
                     dangerouslySetInnerHTML={{ __html: sub.content_html }}
                   />
                 ) : (
-                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                  <div className="article-content w-full max-w-full min-w-0">
                     {sub.content?.split('\n').map((paragraph, i) =>
                       paragraph.trim() ? <p key={i}>{paragraph}</p> : null
                     )}

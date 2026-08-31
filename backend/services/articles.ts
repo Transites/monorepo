@@ -112,10 +112,8 @@ class ArticlesService {
 
       }
 
-      async updateArticle(id: string, data: any) {
-      if (data.content !== undefined) {
-            data.content_html = formatContentToHtml(data.content);
-      }
+      async updateArticle(id: string, data: any, options: { allowPublishedEdit?: boolean } = {}) {
+      const { allowPublishedEdit = false } = options;
 
       // Campos permitidos — evita que alguém atualize status ou token
       const allowed = [
@@ -123,6 +121,28 @@ class ArticlesService {
       'keywords', 'category', 'author_name',
       'author_institution', 'metadata'
       ];
+
+      const hasAllowedField = Object.keys(data || {}).some((field) => allowed.includes(field));
+      if (!hasAllowedField) {
+            throw new Error('Nenhum campo para atualizar');
+      }
+
+      const current = await db.query(
+            'SELECT * FROM submissions WHERE id = $1',
+            [id]
+      );
+
+      if (current.rows.length === 0) {
+            throw new Error('Artigo não encontrado');
+      }
+
+      if (current.rows[0].status === 'PUBLISHED' && !allowPublishedEdit) {
+            throw new Error('Artigos publicados só podem ser editados por administradores');
+      }
+
+      if (data.content !== undefined) {
+            data.content_html = formatContentToHtml(data.content);
+      }
 
       // Monta o SET dinamicamente só com os campos enviados
       const fields: string[] = [];

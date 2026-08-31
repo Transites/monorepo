@@ -141,6 +141,109 @@ All colors MUST be HSL.
   }
 }
 
+@layer components {
+  .article-content {
+    @apply max-w-full overflow-hidden break-words;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    color: hsl(var(--foreground));
+    line-height: 1.75;
+  }
+
+  .article-content,
+  .article-content * {
+    max-width: 100%;
+    min-width: 0;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .article-content h1,
+  .article-content h2,
+  .article-content h3,
+  .article-content h4,
+  .article-content h5,
+  .article-content h6 {
+    color: hsl(var(--foreground));
+    font-weight: 600;
+    line-height: 1.2;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .article-content h1 { font-size: 2rem; }
+  .article-content h2 { font-size: 1.5rem; }
+  .article-content h3 { font-size: 1.25rem; }
+  .article-content p,
+  .article-content li,
+  .article-content a,
+  .article-content blockquote,
+  .article-content td,
+  .article-content th {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .article-content p,
+  .article-content ul,
+  .article-content ol,
+  .article-content blockquote,
+  .article-content table,
+  .article-content pre {
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+
+  .article-content a {
+    color: hsl(var(--primary));
+    text-decoration: underline;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .article-content img,
+  .article-content video,
+  .article-content iframe,
+  .article-content svg,
+  .article-content table,
+  .article-content pre,
+  .article-content code {
+    max-width: 100%;
+    display: block;
+  }
+
+  .article-content table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .article-content pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    background: hsl(var(--muted));
+    padding: 1rem;
+    border-radius: var(--radius);
+    overflow-x: auto;
+  }
+
+  .article-content code {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+}
+
 /* Custom keyframes for search component animations */
 @keyframes slideIn {
   from {
