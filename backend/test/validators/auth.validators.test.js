@@ -283,8 +283,13 @@ describe('AuthValidators', () => {
             expect(authService.validatePasswordStrength).toHaveBeenCalledWith('Senha123!');
         });
 
-        test('deve rejeitar email não institucional', async () => {
-            const invalidData = {
+        test('deve aceitar email válido fora do domínio institucional', async () => {
+            authService.validatePasswordStrength.mockReturnValue({
+                isValid: true,
+                errors: []
+            });
+
+            const validData = {
                 email: 'admin@gmail.com',
                 password: 'Senha123!',
                 name: 'Administrador Teste'
@@ -292,17 +297,9 @@ describe('AuthValidators', () => {
 
             const response = await request(app)
                 .post('/test')
-                .send(invalidData);
+                .send(validData);
 
-            expect(response.status).toBe(400);
-            expect(response.body.errors).toEqual(
-                expect.arrayContaining([
-                    expect.objectContaining({
-                        path: 'email',
-                        msg: expect.stringContaining('Email deve ser institucional (USP)')
-                    })
-                ])
-            );
+            expect(response.status).toBe(200);
         });
 
         test('deve aceitar diferentes domínios USP', async () => {
@@ -330,6 +327,25 @@ describe('AuthValidators', () => {
 
                 expect(response.status).toBe(200);
             }
+        });
+
+        test('deve aceitar email acadêmico válido fora do domínio USP', async () => {
+            authService.validatePasswordStrength.mockReturnValue({
+                isValid: true,
+                errors: []
+            });
+
+            const validData = {
+                email: 'rodrigo.nabuco-de-araujo@univ-paris1.fr',
+                password: 'Senha123!',
+                name: 'Administrador Teste'
+            };
+
+            const response = await request(app)
+                .post('/test')
+                .send(validData);
+
+            expect(response.status).toBe(200);
         });
 
         test('deve validar força da senha', async () => {

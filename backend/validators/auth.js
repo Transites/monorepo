@@ -56,20 +56,7 @@ class AuthValidators {
             .withMessage('Email deve ter formato válido')
             .normalizeEmail()
             .isLength({ max: 255 })
-            .withMessage('Email muito longo')
-            .custom((email) => {
-                // Verificar se é email institucional
-                const institutionalDomains = ['usp.br', 'iea.usp.br'];
-                const domain = email.split('@')[1];
-                const isInstitutional = institutionalDomains.some(instDomain =>
-                    domain === instDomain || domain.endsWith('.' + instDomain)
-                );
-
-                if (!isInstitutional) {
-                    throw new Error('Email deve ser institucional (USP)');
-                }
-                return true;
-            }),
+            .withMessage('Email muito longo'),
 
         body('password')
             .isLength({ min: 8 })

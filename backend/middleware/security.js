@@ -13,7 +13,7 @@ class SecurityMiddleware {
     createAuthLimiter() {
         return rateLimit({
             windowMs: 15 * 60 * 1000, // 15 minutes
-            max: 5, // máximo 5 tentativas de login por IP
+            max: 20, // máximo 20 tentativas de login por IP
             skipSuccessfulRequests: true,
             message: {
                 error: 'Muitas tentativas de login, tente novamente em 15 minutos',
