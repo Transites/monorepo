@@ -69,8 +69,8 @@ export function validateSubmissionForm(fields: SubmissionFormFields): string[] {
   if (fields.summary.trim().length < 50) {
     errors.push('Resumo deve ter pelo menos 50 caracteres.');
   }
-  if (fields.summary.trim().length > 500) {
-    errors.push('Resumo pode ter no máximo 500 caracteres.');
+  if (fields.summary.trim().length > 250) {
+    errors.push('Resumo pode ter no máximo 250 caracteres.');
   }
   if (!ARTICLE_EDITOR_CATEGORIES.includes(fields.category as ArticleEditorCategory)) {
     errors.push('Selecione uma categoria válida.');
@@ -78,11 +78,14 @@ export function validateSubmissionForm(fields: SubmissionFormFields): string[] {
   if (fields.keywords.length < 1) {
     errors.push('Adicione pelo menos uma palavra-chave.');
   }
-  if (fields.keywords.length > 10) {
-    errors.push('Máximo de 10 palavras-chave.');
+  if (fields.keywords.length > 6) {
+    errors.push('Máximo de 6 palavras-chave.');
   }
   if (fields.content.trim().length < 100) {
     errors.push('Conteúdo deve ter pelo menos 100 caracteres.');
+  }
+  if (fields.content.trim().length > 7200) {
+    errors.push('Conteúdo pode ter no máximo 7.200 caracteres.');
   }
 
   return errors;

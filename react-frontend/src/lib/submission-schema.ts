@@ -30,9 +30,9 @@ export const articleSubmissionSchema = z.object({
     .refine(
       (val) => {
         const items = parseKeywords(val);
-        return items.length >= 1 && items.length <= 10;
+        return items.length >= 1 && items.length <= 6;
       },
-      { message: 'Use entre 1 e 10 palavras-chave, separadas por vírgula' }
+      { message: 'Use entre 1 e 6 palavras-chave, separadas por vírgula' }
     )
     .refine(
       (val) => parseKeywords(val).every((k) => k.length <= 50),
@@ -41,14 +41,14 @@ export const articleSubmissionSchema = z.object({
   summary: z
     .string()
     .min(50, 'Resumo deve ter pelo menos 50 caracteres')
-    .max(500, 'Resumo pode ter no máximo 500 caracteres'),
+    .max(250, 'Resumo pode ter no máximo 250 caracteres'),
   content: z
     .string()
     .refine((val) => stripHtml(val).length >= 100, {
       message: 'Conteúdo principal deve ter pelo menos 100 caracteres',
     })
-    .refine((val) => stripHtml(val).length <= 50000, {
-      message: 'Conteúdo principal excede o limite de 50.000 caracteres',
+    .refine((val) => stripHtml(val).length <= 7200, {
+      message: 'Conteúdo principal excede o limite de 7.200 caracteres',
     }),
   sections: z
     .array(sectionFieldsSchema)

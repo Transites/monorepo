@@ -65,10 +65,10 @@ describe('Constants Utility Tests', () => {
             expect(constants.LIMITS).toBeDefined();
             expect(constants.LIMITS.TITLE_MIN).toBe(5);
             expect(constants.LIMITS.TITLE_MAX).toBe(200);
-            expect(constants.LIMITS.SUMMARY_MAX).toBe(500);
+            expect(constants.LIMITS.SUMMARY_MAX).toBe(250);
             expect(constants.LIMITS.CONTENT_MIN).toBe(100);
-            expect(constants.LIMITS.CONTENT_MAX).toBe(50000);
-            expect(constants.LIMITS.KEYWORDS_MAX).toBe(10);
+            expect(constants.LIMITS.CONTENT_MAX).toBe(7200);
+            expect(constants.LIMITS.KEYWORDS_MAX).toBe(6);
             expect(constants.LIMITS.KEYWORD_MAX).toBe(50);
             expect(constants.LIMITS.FILE_SIZE_MAX).toBe(10 * 1024 * 1024); // 10MB
             expect(constants.LIMITS.SUBMISSIONS_PER_DAY).toBe(5);

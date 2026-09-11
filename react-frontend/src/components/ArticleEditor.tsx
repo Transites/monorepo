@@ -83,7 +83,11 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
   // ── Funções de Arrays (Keywords e Metadata) ──────────────────
   const addKeyword = () => {
     const kw = newKeyword.trim();
-    if (kw && !keywords.includes(kw)) setKeywords([...keywords, kw]);
+    if (!kw || keywords.includes(kw) || keywords.length >= 6) {
+      setNewKeyword('');
+      return;
+    }
+    setKeywords([...keywords, kw]);
     setNewKeyword('');
   };
   const removeKeyword = (kw: string) => setKeywords(keywords.filter(k => k !== kw));
@@ -340,11 +344,11 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
               value={summary}
               onChange={e => setSummary(e.target.value)}
               rows={4}
-              maxLength={1000}
+              maxLength={250}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
             />
             <div className="text-right text-xs text-muted-foreground mt-1">
-                {summary.length}/1000
+                {summary.length}/250
             </div>
           </div>
 
@@ -506,6 +510,9 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
                 <Plus size={16} />
               </Button>
             </div>
+            <div className="text-right text-xs text-muted-foreground mt-1">
+              {keywords.length}/6
+            </div>
           </div>
 
           <Separator />
@@ -618,11 +625,11 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
               value={content}
               onChange={e => setContent(e.target.value)}
               rows={20}
-              maxLength={10000}
+              maxLength={7200}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
             />
             <div className="text-right text-xs text-muted-foreground mt-1">
-                {content.length}/10000
+                {content.length}/7200
               </div>
           </div>
 
