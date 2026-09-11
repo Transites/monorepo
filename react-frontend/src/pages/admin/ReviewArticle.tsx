@@ -785,6 +785,9 @@ const formatStatus = (status: string) => {
                     <option value="instituicao">Instituição</option>
                     <option value="tema">Tema</option>
                     <option value="obra">Obra</option>
+                    <option value="agrupamento">Agrupamento</option>
+                    <option value="empresa">Empresa</option>
+                    <option value="conceito">Conceito</option>
                   </select>
                 </div>
 

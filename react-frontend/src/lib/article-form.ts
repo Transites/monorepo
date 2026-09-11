@@ -6,6 +6,9 @@ export const ARTICLE_EDITOR_CATEGORIES = [
   'instituicao',
   'tema',
   'obra',
+  'agrupamento',
+  'empresa',
+  'conceito',
 ] as const;
 
 export type ArticleEditorCategory = (typeof ARTICLE_EDITOR_CATEGORIES)[number];
@@ -16,6 +19,9 @@ export const ARTICLE_EDITOR_CATEGORY_LABELS: Record<ArticleEditorCategory, strin
   instituicao: 'Instituição',
   tema: 'Tema',
   obra: 'Obra',
+  agrupamento: 'Agrupamento',
+  empresa: 'Empresa',
+  conceito: 'Conceito',
 };
 
 /** Same shape ArticleContent/CatalogCard read from metadata.image / metadata.video. */

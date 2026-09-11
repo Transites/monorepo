@@ -25,6 +25,9 @@ module.exports = {
         'instituicao',
         'tema',
         'obra',
+        'agrupamento',
+        'empresa',
+        'conceito',
     ],
 
     ALLOWED_FILE_TYPES: [
