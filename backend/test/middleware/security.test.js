@@ -43,7 +43,7 @@ describe('Security Middleware Tests', () => {
       const authLimiter = securityMiddleware.createAuthLimiter();
       expect(authLimiter).toBeDefined();
       expect(authLimiter.mockConfig.windowMs).toBe(15 * 60 * 1000);
-      expect(authLimiter.mockConfig.max).toBe(5);
+      expect(authLimiter.mockConfig.max).toBe(20);
       expect(authLimiter.mockConfig.skipSuccessfulRequests).toBe(true);
       expect(authLimiter.mockConfig.message.error).toBe('Muitas tentativas de login, tente novamente em 15 minutos');
       expect(authLimiter.mockConfig.message.retryAfter).toBe(900);
