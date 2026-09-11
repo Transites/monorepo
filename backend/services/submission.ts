@@ -151,30 +151,6 @@ class SubmissionService {
                     change_summary: 'Versão inicial'
                 }, client);
 
-                // Enviar email com token (async - não bloqueia)
-                const adminsResult = await client.query(
-                    'SELECT email FROM admins WHERE is_active = TRUE'
-                );
-                const adminEmails = adminsResult.rows.map((admin: { email: string; }) => admin.email);
-
-                setImmediate(async () => {
-                    try {
-                        await emailService.sendSubmissionToken(
-                            newSubmission.author_email,
-                            newSubmission,
-                        );
-
-                        if(adminEmails.length > 0) {
-                            await emailService.notifyAdminNewSubmission(newSubmission, adminEmails);
-                        }
-                    } catch (emailError: any) {
-                        logger.error('Failed to send submission token email', {
-                            submissionId: newSubmission.id,
-                            error: emailError?.message
-                        });
-                    }
-                });
-
                 logger.audit('Submission created', {
                     submissionId: newSubmission.id,
                     authorEmail: newSubmission.author_email,
@@ -481,8 +457,8 @@ class SubmissionService {
                 );
             }
 
-            return await db.transaction(async (client: any) => {
-                // Atualizar status e timestamp
+            const updatedSubmission = await db.transaction(async (client: any) => {
+                // Atualizar status e timestamp dentro da transação mínima.
                 const result = await client.query(`
                     UPDATE submissions
                     SET status       = $1,
@@ -496,50 +472,50 @@ class SubmissionService {
                     submissionId
                 ]);
 
-                const updatedSubmission = result.rows[0];
+                return result.rows[0];
+            });
 
-                // Renovar token automaticamente para evitar links expirados do autor.
-                // Se a renovação falhar por timeout do banco, a submissão deve seguir enviada
-                // para revisão e o autor continua com acesso via token atual ou link de recuperação.
-                try {
-                    await tokenService.renewToken(submissionId, 30);
-                } catch (renewError: any) {
-                    logger.warn('Token renewal failed during submit flow; continuing with submission', {
-                        submissionId,
-                        authorEmail,
-                        error: renewError?.message
-                    });
-                }
-
-                // Buscar emails dos admins
-                // Expected adminsResult = { rows: [{ email: string }] }
-                // TODO: create type for Rows, something like Rows<{ email: string }> and Rows<T>.
-                const adminsResult = await client.query(
-                    'SELECT email FROM admins WHERE is_active = true'
-                );
-                const adminEmails = adminsResult.rows.map((admin: { email: any; }) => admin.email);
-
-                // Notificar admins (async - não bloqueia)
-                setImmediate(async () => {
-                    try {
-                        await emailService.notifyAdminNewSubmission(updatedSubmission, adminEmails);
-                    } catch (emailError: any) {
-                        logger.error('Failed to notify admins about new submission', {
-                            submissionId,
-                            error: emailError?.message
-                        });
-                    }
-                });
-
-                logger.audit('Submission submitted for review', {
+            // Renovar token após o commit da transação para evitar lock da mesma linha
+            // e impedir que a resposta do endpoint fique presa no timeout do banco.
+            try {
+                await tokenService.renewToken(submissionId, 30);
+            } catch (renewError: any) {
+                logger.warn('Token renewal failed during submit flow; continuing with submission', {
                     submissionId,
                     authorEmail,
-                    previousStatus: submission.status,
-                    adminEmails: adminEmails.length
+                    error: renewError?.message
                 });
+            }
 
-                return updatedSubmission;
+            // Buscar emails dos admins fora da transação para manter a resposta rápida.
+            const adminsResult = await db.query(
+                'SELECT email FROM admins WHERE is_active = true'
+            );
+            const adminEmails = adminsResult.rows.map((admin: { email: any; }) => admin.email);
+
+            // Enviar e-mails de "submissão enviada" em background após confirmar o envio.
+            void (async () => {
+                try {
+                    await Promise.allSettled([
+                        emailService.sendSubmissionToken(updatedSubmission.author_email, updatedSubmission),
+                        ...(adminEmails.length > 0 ? [emailService.notifyAdminNewSubmission(updatedSubmission, adminEmails)] : [])
+                    ]);
+                } catch (emailError: any) {
+                    logger.error('Failed to notify about successful submission', {
+                        submissionId,
+                        error: emailError?.message
+                    });
+                }
+            })();
+
+            logger.audit('Submission submitted for review', {
+                submissionId,
+                authorEmail,
+                previousStatus: submission.status,
+                adminEmails: adminEmails.length
             });
+
+            return updatedSubmission;
 
         } catch (error: any) {
             logger.error('Error submitting for review', {

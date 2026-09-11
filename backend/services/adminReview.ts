@@ -365,8 +365,19 @@ class AdminReviewService {
                 );
             }
 
-            // Enviar email para o autor
-            await this.emailService.sendFeedbackToAuthor(submission, feedback, adminName);
+            // Enviar email para o autor em background, sem bloquear a resposta da API.
+            void (async () => {
+                try {
+                    await this.emailService.sendFeedbackToAuthor(submission, feedback, adminName);
+                } catch (error) {
+                    this.logger.error('Background feedback email failed', {
+                        submissionId,
+                        feedbackId,
+                        adminId,
+                        error: error instanceof Error ? error.message : String(error)
+                    });
+                }
+            })();
 
             // Log da ação
             await this.logAdminAction(adminId, 'send_feedback', 'feedback', feedbackId, {
@@ -455,8 +466,18 @@ class AdminReviewService {
                 );
             }
 
-            // Enviar notificação de publicação para o autor
-            await this.emailService.notifyAuthorApproval(submission, submissionUrl);
+            // Enviar notificação de publicação para o autor em background.
+            void (async () => {
+                try {
+                    await this.emailService.notifyAuthorApproval(submission, submissionUrl);
+                } catch (error) {
+                    this.logger.error('Background approval email failed', {
+                        submissionId,
+                        adminId,
+                        error: error instanceof Error ? error.message : String(error)
+                    });
+                }
+            })();
 
             // Log da ação
             await this.logAdminAction(adminId, 'publish_submission', 'submission', submissionId, {
@@ -1194,7 +1215,17 @@ class AdminReviewService {
                 adminName: review.adminName
             }
             if (review.status === 'rejected' || review.status === 'changes_requested') {
-                await this.emailService.sendFeedbackToAuthor(submission, feedback, review.adminName);
+                void (async () => {
+                    try {
+                        await this.emailService.sendFeedbackToAuthor(submission, feedback, review.adminName);
+                    } catch (error) {
+                        this.logger.error('Background review email failed', {
+                            submissionId: submission.id,
+                            reviewStatus: review.status,
+                            error: error instanceof Error ? error.message : String(error)
+                        });
+                    }
+                })();
             }
             // Caso contrário, notificação será enviada quando publicar.
         } catch (error) {
@@ -1297,7 +1328,7 @@ class AdminReviewService {
                 { previousStatus: submission.status, newStatus: dbStatus }
             );
 
-            // Enviar notificação por email
+            // Enviar notificação por email em background sem bloquear a resposta do admin.
             try {
                 const adminResult = await this.db.query(
                     'SELECT name FROM admins WHERE id = $1',
@@ -1305,11 +1336,21 @@ class AdminReviewService {
                 );
                 const adminName = adminResult.rows[0]?.name || 'Curador';
 
-                if (newStatus === 'approved') {
-                    await this.emailService.sendApprovalNotification(submission, adminName);
-                } else if (newStatus === 'rejected') {
-                    await this.emailService.sendRejectionNotification(submission, adminName);
-                }
+                void (async () => {
+                    try {
+                        if (newStatus === 'approved') {
+                            await this.emailService.sendApprovalNotification(submission, adminName);
+                        } else if (newStatus === 'rejected') {
+                            await this.emailService.sendRejectionNotification(submission, adminName);
+                        }
+                    } catch (error) {
+                        this.logger.error('Background status notification email failed', {
+                            submissionId,
+                            newStatus,
+                            error: error instanceof Error ? error.message : String(error)
+                        });
+                    }
+                })();
             } catch (error) {
                 this.logger.error('Error sending status notification email', {
                     submissionId,

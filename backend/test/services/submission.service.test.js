@@ -387,7 +387,14 @@ describe('SubmissionService.getSubmissionByToken', () => {
 // ─── submitForReview ──────────────────────────────────────────────────────────
 
 describe('SubmissionService.submitForReview', () => {
-    beforeEach(() => jest.clearAllMocks());
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockClient.query.mockReset();
+        mockDb.query.mockReset();
+        mockDb.findById.mockReset();
+        mockTokenService.renewToken.mockReset();
+        mockTokenService.renewToken.mockResolvedValue({ success: true, newExpiresAt: new Date(), additionalDays: 30 });
+    });
 
     it('throws SubmissionNotFoundException when submission missing', async () => {
         mockDb.findById.mockResolvedValueOnce(null);
@@ -412,15 +419,13 @@ describe('SubmissionService.submitForReview', () => {
         mockDb.findById.mockResolvedValueOnce(sub);
 
         const updatedRow = { ...sub, status: 'SUBMITTED', submitted_at: new Date() };
-        mockClient.query
-            .mockResolvedValueOnce({ rows: [updatedRow] })              // UPDATE status
-            .mockResolvedValueOnce({ rows: [{ next_version: 2 }] })    // version count
-            .mockResolvedValueOnce({ rows: [updatedRow] })              // INSERT version
-            .mockResolvedValueOnce({ rows: [{ email: 'admin@enc.com' }] }); // admins
+        mockClient.query.mockResolvedValueOnce({ rows: [updatedRow] });
+        mockDb.query.mockResolvedValueOnce({ rows: [{ email: 'admin@enc.com' }] });
 
         const result = await submissionService.submitForReview('sub-uuid', 'a@b.com');
 
         expect(result.status).toBe('SUBMITTED');
+        expect(mockTokenService.renewToken).toHaveBeenCalledWith('sub-uuid', 30);
     });
 
     it('renews the submission token when sending for review', async () => {
@@ -428,17 +433,12 @@ describe('SubmissionService.submitForReview', () => {
         mockDb.findById.mockResolvedValueOnce(sub);
 
         const updatedRow = { ...sub, status: 'SUBMITTED', submitted_at: new Date() };
-        mockClient.query
-            .mockResolvedValueOnce({ rows: [updatedRow] })
-            .mockResolvedValueOnce({ rows: [{ next_version: 2 }] })
-            .mockResolvedValueOnce({ rows: [updatedRow] })
-            .mockResolvedValueOnce({ rows: [{ email: 'admin@enc.com' }] });
-
-        const renewSpy = jest.spyOn(require('../../services/tokens'), 'renewToken').mockResolvedValue({ success: true, newExpiresAt: new Date(), additionalDays: 30 });
+        mockClient.query.mockResolvedValueOnce({ rows: [updatedRow] });
+        mockDb.query.mockResolvedValueOnce({ rows: [{ email: 'admin@enc.com' }] });
 
         await submissionService.submitForReview('sub-uuid', 'a@b.com');
 
-        expect(renewSpy).toHaveBeenCalledWith('sub-uuid', 30);
+        expect(mockTokenService.renewToken).toHaveBeenCalledWith('sub-uuid', 30);
     });
 
     it('keeps the submission as submitted when token renewal fails', async () => {
@@ -446,13 +446,10 @@ describe('SubmissionService.submitForReview', () => {
         mockDb.findById.mockResolvedValueOnce(sub);
 
         const updatedRow = { ...sub, status: 'SUBMITTED', submitted_at: new Date() };
-        mockClient.query
-            .mockResolvedValueOnce({ rows: [updatedRow] })
-            .mockResolvedValueOnce({ rows: [{ next_version: 2 }] })
-            .mockResolvedValueOnce({ rows: [updatedRow] })
-            .mockResolvedValueOnce({ rows: [{ email: 'admin@enc.com' }] });
+        mockClient.query.mockResolvedValueOnce({ rows: [updatedRow] });
+        mockDb.query.mockResolvedValueOnce({ rows: [{ email: 'admin@enc.com' }] });
 
-        jest.spyOn(require('../../services/tokens'), 'renewToken').mockRejectedValueOnce(new Error('canceling statement due to statement timeout'));
+        mockTokenService.renewToken.mockRejectedValueOnce(new Error('canceling statement due to statement timeout'));
 
         await expect(submissionService.submitForReview('sub-uuid', 'a@b.com')).resolves.toMatchObject({ status: 'SUBMITTED' });
     });

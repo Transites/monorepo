@@ -135,7 +135,6 @@ class EmailTemplates {
             <p>Agradecemos a sua contribuição.</p>
             <p>Em caso de dúvidas, entre em contato pelo email <a href="mailto:${supportEmail}">${supportEmail}</a></p>
 
-            <p>Em caso de dúvidas, entre em contato pelo email <a href="mailto:${supportEmail}">${supportEmail}</a></p>
         `;
 
         return this.baseTemplate(content, 'Submissão Criada - Transitos');

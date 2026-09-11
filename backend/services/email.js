@@ -258,14 +258,12 @@ class EmailService {
 
             const subject = `[Transitos Admin] Nova submissão: ${submission.title}`;
 
-            // DISPARAR INDIVIDUALMENTE PARA CADA ADMIN (Contorna o bloqueio de array no modo teste)
-            for (const adminEmail of adminEmails) {
-                await this.sendEmail({
-                    to: adminEmail,
-                    subject,
-                    html
-                });
-            }
+            // Enviar em paralelo para reduzir o tempo total e não bloquear a resposta da API.
+            await Promise.all(adminEmails.map((adminEmail) => this.sendEmail({
+                to: adminEmail,
+                subject,
+                html
+            })));
 
             logger.audit('Admin notifications sent individually', {
                 submissionId: submission.id,

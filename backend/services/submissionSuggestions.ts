@@ -85,11 +85,46 @@ class SubmissionSuggestionsService {
       );
 
       // Atualiza status da submissão para CHANGES_REQUESTED
-      // 
       await this.db.query(
         `UPDATE submissions SET status = 'CHANGES_REQUESTED', updated_at = NOW() WHERE id = $1`,
         [submissionId]
       );
+
+      void (async () => {
+        try {
+          const submissionResult = await this.db.query(
+            'SELECT * FROM submissions WHERE id = $1',
+            [submissionId]
+          );
+          const submission = submissionResult.rows[0];
+
+          if (!submission || !submission.author_email) {
+            return;
+          }
+
+          const adminResult = await this.db.query(
+            'SELECT name FROM admins WHERE id = $1',
+            [adminId]
+          );
+          const adminName = adminResult.rows[0]?.name || 'Curador';
+          const feedback = {
+            id: result.rows[0].id,
+            content: data.notes || 'O curador solicitou ajustes e uma nova revisão da submissão.',
+            status: 'changes_requested',
+            created_at: new Date(),
+          };
+
+          await Promise.allSettled([
+            emailService.sendFeedbackToAuthor(submission, feedback, adminName)
+          ]);
+        } catch (emailError: any) {
+          logger.error('Error notifying author about review request', {
+            submissionId,
+            adminId,
+            error: emailError?.message,
+          });
+        }
+      })();
 
       logger.audit('Suggestion created by admin', {
         submissionId, adminId, suggestionId: result.rows[0].id
@@ -181,27 +216,31 @@ class SubmissionSuggestionsService {
           originalSuggestionId
         });
 
-        try {
-          const adminResult = await this.db.query(
-            'SELECT email FROM admins WHERE id = $1',
-            [updatedSubmissionResult.rows[0]?.admin_id ?? (await this.db.query('SELECT admin_id FROM submission_suggestions WHERE id = $1', [originalSuggestionId])).rows[0]?.admin_id]
-          );
-          const adminEmail = adminResult.rows[0]?.email;
-          if (adminEmail) {
-            await emailService.notifyCuratorOnCounterProposal(
-              updatedSubmission,
-              adminEmail,
-              authorEmail,
-              data.notes
+        void (async () => {
+          try {
+            const adminResult = await this.db.query(
+              'SELECT email FROM admins WHERE id = $1',
+              [updatedSubmissionResult.rows[0]?.admin_id ?? (await this.db.query('SELECT admin_id FROM submission_suggestions WHERE id = $1', [originalSuggestionId])).rows[0]?.admin_id]
             );
+            const adminEmail = adminResult.rows[0]?.email;
+            if (adminEmail) {
+              await Promise.allSettled([
+                emailService.notifyCuratorOnCounterProposal(
+                  updatedSubmission,
+                  adminEmail,
+                  authorEmail,
+                  data.notes
+                )
+              ]);
+            }
+          } catch (emailError: any) {
+            logger.error('Error notifying curator about counter-proposal', {
+              submissionId,
+              authorEmail,
+              error: emailError?.message,
+            });
           }
-        } catch (emailError: any) {
-          logger.error('Error notifying curator about counter-proposal', {
-            submissionId,
-            authorEmail,
-            error: emailError?.message,
-          });
-        }
+        })();
 
         return updatedSubmission;
       });
@@ -289,34 +328,39 @@ class SubmissionSuggestionsService {
         [suggestionId]
       );
 
-      try {
-        const adminResult = await this.db.query(
-          'SELECT email, name FROM admins WHERE id = $1',
-          [s.admin_id]
-        );
-        const adminEmail = adminResult.rows[0]?.email;
-        const adminName = adminResult.rows[0]?.name || 'Curador';
-        if (adminEmail) {
-          await emailService.notifyCuratorOnSuggestionAccepted(
-            submissionResult.rows[0],
-            adminEmail,
-            authorEmail,
-            s.suggested_title || s.notes
+      void (async () => {
+        try {
+          const adminResult = await this.db.query(
+            'SELECT email, name FROM admins WHERE id = $1',
+            [s.admin_id]
           );
+          const adminEmail = adminResult.rows[0]?.email;
+          const adminName = adminResult.rows[0]?.name || 'Curador';
+
+          await Promise.allSettled([
+            adminEmail
+              ? emailService.notifyCuratorOnSuggestionAccepted(
+                  submissionResult.rows[0],
+                  adminEmail,
+                  authorEmail,
+                  s.suggested_title || s.notes
+                )
+              : Promise.resolve(),
+            emailService.sendSuggestionAcceptedToAuthor(
+              submissionResult.rows[0],
+              authorEmail,
+              adminName
+            )
+          ]);
+        } catch (emailError: any) {
+          logger.error('Error notifying curator about accepted suggestion', {
+            submissionId,
+            suggestionId,
+            authorEmail,
+            error: emailError?.message,
+          });
         }
-        await emailService.sendSuggestionAcceptedToAuthor(
-          submissionResult.rows[0],
-          authorEmail,
-          adminName
-        );
-      } catch (emailError: any) {
-        logger.error('Error notifying curator about accepted suggestion', {
-          submissionId,
-          suggestionId,
-          authorEmail,
-          error: emailError?.message,
-        });
-      }
+      })();
 
       logger.audit('Suggestion accepted by author', { submissionId, suggestionId, authorEmail });
 

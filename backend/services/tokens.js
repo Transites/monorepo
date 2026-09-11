@@ -54,20 +54,29 @@ class TokenService {
             const submission = await db.findById('submissions', submissionId);
             if (submission) {
                 const emailService = require('./email');
-                const result = await emailService.sendSubmissionToken(
-                    submission.author_email,
-                    submission,
-                    token
-                );
+                void (async () => {
+                    try {
+                        const result = await emailService.sendSubmissionToken(
+                            submission.author_email,
+                            submission,
+                            token
+                        );
 
-                if (!result.success) {
-                    logger.error('Failed to send submission token email', {
-                        submissionId,
-                        authorEmail: submission.author_email,
-                        error: result.errorMessage
-                    });
-                    // We continue even if email fails, as the token was created successfully
-                }
+                        if (!result.success) {
+                            logger.error('Failed to send submission token email', {
+                                submissionId,
+                                authorEmail: submission.author_email,
+                                error: result.errorMessage
+                            });
+                        }
+                    } catch (error) {
+                        logger.error('Failed to queue submission token email', {
+                            submissionId,
+                            authorEmail: submission.author_email,
+                            error: error?.message || String(error)
+                        });
+                    }
+                })();
             }
 
             return {

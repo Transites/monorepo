@@ -32,6 +32,7 @@ describe('AdminReviewService', () => {
 
         emailService.sendEmail = jest.fn();
         emailService.sendFeedbackToAuthor = jest.fn();
+        emailService.notifyAuthorApproval = jest.fn();
 
         logger.audit = jest.fn();
         logger.error = jest.fn();
@@ -593,7 +594,7 @@ describe('AdminReviewService', () => {
             expect(emailService.sendFeedbackToAuthor).not.toHaveBeenCalled();
         });
 
-        test('deve tratar erros ao enviar email', async () => {
+        test('deve continuar sem falhar quando o email de feedback falha em background', async () => {
             // Setup
             const submissionId = 'sub-123';
             const adminId = 'admin-123';
@@ -619,112 +620,80 @@ describe('AdminReviewService', () => {
                 }]
             };
 
-            // Mock database operations - todas as 5 chamadas
             db.query
-                .mockResolvedValueOnce({rows: [mockSubmission]}) // getSubmissionById
-                .mockResolvedValueOnce({rows: [{name: 'Admin User'}]}) // getAdminName
-                .mockResolvedValueOnce(mockFeedbackResult) // INSERT INTO feedback
-                .mockResolvedValueOnce({rows: []}) // UPDATE submissions
-                .mockResolvedValueOnce({rows: [{}]}); // logAdminAction
+                .mockResolvedValueOnce({rows: [mockSubmission]})
+                .mockResolvedValueOnce({rows: [{name: 'Admin User'}]})
+                .mockResolvedValueOnce(mockFeedbackResult)
+                .mockResolvedValueOnce({rows: []})
+                .mockResolvedValueOnce({rows: [{}]});
 
-            // Mock email service to throw error
             emailService.sendFeedbackToAuthor.mockRejectedValue(emailError);
 
-            // Execute & Verify - O método deve falhar devido ao erro de email
             await expect(adminReviewService.sendFeedback(submissionId, adminId, content))
-                .rejects
-                .toThrow('Erro ao enviar email');
+                .resolves
+                .toMatchObject({
+                    submissionId,
+                    adminId,
+                    content,
+                    status: 'pending'
+                });
 
-            // Verify que as operações de banco foram executadas antes do erro
-            expect(db.query).toHaveBeenCalledTimes(4); // Para antes do logAdminAction devido ao erro
             expect(emailService.sendFeedbackToAuthor).toHaveBeenCalled();
-
-            // Verify que o erro foi logado
-            expect(logger.error).toHaveBeenCalledWith('Error sending feedback', expect.objectContaining({
+            expect(logger.error).not.toHaveBeenCalledWith('Error sending feedback', expect.objectContaining({
                 error: 'Erro ao enviar email'
             }));
         });
     });
     describe('publishSubmission', () => {
-        // test('deve publicar submissão com sucesso', async () => {
-        //     // Setup
-        //     const submissionId = 'sub-123';
-        //     const adminId = 'admin-123';
-        //     const publishRequest = {
-        //         submissionId,
-        //         publishNotes: 'Notas para publicação',
-        //         scheduledFor: new Date('2025-08-01T12:00:00Z'),
-        //         categoryOverride: 'artigo-especial',
-        //         keywordsOverride: ['keyword1', 'keyword2']
-        //     };
-        //
-        //     const mockSubmission = {
-        //         id: submissionId,
-        //         author_email: 'author@example.com',
-        //         author_name: 'Test Author',
-        //         title: 'Test Submission',
-        //         status: 'APPROVED', // Status correto para publicação
-        //         content: 'Conteúdo da submissão',
-        //         category: 'article',
-        //         keywords: ['original1', 'original2']
-        //     };
-        //
-        //     const mockArticleResult = {
-        //         rows: [{
-        //             id: 'article-123',
-        //             submission_id: submissionId,
-        //             title: 'Test Submission',
-        //             content: 'Conteúdo da submissão',
-        //             author_name: 'Test Author',
-        //             category: 'artigo-especial',
-        //             keywords: ['keyword1', 'keyword2'],
-        //             published_at: new Date('2025-08-01T12:00:00Z').toISOString(),
-        //             created_at: new Date().toISOString()
-        //         }]
-        //     };
-        //
-        //     // Mock database operations - todas as chamadas necessárias
-        //     db.query
-        //         .mockResolvedValueOnce({rows: [mockSubmission]}) // getSubmissionById
-        //         .mockResolvedValueOnce(mockArticleResult) // INSERT INTO articles
-        //         .mockResolvedValueOnce({rows: [{...mockSubmission, status: 'PUBLISHED'}]}) // UPDATE submissions
-        //         .mockResolvedValueOnce({rows: [{}]}); // logAdminAction
-        //
-        //     // Mock email service
-        //     emailService.notifyAuthorApproval.mockResolvedValue({success: true});
-        //
-        //     // Execute
-        //     const result = await adminReviewService.publishSubmission(
-        //         submissionId,
-        //         adminId,
-        //         publishRequest
-        //     );
-        //
-        //     // Verify database calls
-        //     expect(db.query).toHaveBeenCalledTimes(3);
-        //     expect(db.query).toHaveBeenNthCalledWith(1, expect.stringContaining('SELECT * FROM submissions WHERE id = $1'), [submissionId]);
-        //     expect(db.query).toHaveBeenNthCalledWith(2, expect.stringContaining('INSERT INTO articles'), expect.arrayContaining([expect.any(String), submissionId]));
-        //     expect(db.query).toHaveBeenNthCalledWith(3, expect.stringContaining('UPDATE submissions'), expect.arrayContaining(['PUBLISHED', submissionId]));
-        //
-        //     // Verify email notification
-        //     expect(emailService.notifyAuthorApproval).toHaveBeenCalledWith(
-        //         mockSubmission,
-        //         expect.objectContaining({
-        //             articleId: 'article-123',
-        //             publishedAt: expect.any(String)
-        //         })
-        //     );
-        //
-        //     // Verify audit log
-        //     expect(logger.audit).toHaveBeenCalledWith('Article published', expect.any(Object));
-        //
-        //     // Verify result
-        //     expect(result).toEqual(expect.objectContaining({
-        //         success: true,
-        //         articleId: 'article-123',
-        //         publishedAt: expect.any(String)
-        //     }));
-        // });
+        test('deve publicar submissão aprovada e disparar notificação em background', async () => {
+            const submissionId = 'sub-123';
+            const adminId = 'admin-123';
+            const publishRequest = {
+                submissionId,
+                publishNotes: 'Notas para publicação',
+                categoryOverride: 'artigo-especial',
+                keywordsOverride: ['keyword1', 'keyword2']
+            };
+
+            const mockSubmission = {
+                id: submissionId,
+                author_email: 'author@example.com',
+                author_name: 'Test Author',
+                title: 'Test Submission',
+                status: 'APPROVED',
+                summary: 'Resumo da submissão',
+                content: 'Conteúdo da submissão',
+                category: 'article',
+                keywords: ['original1', 'original2'],
+                metadata: { bibliography: ['ref 1'] }
+            };
+
+            db.query
+                .mockResolvedValueOnce({ rows: [mockSubmission] })
+                .mockResolvedValueOnce({ rows: [{ id: submissionId }] })
+                .mockResolvedValueOnce({ rows: [{}] });
+
+            emailService.notifyAuthorApproval.mockResolvedValue({ success: true });
+
+            const result = await adminReviewService.publishSubmission(
+                submissionId,
+                adminId,
+                publishRequest
+            );
+
+            expect(result.success).toBe(true);
+            expect(db.query).toHaveBeenCalledWith(
+                expect.stringContaining('UPDATE submissions SET status = $1, published_at = NOW()'),
+                expect.arrayContaining(['PUBLISHED', submissionId])
+            );
+
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            expect(emailService.notifyAuthorApproval).toHaveBeenCalledWith(
+                mockSubmission,
+                expect.stringContaining('/articles/test-submission')
+            );
+        });
 
         test('deve registrar data de publicação ao publicar submissão aprovada', async () => {
             const submissionId = 'sub-123';

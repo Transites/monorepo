@@ -47,6 +47,7 @@ jest.mock('../../services/email', () => ({
     notifyCuratorOnCounterProposal: jest.fn().mockResolvedValue({ success: true }),
     sendSuggestionAcceptedToAuthor: jest.fn().mockResolvedValue({ success: true }),
     sendCounterProposalReceivedToAuthor: jest.fn().mockResolvedValue({ success: true }),
+    sendFeedbackToAuthor: jest.fn().mockResolvedValue({ success: true }),
   },
 }));
 
@@ -88,12 +89,14 @@ describe('SubmissionSuggestionsService', () => {
   // ── createSuggestion ────────────────────────────────────────────────────────
   describe('createSuggestion', () => {
     // ... [Seus testes originais de createSuggestion podem ser mantidos aqui]
-    test('deve criar sugestão com sucesso', async () => {
+    test('deve criar sugestão com sucesso e notificar o autor sobre a revisão solicitada', async () => {
       mockDb.query
         .mockResolvedValueOnce({ rows: [mockSubmissionRow] })
         .mockResolvedValueOnce({ rows: [] })
         .mockResolvedValueOnce({ rows: [mockSuggestion] })
-        .mockResolvedValueOnce({ rows: [] });
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [{ author_email: AUTHOR_EMAIL, author_name: 'Autor Teste', title: 'Meu Título', token: 'abc123' }] })
+        .mockResolvedValueOnce({ rows: [{ name: 'Curador Teste' }] });
 
       const result = await service.createSuggestion(SUBMISSION_ID, ADMIN_ID, {
         suggested_title:   'Título Sugerido',
@@ -102,6 +105,20 @@ describe('SubmissionSuggestionsService', () => {
       });
 
       expect(result).toEqual(mockSuggestion);
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      expect(emailService.sendFeedbackToAuthor).toHaveBeenCalledWith(
+        expect.objectContaining({
+          author_email: AUTHOR_EMAIL,
+          author_name: 'Autor Teste',
+          title: 'Meu Título',
+        }),
+        expect.objectContaining({
+          id: mockSuggestion.id,
+          status: 'changes_requested',
+          content: 'Notas do curador',
+        }),
+        'Curador Teste'
+      );
     });
 
     test('deve lançar SubmissionNotFoundException quando submissão não existe', async () => {
