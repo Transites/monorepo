@@ -498,8 +498,18 @@ class SubmissionService {
 
                 const updatedSubmission = result.rows[0];
 
-                // Renovar token automaticamente para evitar links expirados do autor
-                await tokenService.renewToken(submissionId, 30);
+                // Renovar token automaticamente para evitar links expirados do autor.
+                // Se a renovação falhar por timeout do banco, a submissão deve seguir enviada
+                // para revisão e o autor continua com acesso via token atual ou link de recuperação.
+                try {
+                    await tokenService.renewToken(submissionId, 30);
+                } catch (renewError: any) {
+                    logger.warn('Token renewal failed during submit flow; continuing with submission', {
+                        submissionId,
+                        authorEmail,
+                        error: renewError?.message
+                    });
+                }
 
                 // Buscar emails dos admins
                 // Expected adminsResult = { rows: [{ email: string }] }

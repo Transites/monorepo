@@ -58,12 +58,7 @@ export interface Submission {
       place?: string;
       formatted: string;
     };
-    works?: Array<{
-      year: string;
-      title: string;
-      location?: string;
-      publisher?: string;
-    }>;
+    works?: CitationItem[];
     source?: string;
     themes?: string[];
     periods?: {
@@ -78,13 +73,7 @@ export interface Submission {
     }>;
     cache_file?: string;
     occupation?: string[];
-    bibliography?: Array<{
-      year: string;
-      title: string;
-      author: string;
-      location?: string;
-      publisher?: string;
-    }>;
+    bibliography?: CitationItem[];
     organizations?: string[];
     processed_date?: string;
     alternativeNames?: string[];
@@ -413,13 +402,62 @@ export async function fetchArticles(
 }
 
 
-/** Bibliography item — same shape as ArticleEditor metadata.bibliography[]. */
-export interface BibliographyItem {
-  year: string;
-  title: string;
-  author: string;
+/** Freeform reference item — supports legacy structured data and the new free-text authoring flow. */
+export interface CitationItem {
+  year?: string;
+  title?: string;
+  author?: string;
   location?: string;
   publisher?: string;
+  text?: string;
+}
+
+export type BibliographyItem = CitationItem;
+
+export function formatCitationText(item?: Partial<CitationItem> | null): string {
+  if (!item) return '';
+  if (item.text?.trim()) return item.text.trim();
+
+  const parts = [
+    item.author,
+    item.title,
+    item.year ? `(${item.year})` : undefined,
+    item.location,
+    item.publisher,
+  ].filter(Boolean) as string[];
+
+  return parts.join('. ').trim();
+}
+
+export function normalizeCitationItems(items?: Array<Partial<CitationItem> | null> | null): CitationItem[] {
+  if (!items) return [];
+
+  return items
+    .filter((item): item is Partial<CitationItem> => Boolean(item))
+    .map((item) => {
+      const text = item.text?.trim();
+      if (text) {
+        return { text };
+      }
+      const formatted = formatCitationText(item);
+      return formatted ? { text: formatted } : { text: '' };
+    })
+    .filter((item) => item.text && item.text.trim().length > 0);
+}
+
+export function citationItemsToText(items?: Array<Partial<CitationItem> | null> | null): string {
+  return normalizeCitationItems(items)
+    .map((item) => item.text?.trim())
+    .filter(Boolean)
+    .join('\n');
+}
+
+export function textToCitationItems(value: string): CitationItem[] {
+  return value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => ({ text: line }));
 }
 
 /** Payload for creating a new article submission (POST /submissions). */
@@ -434,6 +472,7 @@ export interface CreateArticleSubmissionPayload {
   category: string;
   metadata?: {
     bibliography?: BibliographyItem[];
+    works?: BibliographyItem[];
     [key: string]: unknown;
   };
   submit_for_review?: boolean;

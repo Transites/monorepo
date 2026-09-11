@@ -107,6 +107,35 @@ export default function ArticleContent({ article }: ArticleContentProps) {
     });
   };
 
+  const renderCitationList = (items: Array<{ text?: string; title?: string; author?: string; year?: string; location?: string; publisher?: string }> | undefined, emptyLabel?: string) => {
+    if (!items || items.length === 0) return null;
+
+    return (
+      <div className="space-y-3">
+        {items
+          .map((item) => ({
+            ...item,
+            displayText: item.text?.trim() || [item.author, item.title, item.year ? `(${item.year})` : undefined, item.location, item.publisher].filter(Boolean).join('. '),
+          }))
+          .sort((a, b) => {
+            const yearA = Number.parseInt(a.year ?? '', 10);
+            const yearB = Number.parseInt(b.year ?? '', 10);
+            if (Number.isNaN(yearA) && Number.isNaN(yearB)) return 0;
+            if (Number.isNaN(yearA)) return 1;
+            if (Number.isNaN(yearB)) return -1;
+            return yearA - yearB;
+          })
+          .map((item, index) => (
+            <div key={`${item.displayText}-${index}`} className="p-4 bg-muted/30 rounded-lg border border-border/60">
+              <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words">
+                {item.displayText || emptyLabel || '—'}
+              </p>
+            </div>
+          ))}
+      </div>
+    );
+  };
+
   return (
     <article className="space-y-8">
       {/* Article Header */}
@@ -115,6 +144,20 @@ export default function ArticleContent({ article }: ArticleContentProps) {
           <h1 className="text-4xl font-bold text-foreground mb-4 leading-tight">
             {article.title}
           </h1>
+
+          {article.doi && (
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">DOI</span>
+              <a
+                href={`https://doi.org/${article.doi}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+              >
+                {article.doi}
+              </a>
+            </div>
+          )}
           
           {article.summary && (
             <p className="text-xl text-muted-foreground leading-relaxed">
@@ -344,35 +387,7 @@ export default function ArticleContent({ article }: ArticleContentProps) {
         <section id="principais-obras" className="space-y-6">
           <Separator />
           <h2 className="text-2xl font-bold text-foreground">Principais Obras</h2>
-          <div className="grid gap-4">
-            {article.metadata.works
-              .sort((a, b) => parseInt(a.year) - parseInt(b.year))
-              .map((work, index) => (
-                <Card key={index} className="border-l-4 border-l-primary/20">
-                  <CardContent className="pt-4">
-                    <div className="flex flex-col sm:flex-row sm:items-start gap-3">
-                      <Badge variant="outline" className="self-start sm:self-center whitespace-nowrap">
-                        {work.year}
-                      </Badge>
-                      <div className="flex-1 space-y-1">
-                        <h3 className="font-semibold text-foreground leading-tight">
-                          {work.title}
-                        </h3>
-                        {(work.location || work.publisher) && (
-                          <p className="text-sm text-muted-foreground">
-                            {work.location && work.publisher 
-                              ? `${work.location}: ${work.publisher}`
-                              : work.location || work.publisher
-                            }
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            }
-          </div>
+          {renderCitationList(article.metadata.works, 'Entrada de obra vazia.')}
         </section>
       )}
 
@@ -381,38 +396,7 @@ export default function ArticleContent({ article }: ArticleContentProps) {
         <section id="bibliografia" className="space-y-6">
           <Separator />
           <h2 className="text-2xl font-bold text-foreground">Bibliografia</h2>
-          <div className="space-y-4">
-            {article.metadata.bibliography
-              .sort((a, b) => parseInt(a.year) - parseInt(b.year))
-              .map((item, index) => (
-                <div key={index} className="p-4 bg-muted/30 rounded-lg">
-                  <div className="space-y-2">
-                    <div className="flex flex-col sm:flex-row sm:items-start gap-3">
-                      <Badge variant="secondary" className="self-start sm:self-center whitespace-nowrap">
-                        {item.year}
-                      </Badge>
-                      <div className="flex-1 space-y-1">
-                        <p className="text-sm font-medium text-foreground">
-                          {item.author}
-                        </p>
-                        <p className="text-foreground font-semibold">
-                          {item.title}
-                        </p>
-                        {(item.location || item.publisher) && (
-                          <p className="text-sm text-muted-foreground italic">
-                            {item.location && item.publisher 
-                              ? `${item.location}: ${item.publisher}`
-                              : item.location || item.publisher
-                            }
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            }
-          </div>
+          {renderCitationList(article.metadata.bibliography, 'Entrada de bibliografia vazia.')}
         </section>
       )}
 

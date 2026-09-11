@@ -41,14 +41,14 @@ export const articleSubmissionSchema = z.object({
   summary: z
     .string()
     .min(50, 'Resumo deve ter pelo menos 50 caracteres')
-    .max(250, 'Resumo pode ter no máximo 250 caracteres'),
+    .max(500, 'Resumo pode ter no máximo 500 caracteres'),
   content: z
     .string()
     .refine((val) => stripHtml(val).length >= 100, {
       message: 'Conteúdo principal deve ter pelo menos 100 caracteres',
     })
-    .refine((val) => stripHtml(val).length <= 7200, {
-      message: 'Conteúdo principal excede o limite de 7.200 caracteres',
+    .refine((val) => stripHtml(val).length <= 8000, {
+      message: 'Conteúdo principal excede o limite de 8.000 caracteres',
     }),
   sections: z
     .array(sectionFieldsSchema)

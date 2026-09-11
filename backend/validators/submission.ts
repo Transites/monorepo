@@ -221,8 +221,8 @@ class SubmissionValidators {
                 if (!submission.summary || submission.summary.length < 50) {
                     throw new Error('Resumo deve ter pelo menos 50 caracteres');
                 }
-                if (submission.summary.length > 250) {
-                    throw new Error('Resumo pode ter no máximo 250 caracteres');
+                if (submission.summary.length > constants.LIMITS.SUMMARY_MAX) {
+                    throw new Error(`Resumo pode ter no máximo ${constants.LIMITS.SUMMARY_MAX} caracteres`);
                 }
                 return true;
             }),
@@ -233,8 +233,8 @@ class SubmissionValidators {
                 if (!submission.content || submission.content.length < 100) {
                     throw new Error('Conteúdo deve ter pelo menos 100 caracteres');
                 }
-                if (submission.content.length > 7200) {
-                    throw new Error('Conteúdo pode ter no máximo 7.200 caracteres');
+                if (submission.content.length > constants.LIMITS.CONTENT_MAX) {
+                    throw new Error(`Conteúdo pode ter no máximo ${constants.LIMITS.CONTENT_MAX.toLocaleString('pt-BR')} caracteres`);
                 }
                 return true;
             }),

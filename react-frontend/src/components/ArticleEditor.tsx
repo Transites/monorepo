@@ -5,7 +5,7 @@ import { Input }         from '@/components/ui/input';
 import { Label }         from '@/components/ui/label';
 import { Separator }     from '@/components/ui/separator';
 import { Badge }         from '@/components/ui/badge';
-import { Submission, ArticleUpdateData, updateArticle, assignDoi, uploadSubmissionMedia } from '@/lib/api';
+import { Submission, ArticleUpdateData, updateArticle, assignDoi, uploadSubmissionMedia, citationItemsToText, textToCitationItems } from '@/lib/api';
 
 interface ArticleEditorProps {
   article:   Submission;
@@ -41,17 +41,19 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
 
   // Cada item da bibliografia tem esses campos — igual ao que está no banco
   interface BibItem {
-    year:      string;
-    title:     string;
-    author:    string;
+    year?:      string;
+    title?:     string;
+    author?:    string;
     location?: string;
     publisher?: string;
+    text?: string;
   }
 
   // Iniciamos com a bibliografia atual do artigo, ou array vazio se não tiver
   const [bibliography, setBibliography] = useState<BibItem[]>(
     article.metadata?.bibliography ?? []
   );
+  const [works, setWorks] = useState<BibItem[]>(article.metadata?.works ?? []);
   
   // Keywords são um array — precisam de lógica especial
   const [keywords,    setKeywords]    = useState<string[]>(article.keywords ?? []);
@@ -115,7 +117,7 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
   
   // ── Bibliografia ───────────────────────────────────────────
   const addBibItem = () => {
-    setBibliography([...bibliography, { year: '', title: '', author: '', location: '', publisher: '' }]);
+    setBibliography([...bibliography, { text: '' }]);
   };
   const updateBibItem = (index: number, field: keyof BibItem, value: string) => {
     const updated = bibliography.map((item, i) => i === index ? { ...item, [field]: value } : item);
@@ -124,6 +126,9 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
   const removeBibItem = (index: number) => {
     setBibliography(bibliography.filter((_, i) => i !== index));
   };
+
+  const updateBibliographyText = (value: string) => setBibliography(textToCitationItems(value));
+  const updateWorksText = (value: string) => setWorks(textToCitationItems(value));
 
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
@@ -184,6 +189,7 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
       const updatedMetadata: any = {
         ...article.metadata,
         bibliography: bibliography.length > 0 ? bibliography : undefined,
+        works: works.length > 0 ? works : undefined,
         occupation: occupations.length > 0 ? occupations : undefined,
         organizations: organizations.length > 0 ? organizations : undefined,
         alternativeNames: alternativeNames.length > 0 ? alternativeNames : undefined,
@@ -344,11 +350,11 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
               value={summary}
               onChange={e => setSummary(e.target.value)}
               rows={4}
-              maxLength={250}
+              maxLength={500}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
             />
             <div className="text-right text-xs text-muted-foreground mt-1">
-                {summary.length}/250
+                {summary.length}/500
             </div>
           </div>
 
@@ -628,94 +634,45 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
               value={content}
               onChange={e => setContent(e.target.value)}
               rows={20}
-              maxLength={7200}
+              maxLength={8000}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
             />
             <div className="text-right text-xs text-muted-foreground mt-1">
-                {content.length}/7200
+                {content.length}/8000
               </div>
           </div>
 
           <Separator />
            
-          {/* ── Bibliografia ──────────────────────────────── */}
+          {/* ── Bibliografia livre ───────────────────────────── */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Label>Bibliografia</Label>
-              <Button variant="outline" size="sm" onClick={addBibItem} type="button">
-                <Plus size={14} className="mr-1" /> Adicionar item
-              </Button>
             </div>
+            <textarea
+              value={citationItemsToText(bibliography)}
+              onChange={(e) => updateBibliographyText(e.target.value)}
+              rows={8}
+              placeholder={'Uma referência por linha\nEx.: LIMA, H. A. (2020). ...'}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
+            />
+            <p className="text-xs text-muted-foreground">Digite cada referência em uma linha. O campo é livre.</p>
+          </div>
 
-            {bibliography.length === 0 && (
-              <p className="text-sm text-muted-foreground italic">
-                Nenhum item. Clique em "Adicionar item" para começar.
-              </p>
-            )}
+          <Separator />
 
-            {/* Renderiza um formulário por item da bibliografia */}
-            {bibliography.map((item, index) => (
-              // key={index}: identificador único para o React — usamos o índice pois
-              // não temos IDs nos itens da bibliografia
-              <div key={index} className="p-4 border rounded-lg space-y-3 relative">
-
-                {/* Botão de remover no canto do card */}
-                <button
-                  onClick={() => removeBibItem(index)}
-                  className="absolute top-3 right-3 text-muted-foreground hover:text-destructive"
-                  type="button"
-                >
-                  <Trash2 size={14} />
-                </button>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Ano</Label>
-                    <Input
-                      value={item.year}
-                      onChange={e => updateBibItem(index, 'year', e.target.value)}
-                      placeholder="2024"
-                    />
-                  </div>
-                  <div className="space-y-1 col-span-2 sm:col-span-1">
-                    <Label className="text-xs">Autor</Label>
-                    <Input
-                      value={item.author}
-                      onChange={e => updateBibItem(index, 'author', e.target.value)}
-                      placeholder="SOBRENOME, Nome"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <Label className="text-xs">Título</Label>
-                  <Input
-                    value={item.title}
-                    onChange={e => updateBibItem(index, 'title', e.target.value)}
-                    placeholder="Título da obra"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Local</Label>
-                    <Input
-                      value={item.location ?? ''}
-                      onChange={e => updateBibItem(index, 'location', e.target.value)}
-                      placeholder="São Paulo"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Editora</Label>
-                    <Input
-                      value={item.publisher ?? ''}
-                      onChange={e => updateBibItem(index, 'publisher', e.target.value)}
-                      placeholder="Editora"
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label>Principais Obras</Label>
+            </div>
+            <textarea
+              value={citationItemsToText(works)}
+              onChange={(e) => updateWorksText(e.target.value)}
+              rows={6}
+              placeholder={'Uma obra por linha\nEx.: BETIM, A. (1910). Obra principal de referência.'}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
+            />
+            <p className="text-xs text-muted-foreground">Liste as principais obras em linhas separadas.</p>
           </div>
 
         </div>

@@ -42,6 +42,7 @@ export interface ArticleFormFields {
   content: string;
   keywords: string[];
   bibliography: BibliographyItem[];
+  works?: BibliographyItem[];
   metadata?: Record<string, any>;
   media?: { type: 'image' | 'video'; data: ArticleMedia };
 }
@@ -52,10 +53,12 @@ export interface SubmissionFormFields extends ArticleFormFields {
 
 export function buildArticleMetadata(
   bibliography: BibliographyItem[],
+  works: BibliographyItem[] = [],
   media?: ArticleFormFields['media']
 ) {
   return {
     bibliography,
+    works,
     ...(media ? { [media.type]: media.data } : {}),
   };
 }
@@ -75,8 +78,8 @@ export function validateSubmissionForm(fields: SubmissionFormFields): string[] {
   if (fields.summary.trim().length < 50) {
     errors.push('Resumo deve ter pelo menos 50 caracteres.');
   }
-  if (fields.summary.trim().length > 250) {
-    errors.push('Resumo pode ter no máximo 250 caracteres.');
+  if (fields.summary.trim().length > 500) {
+    errors.push('Resumo pode ter no máximo 500 caracteres.');
   }
   if (!ARTICLE_EDITOR_CATEGORIES.includes(fields.category as ArticleEditorCategory)) {
     errors.push('Selecione uma categoria válida.');
@@ -90,8 +93,8 @@ export function validateSubmissionForm(fields: SubmissionFormFields): string[] {
   if (fields.content.trim().length < 100) {
     errors.push('Conteúdo deve ter pelo menos 100 caracteres.');
   }
-  if (fields.content.trim().length > 7200) {
-    errors.push('Conteúdo pode ter no máximo 7.200 caracteres.');
+  if (fields.content.trim().length > 8000) {
+    errors.push('Conteúdo pode ter no máximo 8.000 caracteres.');
   }
 
   return errors;
@@ -112,7 +115,7 @@ function generateSlug(text: string) {
 
 export function buildSubmissionPayload(fields: SubmissionFormFields): CreateArticleSubmissionPayload {
   // Pega o metadata que vem do form (nascimento, ocupação, etc) ou cria um padrão
-  const baseMetadata = fields.metadata || buildArticleMetadata(fields.bibliography);
+  const baseMetadata = fields.metadata || buildArticleMetadata(fields.bibliography, fields.works ?? []);
 
   const mediaMetadata = fields.media ? {
     [fields.media.type]: fields.media.data,
@@ -126,6 +129,7 @@ export function buildSubmissionPayload(fields: SubmissionFormFields): CreateArti
     sections: [],
     source: 'Submissão de Usuário',
     bibliography: fields.bibliography,
+    works: fields.works ?? [],
     ...baseMetadata,
     ...mediaMetadata,
   };

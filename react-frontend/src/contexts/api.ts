@@ -58,12 +58,7 @@ export interface Submission {
       place?: string;
       formatted: string;
     };
-    works?: Array<{
-      year: string;
-      title: string;
-      location?: string;
-      publisher?: string;
-    }>;
+    works?: CitationItem[];
     source?: string;
     themes?: string[];
     periods?: {
@@ -78,13 +73,7 @@ export interface Submission {
     }>;
     cache_file?: string;
     occupation?: string[];
-    bibliography?: Array<{
-      year: string;
-      title: string;
-      author: string;
-      location?: string;
-      publisher?: string;
-    }>;
+    bibliography?: CitationItem[];
     organizations?: string[];
     processed_date?: string;
     alternativeNames?: string[];
@@ -413,14 +402,17 @@ export async function fetchArticles(
 }
 
 
-/** Bibliography item — same shape as ArticleEditor metadata.bibliography[]. */
-export interface BibliographyItem {
-  year: string;
-  title: string;
-  author: string;
+/** Freeform reference item — supports legacy structured data and the new free-text authoring flow. */
+export interface CitationItem {
+  year?: string;
+  title?: string;
+  author?: string;
   location?: string;
   publisher?: string;
+  text?: string;
 }
+
+export type BibliographyItem = CitationItem;
 
 /** Payload for creating a new article submission (POST /submissions). */
 export interface CreateArticleSubmissionPayload {
@@ -434,6 +426,7 @@ export interface CreateArticleSubmissionPayload {
   category: string;
   metadata?: {
     bibliography?: BibliographyItem[];
+    works?: BibliographyItem[];
     [key: string]: unknown;
   };
   submit_for_review?: boolean;

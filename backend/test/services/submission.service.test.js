@@ -440,6 +440,22 @@ describe('SubmissionService.submitForReview', () => {
 
         expect(renewSpy).toHaveBeenCalledWith('sub-uuid', 30);
     });
+
+    it('keeps the submission as submitted when token renewal fails', async () => {
+        const sub = completeSubmission();
+        mockDb.findById.mockResolvedValueOnce(sub);
+
+        const updatedRow = { ...sub, status: 'SUBMITTED', submitted_at: new Date() };
+        mockClient.query
+            .mockResolvedValueOnce({ rows: [updatedRow] })
+            .mockResolvedValueOnce({ rows: [{ next_version: 2 }] })
+            .mockResolvedValueOnce({ rows: [updatedRow] })
+            .mockResolvedValueOnce({ rows: [{ email: 'admin@enc.com' }] });
+
+        jest.spyOn(require('../../services/tokens'), 'renewToken').mockRejectedValueOnce(new Error('canceling statement due to statement timeout'));
+
+        await expect(submissionService.submitForReview('sub-uuid', 'a@b.com')).resolves.toMatchObject({ status: 'SUBMITTED' });
+    });
 });
 
 // ─── addAttachment ────────────────────────────────────────────────────────────

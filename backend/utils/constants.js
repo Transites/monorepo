@@ -101,9 +101,9 @@ module.exports = {
     LIMITS: {
         TITLE_MIN: 5,
         TITLE_MAX: 200,
-        SUMMARY_MAX: 250,
+        SUMMARY_MAX: 500,
         CONTENT_MIN: 100,
-        CONTENT_MAX: 7200,
+        CONTENT_MAX: 8000,
         KEYWORDS_MAX: 6,
         KEYWORD_MAX: 50,
         FILE_SIZE_MAX: 10 * 1024 * 1024, // 10MB
