@@ -59,6 +59,7 @@ export interface Submission {
       formatted: string;
     };
     works?: CitationItem[];
+    sources?: CitationItem[];
     source?: string;
     themes?: string[];
     periods?: {
@@ -473,6 +474,7 @@ export interface CreateArticleSubmissionPayload {
   metadata?: {
     bibliography?: BibliographyItem[];
     works?: BibliographyItem[];
+    sources?: BibliographyItem[];
     [key: string]: unknown;
   };
   submit_for_review?: boolean;

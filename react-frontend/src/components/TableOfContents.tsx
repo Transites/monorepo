@@ -47,11 +47,16 @@ export default function TableOfContents({ article, className }: TableOfContentsP
       available: !!(article?.metadata?.works && article.metadata.works.length > 0),
     },
     {
+      id: 'fontes',
+      title: 'Fontes',
+      available: !!(article?.metadata?.sources && article.metadata.sources.length > 0),
+    },
+    {
       id: 'bibliografia',
       title: 'Bibliografia',
       available: !!(article?.metadata?.bibliography && article.metadata.bibliography.length > 0),
     },
-  ], [article?.summary, article?.content_html, article?.metadata?.works, article?.metadata?.bibliography, biografiaSubsections]);
+  ], [article?.summary, article?.content_html, article?.metadata?.works, article?.metadata?.sources, article?.metadata?.bibliography, biografiaSubsections]);
 
   // Get all scrollable IDs for scroll spy (main sections + subsections)
   const allScrollableIds = useMemo(() => {

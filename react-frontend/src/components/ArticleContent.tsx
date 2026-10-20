@@ -167,26 +167,41 @@ export default function ArticleContent({ article }: ArticleContentProps) {
         </div>
 
         {/* Article Metadata */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {article.author_name && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <User className="h-4 w-4" />
-              <span>Por <span className="font-medium">{article.author_name}</span></span>
-            </div>
-          )}
+        {(() => {
+          const metadataItems = [
+            article.author_name && (
+              <div key="author-name" className="flex items-center gap-2 text-sm text-muted-foreground">
+                <User className="h-4 w-4" />
+                <span>Por <span className="font-medium">{article.author_name}</span></span>
+              </div>
+            ),
+            article.author_institution && (
+              <div key="author-institution" className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Building2 className="h-4 w-4" />
+                <span><span className="font-medium">{article.author_institution}</span></span>
+              </div>
+            ),
+            (article.created_at || article.updated_at) && (
+              <div key="article-date" className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                <span>
+                  {article.updated_at 
+                    ? `Atualizado em ${formatDate(article.updated_at)}`
+                    : `Publicado em ${formatDate(article.created_at)}`
+                  }
+                </span>
+              </div>
+            )
+          ].filter(Boolean);
 
-          {(article.created_at || article.updated_at) && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="h-4 w-4" />
-              <span>
-                {article.updated_at 
-                  ? `Atualizado em ${formatDate(article.updated_at)}`
-                  : `Publicado em ${formatDate(article.created_at)}`
-                }
-              </span>
+          if (metadataItems.length === 0) return null;
+
+          return (
+            <div className={`grid grid-cols-1 gap-4 ${metadataItems.length > 2 ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+              {metadataItems}
             </div>
-          )}
-        </div>
+          );
+        })()}
 
         {/* Additional Metadata from submission */}
         {article.metadata && (
@@ -388,6 +403,15 @@ export default function ArticleContent({ article }: ArticleContentProps) {
           <Separator />
           <h2 className="text-2xl font-bold text-foreground">Principais Obras</h2>
           {renderCitationList(article.metadata.works, 'Entrada de obra vazia.')}
+        </section>
+      )}
+
+      {/* Fontes Section */}
+      {article.metadata?.sources && article.metadata.sources.length > 0 && (
+        <section id="fontes" className="space-y-6">
+          <Separator />
+          <h2 className="text-2xl font-bold text-foreground">Fontes</h2>
+          {renderCitationList(article.metadata.sources, 'Entrada de fontes vazia.')}
         </section>
       )}
 

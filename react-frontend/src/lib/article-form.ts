@@ -43,6 +43,7 @@ export interface ArticleFormFields {
   keywords: string[];
   bibliography: BibliographyItem[];
   works?: BibliographyItem[];
+  sources?: BibliographyItem[];
   metadata?: Record<string, any>;
   media?: { type: 'image' | 'video'; data: ArticleMedia };
 }
@@ -54,11 +55,13 @@ export interface SubmissionFormFields extends ArticleFormFields {
 export function buildArticleMetadata(
   bibliography: BibliographyItem[],
   works: BibliographyItem[] = [],
+  sources: BibliographyItem[] = [],
   media?: ArticleFormFields['media']
 ) {
   return {
     bibliography,
     works,
+    sources,
     ...(media ? { [media.type]: media.data } : {}),
   };
 }
@@ -115,7 +118,11 @@ function generateSlug(text: string) {
 
 export function buildSubmissionPayload(fields: SubmissionFormFields): CreateArticleSubmissionPayload {
   // Pega o metadata que vem do form (nascimento, ocupação, etc) ou cria um padrão
-  const baseMetadata = fields.metadata || buildArticleMetadata(fields.bibliography, fields.works ?? []);
+  const baseMetadata = fields.metadata || buildArticleMetadata(
+    fields.bibliography,
+    fields.works ?? [],
+    fields.sources ?? []
+  );
 
   const mediaMetadata = fields.media ? {
     [fields.media.type]: fields.media.data,
@@ -130,6 +137,7 @@ export function buildSubmissionPayload(fields: SubmissionFormFields): CreateArti
     source: 'Submissão de Usuário',
     bibliography: fields.bibliography,
     works: fields.works ?? [],
+    sources: fields.sources ?? [],
     ...baseMetadata,
     ...mediaMetadata,
   };

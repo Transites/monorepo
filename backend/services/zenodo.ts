@@ -56,6 +56,8 @@ class ZenodoService {
     private authHeaders(contentType?: string): Record<string, string> {
         const headers: Record<string, string> = {
             Authorization: `Bearer ${this.zenodoConfig.accessToken}`,
+            Accept: 'application/json',
+            'User-Agent': 'Transitos/1.0 (+https://enciclopedia.iea.usp.br; DOI assignment)',
         };
 
         if (contentType) {
@@ -65,17 +67,44 @@ class ZenodoService {
         return headers;
     }
 
+    private async wait(ms: number): Promise<void> {
+        await new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
     private async request<T>(
         path: string,
-        options: RequestInit = {}
+        options: RequestInit = {},
+        retryAttempt = 0
     ): Promise<T> {
         this.assertEnabled();
 
         const url = `${this.zenodoConfig.baseUrl}${path}`;
-        const response = await fetch(url, options);
+        const requestOptions: RequestInit = {
+            ...options,
+            headers: {
+                ...this.authHeaders(),
+                ...((options.headers && typeof options.headers === 'object' && !(options.headers instanceof Headers))
+                    ? options.headers as Record<string, string>
+                    : {}),
+            },
+        };
+
+        const response = await fetch(url, requestOptions);
 
         if (!response.ok) {
             const body = await response.text();
+            const isTransientZenodoError = [403, 429, 500, 502, 503, 504].includes(response.status);
+            const shouldRetry = isTransientZenodoError && retryAttempt < 2;
+
+            if (shouldRetry) {
+                await this.wait((retryAttempt + 1) * 1500);
+                return this.request<T>(path, options, retryAttempt + 1);
+            }
+
+            if (response.status === 403 && /unusual traffic|forbidden/i.test(body)) {
+                throw new Error(`Zenodo bloqueou a requisição por tráfego incomum em ${path}. Aguarde alguns minutos e tente novamente.`);
+            }
+
             throw new Error(`Zenodo API error ${response.status} on ${path}: ${body}`);
         }
 

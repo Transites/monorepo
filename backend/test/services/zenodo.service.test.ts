@@ -98,6 +98,62 @@ describe('ZenodoService', () => {
         expect(global.fetch).toHaveBeenCalledTimes(3);
     });
 
+    test('retries a temporary Zenodo 403 traffic block before succeeding', async () => {
+        global.fetch = jest.fn()
+            .mockResolvedValueOnce({
+                ok: false,
+                status: 403,
+                text: async () => 'Access to this resource has been restricted due to unusual traffic from your network.',
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                status: 201,
+                json: async () => ({
+                    id: 101,
+                    state: 'unsubmitted',
+                    links: {
+                        bucket: 'https://sandbox.zenodo.org/api/files/bucket-uuid',
+                    },
+                    metadata: {},
+                }),
+            })
+            .mockResolvedValueOnce({ ok: true, status: 200 })
+            .mockResolvedValueOnce({
+                ok: true,
+                status: 200,
+                json: async () => ({
+                    id: 101,
+                    state: 'unsubmitted',
+                    links: {},
+                    metadata: {},
+                }),
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                status: 202,
+                json: async () => ({
+                    id: 101,
+                    state: 'done',
+                    doi: '10.5072/zenodo.101',
+                    doi_url: 'https://doi.org/10.5072/zenodo.101',
+                    record_url: 'https://sandbox.zenodo.org/record/101',
+                    links: {
+                        record_html: 'https://sandbox.zenodo.org/record/101',
+                    },
+                    metadata: {
+                        doi: '10.5072/zenodo.101',
+                    },
+                }),
+            }) as jest.Mock;
+
+        const result = await zenodoService.depositArticle(submission, { publish: true });
+
+        expect(result.doi).toBe('10.5072/zenodo.101');
+        expect(global.fetch).toHaveBeenCalledTimes(5);
+        const firstCallHeaders = (global.fetch as jest.Mock).mock.calls[0][1].headers;
+        expect(firstCallHeaders['User-Agent']).toContain('Transitos');
+    });
+
     test('depositArticle publishes when publish option is true', async () => {
         global.fetch = jest.fn()
             .mockResolvedValueOnce({

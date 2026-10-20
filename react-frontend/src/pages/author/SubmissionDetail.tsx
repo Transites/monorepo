@@ -26,6 +26,7 @@ import {
   type SubmissionVersion,
 } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { SubmissionTermsDialog } from '@/components/SubmissionTermsDialog';
 
 interface BibItem {
   year?: string;
@@ -105,6 +106,8 @@ export default function SubmissionDetail() {
   const [newKeyword, setNewKeyword] = useState('');
   const [authorNotes, setAuthorNotes] = useState('');
   const [imageError, setImageError] = useState<string | null>(null);
+  const [termsOpen, setTermsOpen] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // ── Novos Estados (Metadata) ────────────────────────────────
   const [birthDate, setBirthDate] = useState('');
@@ -119,6 +122,7 @@ export default function SubmissionDetail() {
   const [newAlternativeName, setNewAlternativeName] = useState('');
   const [bibliography, setBibliography] = useState<BibItem[]>([]);
   const [works, setWorks] = useState<BibItem[]>([]);
+  const [sources, setSources] = useState<BibItem[]>([]);
 
   const { isAuthenticated, loading: authLoading } = useAuth();
 
@@ -153,6 +157,11 @@ export default function SubmissionDetail() {
 
   const counterMutation = useMutation({
     mutationFn: async () => {
+      if (!termsAccepted) {
+        setTermsOpen(true);
+        throw new Error('Você precisa ler e concordar com o termo editorial antes de enviar a contra-proposta.');
+      }
+
       // Helper para formatar a data de nascimento e morte
       const formatLifeEvent = (dateStr: string, placeStr: string) => {
         let formattedDate = '';
@@ -180,6 +189,9 @@ export default function SubmissionDetail() {
 
       if (works.length > 0) newMetadata.works = works;
       else delete newMetadata.works;
+
+      if (sources.length > 0) newMetadata.sources = sources;
+      else delete newMetadata.sources;
 
       if (category === 'pessoa') {
         if (birthDate || birthPlace) {
@@ -279,6 +291,7 @@ export default function SubmissionDetail() {
     setAlternativeNames(meta.alternativeNames ?? []);
     setBibliography(meta.bibliography ?? []);
     setWorks(meta.works ?? []);
+    setSources(meta.sources ?? []);
 
     setAuthorNotes('');
     setCounteringId(s.id);
@@ -326,6 +339,7 @@ export default function SubmissionDetail() {
     setBibliography(bibliography.filter((_, i) => i !== index));
   const updateBibliographyText = (value: string) => setBibliography(textToCitationItems(value));
   const updateWorksText = (value: string) => setWorks(textToCitationItems(value));
+  const updateSourcesText = (value: string) => setSources(textToCitationItems(value));
 
   const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
     { key: 'versions',    label: 'Histórico de versões', icon: <History className="h-4 w-4" /> },
@@ -342,10 +356,26 @@ export default function SubmissionDetail() {
           Voltar
         </Button>
 
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight">{submission?.title ?? 'Carregando…'}</h1>
-          <p className="text-muted-foreground mt-2">Revisão editorial</p>
+        <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">{submission?.title ?? 'Carregando…'}</h1>
+            <p className="text-muted-foreground mt-2">Revisão editorial</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" onClick={() => setTermsOpen(true)}>
+              Ver termo
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              {termsAccepted ? 'Termo aceito' : 'Termo pendente'}
+            </span>
+          </div>
         </div>
+
+        <SubmissionTermsDialog
+          open={termsOpen}
+          onOpenChange={setTermsOpen}
+          onAgree={() => setTermsAccepted(true)}
+        />
 
         {/* Abas */}
         <div className="flex border-b mb-6 gap-1">
@@ -829,6 +859,22 @@ export default function SubmissionDetail() {
 
               <Separator />
 
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Fontes</Label>
+                </div>
+                <textarea
+                  value={citationItemsToText(sources)}
+                  onChange={(e) => updateSourcesText(e.target.value)}
+                  rows={6}
+                  placeholder={'Uma fonte por linha\nEx.: Entrevista com o autor em 2024.\nEx.: Relatório oficial do município.'}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
+                />
+                <p className="text-xs text-muted-foreground">Digite as fontes em linhas separadas. O campo é livre e segue o mesmo padrão da bibliografia.</p>
+              </div>
+
+              <Separator />
+
               <div className="space-y-2">
                 <Label>Notas para o curador <span className="text-destructive">*</span></Label>
                 <p className="text-xs text-muted-foreground">Explique por que você alterou certas partes.</p>
@@ -842,7 +888,7 @@ export default function SubmissionDetail() {
               <Button variant="outline" onClick={() => { setActiveTab('suggestions'); setCounteringId(null); }}>
                 Cancelar
               </Button>
-              <Button onClick={() => counterMutation.mutate()} disabled={counterMutation.isPending || !authorNotes.trim()}>
+              <Button onClick={() => counterMutation.mutate()} disabled={counterMutation.isPending || !authorNotes.trim() || !termsAccepted}>
                 {counterMutation.isPending
                   ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Enviando…</>
                   : <><Save className="h-4 w-4 mr-2" />Enviar nova versão</>}

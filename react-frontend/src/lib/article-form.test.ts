@@ -1,5 +1,15 @@
-import { describe, expect, it } from 'vitest';
+import React from 'react';
+import { describe, expect, it, vi } from 'vitest';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { MemoryRouter } from 'react-router-dom';
+import ArticleContent from '../components/ArticleContent';
 import { buildSubmissionPayload, validateSubmissionForm } from './article-form';
+
+vi.mock('dompurify', () => ({
+  default: {
+    sanitize: (value: string) => value,
+  },
+}));
 
 describe('buildSubmissionPayload', () => {
   it('preserves metadata generated from the form while keeping bibliography and media fields', () => {
@@ -78,12 +88,56 @@ describe('buildSubmissionPayload', () => {
       keywords: ['história', 'educação'],
       bibliography: [{ text: 'LIMA, H. A. (2020). Texto livre de bibliografia.' }],
       works: [{ text: 'BETIM, A. (1910). Obra principal de referência.' }],
+      sources: [{ text: 'Entrevista concedida em 2024.' }],
       metadata: {},
     });
 
     expect(payload.metadata).toMatchObject({
       works: [{ text: 'BETIM, A. (1910). Obra principal de referência.' }],
       bibliography: [{ text: 'LIMA, H. A. (2020). Texto livre de bibliografia.' }],
+      sources: [{ text: 'Entrevista concedida em 2024.' }],
     });
+  });
+
+  it('renders the institution and sources section on the final article page', () => {
+    (globalThis as any).DOMParser = class {
+      parseFromString(html: string) {
+        return {
+          querySelectorAll: () => [],
+          body: { innerHTML: html },
+        };
+      }
+    };
+
+    const html = renderToStaticMarkup(
+      React.createElement(
+        MemoryRouter,
+        null,
+        React.createElement(ArticleContent, {
+          article: {
+            id: '1',
+            title: 'Maria Silva',
+            category: 'pessoa',
+            status: 'published',
+            created_at: '2024-01-01',
+            updated_at: '2024-01-02',
+            expires_at: '2025-01-01',
+            author_name: 'João Almeida',
+            author_institution: 'USP',
+            summary: 'Resumo do verbete.',
+            content_html: '<p>Texto do verbete.</p>',
+            keywords: ['história'],
+            metadata: {
+              works: [{ text: 'Obra principal de referência.' }],
+              sources: [{ text: 'Entrevista concedida em 2024.' }],
+              bibliography: [{ text: 'Bibliografia principal.' }],
+            },
+          },
+        })
+      )
+    );
+
+    expect(html).toContain('USP');
+    expect(html).toContain('Fontes');
   });
 });

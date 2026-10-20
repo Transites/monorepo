@@ -18,11 +18,14 @@ import {
   type ArticleFormFields,
 } from '@/lib/article-form';
 import { useAuth } from '@/contexts/AuthContext';
+import { SubmissionTermsDialog } from '@/components/SubmissionTermsDialog';
 
 export default function SubmitArticle() {
   const { user } = useAuth();
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [termsOpen, setTermsOpen] = useState(true);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Mesmos campos que ArticleEditor (+ e-mail de contato para submissão)
   const [title, setTitle] = useState('');
@@ -48,6 +51,7 @@ export default function SubmitArticle() {
   const [newKeyword, setNewKeyword] = useState('');
   const [bibliography, setBibliography] = useState<BibliographyItem[]>([]);
   const [works, setWorks] = useState<BibliographyItem[]>([]);
+  const [sources, setSources] = useState<BibliographyItem[]>([]);
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreviewUrl, setMediaPreviewUrl] = useState<string | null>(null);
   const [mediaUploading, setMediaUploading] = useState(false);
@@ -71,6 +75,7 @@ export default function SubmitArticle() {
       setKeywords([]);
       setBibliography([]);
       setWorks([]);
+      setSources([]);
       setBirthDate('');
       setBirthPlace('');
       setDeathDate('');
@@ -130,6 +135,7 @@ export default function SubmitArticle() {
 
   const updateBibliographyText = (value: string) => setBibliography(textToCitationItems(value));
   const updateWorksText = (value: string) => setWorks(textToCitationItems(value));
+  const updateSourcesText = (value: string) => setSources(textToCitationItems(value));
 
   // ── Funções de Mídia (imagem ou vídeo, um único arquivo) ───
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -176,10 +182,17 @@ export default function SubmitArticle() {
     setValidationErrors([]);
     setMediaError(null);
 
+    if (!termsAccepted) {
+      setTermsOpen(true);
+      setValidationErrors(['Você precisa ler e concordar com o termo editorial antes de enviar o verbete.']);
+      return;
+    }
+
     // Estruturando o metadata de acordo com o JSON esperado pelo banco
     const metadataPayload: any = {
       bibliography: bibliography.length > 0 ? bibliography : undefined,
       works: works.length > 0 ? works : undefined,
+      sources: sources.length > 0 ? sources : undefined,
     };
 
     if (category === 'pessoa') {
@@ -206,6 +219,7 @@ export default function SubmitArticle() {
       keywords,
       bibliography,
       works,
+      sources,
       metadata: metadataPayload, // Enviando os metadados gerados
     };
 
@@ -250,14 +264,28 @@ export default function SubmitArticle() {
 
       <main className="max-w-3xl mx-auto px-4 py-10 space-y-8">
         {/* Cabeçalho da Página */}
-        <div className="flex items-center justify-between border-b pb-4">
+        <div className="flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Submeter artigo</h1>
             <p className="text-sm text-muted-foreground mt-1">
               Preencha os campos abaixo para enviar seu verbete para a revisão editorial.
             </p>
           </div>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" onClick={() => setTermsOpen(true)}>
+              Ver termo
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              {termsAccepted ? 'Termo aceito' : 'Termo pendente'}
+            </span>
+          </div>
         </div>
+
+        <SubmissionTermsDialog
+          open={termsOpen}
+          onOpenChange={setTermsOpen}
+          onAgree={() => setTermsAccepted(true)}
+        />
 
         {/* Alertas de Feedback */}
         {submitSuccess && (
@@ -721,12 +749,31 @@ export default function SubmitArticle() {
 
           <Separator />
 
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label>Fontes</Label>
+            </div>
+
+            <textarea
+              value={citationItemsToText(sources)}
+              onChange={(e) => updateSourcesText(e.target.value)}
+              rows={6}
+              placeholder={'Uma fonte por linha\nEx.: Entrevista com o autor em 2024.\nEx.: Relatório oficial do município.'}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
+            />
+            <p className="text-xs text-muted-foreground">
+              Digite as fontes em linhas separadas. O campo também é livre e segue o mesmo padrão da bibliografia.
+            </p>
+          </div>
+
+          <Separator />
+
           {/* Barra de Ações Inferior */}
           <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between pt-4">
             <Button
               type="submit"
               size="lg"
-              disabled={mutation.isPending || mediaUploading}
+              disabled={mutation.isPending || mediaUploading || !termsAccepted}
               className="sm:min-w-[220px]"
             >
               {mediaUploading ? (

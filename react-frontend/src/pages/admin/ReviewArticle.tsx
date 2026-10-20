@@ -137,6 +137,7 @@ export default function ReviewArticle() {
   const [newKeyword, setNewKeyword] = useState('');
   const [bibliography, setBibliography] = useState<BibItem[]>([]);
   const [works, setWorks] = useState<BibItem[]>([]);
+  const [sources, setSources] = useState<BibItem[]>([]);
   const [notes, setNotes] = useState('');
 
   // campos editáveis de metadados
@@ -188,6 +189,7 @@ export default function ReviewArticle() {
 
       setBibliography(meta.bibliography ?? []);
       setWorks(meta.works ?? []);
+      setSources(meta.sources ?? []);
       setBirthDate(meta.birth?.date ?? '');
       setBirthPlace(meta.birth?.place ?? '');
       setDeathDate(meta.death?.date ?? '');
@@ -241,6 +243,7 @@ export default function ReviewArticle() {
     setBibliography(bibliography.filter((_, i) => i !== index));
   const updateBibliographyText = (value: string) => setBibliography(textToCitationItems(value));
   const updateWorksText = (value: string) => setWorks(textToCitationItems(value));
+  const updateSourcesText = (value: string) => setSources(textToCitationItems(value));
 
   // ── salvar sugestão ───────────────────────────────────────
   const sub = data?.submission; 
@@ -270,6 +273,7 @@ export default function ReviewArticle() {
         ...baseMetadata,
         bibliography: bibliography.length > 0 ? bibliography : undefined,
         works: works.length > 0 ? works : undefined,
+        sources: sources.length > 0 ? sources : undefined,
         occupation: occupations.length > 0 ? occupations : undefined,
         organizations: organizations.length > 0 ? organizations : undefined,
         alternativeNames: alternativeNames.length > 0 ? alternativeNames : undefined,
@@ -978,6 +982,22 @@ const formatStatus = (status: string) => {
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
               />
               <p className="text-xs text-muted-foreground">Liste as principais obras em linhas separadas.</p>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>Fontes</Label>
+              </div>
+              <textarea
+                value={citationItemsToText(sources)}
+                onChange={(e) => updateSourcesText(e.target.value)}
+                rows={6}
+                placeholder={'Uma fonte por linha\nEx.: Entrevista com o autor em 2024.\nEx.: Relatório oficial do município.'}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
+              />
+              <p className="text-xs text-muted-foreground">Digite as fontes em linhas separadas. O campo é livre e segue o padrão da bibliografia.</p>
             </div>
 
             <Separator />

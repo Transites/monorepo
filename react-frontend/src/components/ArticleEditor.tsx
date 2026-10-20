@@ -5,6 +5,7 @@ import { Input }         from '@/components/ui/input';
 import { Label }         from '@/components/ui/label';
 import { Separator }     from '@/components/ui/separator';
 import { Badge }         from '@/components/ui/badge';
+import { SubmissionTermsDialog } from '@/components/SubmissionTermsDialog';
 import { Submission, ArticleUpdateData, updateArticle, assignDoi, uploadSubmissionMedia, citationItemsToText, textToCitationItems } from '@/lib/api';
 
 interface ArticleEditorProps {
@@ -54,6 +55,7 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
     article.metadata?.bibliography ?? []
   );
   const [works, setWorks] = useState<BibItem[]>(article.metadata?.works ?? []);
+  const [sources, setSources] = useState<BibItem[]>(article.metadata?.sources ?? []);
   
   // Keywords são um array — precisam de lógica especial
   const [keywords,    setKeywords]    = useState<string[]>(article.keywords ?? []);
@@ -72,6 +74,8 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
   const [removeCurrentMedia, setRemoveCurrentMedia] = useState(false);
   const [mediaUploading, setMediaUploading] = useState(false);
   const [mediaError, setMediaError] = useState('');
+  const [termsOpen, setTermsOpen] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // Estado de salvamento
   const [isSaving,  setIsSaving]  = useState(false);
@@ -129,6 +133,7 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
 
   const updateBibliographyText = (value: string) => setBibliography(textToCitationItems(value));
   const updateWorksText = (value: string) => setWorks(textToCitationItems(value));
+  const updateSourcesText = (value: string) => setSources(textToCitationItems(value));
 
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
@@ -175,6 +180,13 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
     setIsSaving(true);
     setSaveError('');
 
+    if (!termsAccepted) {
+      setTermsOpen(true);
+      setSaveError('Você precisa ler e concordar com o termo editorial antes de salvar o verbete.');
+      setIsSaving(false);
+      return;
+    }
+
     try {
       const formatLifeEvent = (dateStr: string, placeStr: string) => {
         let formattedDate = '';
@@ -190,6 +202,7 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
         ...article.metadata,
         bibliography: bibliography.length > 0 ? bibliography : undefined,
         works: works.length > 0 ? works : undefined,
+        sources: sources.length > 0 ? sources : undefined,
         occupation: occupations.length > 0 ? occupations : undefined,
         organizations: organizations.length > 0 ? organizations : undefined,
         alternativeNames: alternativeNames.length > 0 ? alternativeNames : undefined,
@@ -280,16 +293,25 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
         {/* Barra de ações no topo */}
         <div className="flex items-center justify-between sticky top-0 bg-background/95 py-3 border-b z-10">
           <h2 className="text-lg font-semibold">Editando artigo</h2>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" onClick={() => setTermsOpen(true)}>
+              Ver termo
+            </Button>
             <Button variant="outline" onClick={onCancel} disabled={isSaving}>
               <X size={16} className="mr-1" /> Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
+            <Button onClick={handleSave} disabled={isSaving || !termsAccepted}>
               <Save size={16} className="mr-1" />
               {isSaving ? 'Salvando...' : 'Salvar'}
             </Button>
           </div>
         </div>
+
+        <SubmissionTermsDialog
+          open={termsOpen}
+          onOpenChange={setTermsOpen}
+          onAgree={() => setTermsAccepted(true)}
+        />
 
         {/* Erro de salvamento */}
         {saveError && (
@@ -673,6 +695,22 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
             />
             <p className="text-xs text-muted-foreground">Liste as principais obras em linhas separadas.</p>
+          </div>
+
+          <Separator />
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label>Fontes</Label>
+            </div>
+            <textarea
+              value={citationItemsToText(sources)}
+              onChange={(e) => updateSourcesText(e.target.value)}
+              rows={6}
+              placeholder={'Uma fonte por linha\nEx.: Entrevista com o autor em 2024.\nEx.: Relatório oficial do município.'}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
+            />
+            <p className="text-xs text-muted-foreground">Digite as fontes em linhas separadas. O campo é livre e segue o padrão da bibliografia.</p>
           </div>
 
         </div>
