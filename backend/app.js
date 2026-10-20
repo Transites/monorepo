@@ -39,7 +39,7 @@ const getCorsOrigin = () => {
     }
     
     if (!config.core.corsOrigin) {
-        return ['http://enciclopedia.iea.usp.br:8080'];
+        return ['https://enciclopedia.iea.usp.br'];
     }
     
     // If it's already an array, return as-is
@@ -53,7 +53,7 @@ const getCorsOrigin = () => {
     }
     
     // Fallback
-    return ['http://enciclopedia.iea.usp.br:8080'];
+    return ['https://enciclopedia.iea.usp.br'];
 };
 
 const corsOptions = {

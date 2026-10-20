@@ -30,6 +30,27 @@ const validateConfig = () => {
     validateRequiredVars(['CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET', 'CLOUDINARY_CLOUD_NAME'], 'Storage');
 };
 
+const normalizeFrontendUrl = (value) => {
+    const rawValue = (value || 'https://enciclopedia.iea.usp.br').trim();
+    const sanitized = rawValue.replace(/\/+$/, '');
+
+    if (!sanitized) {
+        return 'https://enciclopedia.iea.usp.br';
+    }
+
+    try {
+        const parsed = new URL(sanitized.includes('://') ? sanitized : `https://${sanitized}`);
+        parsed.port = '';
+        return parsed.origin;
+    } catch (error) {
+        return sanitized.replace(/:\d+$/, '');
+    }
+};
+
+if (process.env.FRONTEND_URL) {
+    process.env.FRONTEND_URL = normalizeFrontendUrl(process.env.FRONTEND_URL);
+}
+
 // Validate configuration on module load
 validateConfig();
 
@@ -78,7 +99,7 @@ module.exports = {
         secure: process.env.CLOUDINARY_SECURE === 'true',
     },
     app: {
-        frontendUrl: process.env.FRONTEND_URL || 'http://enciclopedia.iea.usp.br',
+        frontendUrl: normalizeFrontendUrl(process.env.FRONTEND_URL || 'https://enciclopedia.iea.usp.br'),
     },
     zenodo: {
         enabled: process.env.ZENODO_ENABLED === 'true',
