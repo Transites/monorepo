@@ -15,8 +15,8 @@ const AuthRoute = ({ children }: AuthRouteProps) => {
   }
 
   if (!isAuthenticated) {
-    {/* if the user is not logged in, redirect to login page */}
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+    const from = `${location.pathname}${location.search}${location.hash}`;
+    return <Navigate to="/login" state={{ from }} replace />;
   }
 
   return <>{children}</>;

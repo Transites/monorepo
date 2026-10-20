@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -22,8 +22,10 @@ type LoginValues = z.infer<typeof loginSchema>;
 const Login = () => {
   const { login, getAuthErrorMessage } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const from = (location.state as { from?: string } | null)?.from || "/";
 
   const {
     register,
@@ -38,7 +40,7 @@ const Login = () => {
     setAuthError(null);
     try {
       await login(values.email, values.password);
-      navigate("/"); // redirect home 
+      navigate(from || "/");
     } catch (error) {
       const message = getAuthErrorMessage(error)
       setAuthError(message);
