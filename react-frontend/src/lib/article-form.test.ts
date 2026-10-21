@@ -1,8 +1,13 @@
+// @vitest-environment jsdom
+
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { createRoot } from 'react-dom/client';
+import { act } from 'react-dom/test-utils';
 import { MemoryRouter } from 'react-router-dom';
 import ArticleContent from '../components/ArticleContent';
+import { ArticleEditor, syncMediaMetadataForSave } from '../components/ArticleEditor';
 import { buildSubmissionPayload, validateSubmissionForm } from './article-form';
 
 vi.mock('dompurify', () => ({
@@ -97,6 +102,79 @@ describe('buildSubmissionPayload', () => {
       bibliography: [{ text: 'LIMA, H. A. (2020). Texto livre de bibliografia.' }],
       sources: [{ text: 'Entrevista concedida em 2024.' }],
     });
+  });
+
+  it('keeps the current media caption, alternative text and credit when only metadata is edited without re-uploading the file', () => {
+    const nextMetadata = syncMediaMetadataForSave(
+      {
+        image: {
+          url: 'https://example.com/image.jpg',
+          publicId: 'img-123',
+          caption: 'Antiga legenda',
+          alternativeText: 'Texto antigo',
+          credit: 'Crédito antigo',
+        },
+      },
+      null,
+      'Nova legenda da imagem',
+      'Descrição acessível nova',
+      false,
+      undefined,
+      'Crédito novo da imagem'
+    );
+
+    expect(nextMetadata.image).toMatchObject({
+      url: 'https://example.com/image.jpg',
+      publicId: 'img-123',
+      caption: 'Nova legenda da imagem',
+      alternativeText: 'Descrição acessível nova',
+      credit: 'Crédito novo da imagem',
+    });
+  });
+
+  it('keeps the Save button enabled for edits to an existing verbete', async () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        React.createElement(ArticleEditor, {
+          article: {
+            id: 'article-1',
+            title: 'Maria Silva',
+            status: 'PUBLISHED',
+            category: 'pessoa',
+            created_at: '2024-01-01',
+            updated_at: '2024-01-02',
+            expires_at: '2025-01-01',
+            author_name: 'João Almeida',
+            author_institution: 'USP',
+            summary: 'Resumo do verbete.',
+            content: 'Texto do verbete.',
+            keywords: ['história'],
+            metadata: {
+              image: {
+                url: 'https://example.com/image.jpg',
+                publicId: 'img-123',
+                caption: 'Legenda atual',
+                alternativeText: 'Texto atual',
+              },
+            },
+          },
+          onSave: () => {},
+          onCancel: () => {},
+        })
+      );
+    });
+
+    const saveButton = Array.from(container.querySelectorAll('button')).find((button) => button.textContent?.includes('Salvar'));
+    expect(saveButton).toBeTruthy();
+    expect((saveButton as HTMLButtonElement).disabled).toBe(false);
+
+    root.unmount();
+    document.body.removeChild(container);
   });
 
   it('renders the institution and sources section on the final article page', () => {

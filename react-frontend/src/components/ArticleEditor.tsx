@@ -14,6 +14,71 @@ interface ArticleEditorProps {
   onCancel:  () => void;                    // chamado ao cancelar
 }
 
+export function syncMediaMetadataForSave(
+  currentMetadata: Record<string, any> | undefined,
+  uploadedMedia: { resourceType: 'image' | 'video'; url: string; publicId: string } | null,
+  mediaCaption: string,
+  mediaAlternativeText: string,
+  removeCurrentMedia: boolean,
+  forcedMediaType?: 'image' | 'video',
+  mediaCredit?: string
+): Record<string, any> {
+  const nextMetadata = { ...(currentMetadata ?? {}) };
+
+  if (removeCurrentMedia) {
+    delete nextMetadata.image;
+    delete nextMetadata.video;
+    return nextMetadata;
+  }
+
+  const currentMediaKey = forcedMediaType
+    ? forcedMediaType
+    : nextMetadata.image
+      ? 'image'
+      : nextMetadata.video
+        ? 'video'
+        : undefined;
+
+  if (!currentMediaKey && !uploadedMedia) {
+    return nextMetadata;
+  }
+
+  const mediaKey = uploadedMedia?.resourceType ?? currentMediaKey;
+  const currentMedia = nextMetadata[mediaKey] ?? {};
+  const normalizedCaption = mediaCaption.trim();
+  const normalizedAlt = mediaAlternativeText.trim();
+  const normalizedCredit = (mediaCredit ?? '').trim();
+
+  const updatedMedia = {
+    ...currentMedia,
+    ...(uploadedMedia ? {
+      url: uploadedMedia.url,
+      publicId: uploadedMedia.publicId,
+    } : {}),
+    ...(normalizedCaption ? { caption: normalizedCaption } : { caption: undefined }),
+    ...(normalizedAlt ? { alternativeText: normalizedAlt } : { alternativeText: undefined }),
+    ...(normalizedCredit ? { credit: normalizedCredit } : { credit: undefined }),
+  };
+
+  if (!normalizedCaption) {
+    delete updatedMedia.caption;
+  }
+
+  if (!normalizedAlt) {
+    delete updatedMedia.alternativeText;
+  }
+
+  if (!normalizedCredit) {
+    delete updatedMedia.credit;
+  }
+
+  delete nextMetadata.image;
+  delete nextMetadata.video;
+  nextMetadata[mediaKey] = updatedMedia;
+
+  return nextMetadata;
+}
+
 export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps) {
   // Cada campo do formulário é um estado separado.
   // Iniciamos com os valores atuais do artigo.
@@ -71,11 +136,14 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
   const [mediaAlternativeText, setMediaAlternativeText] = useState(
     article.metadata?.image?.alternativeText ?? article.metadata?.video?.alternativeText ?? ''
   );
+  const [mediaCredit, setMediaCredit] = useState(
+    article.metadata?.image?.credit ?? article.metadata?.video?.credit ?? ''
+  );
   const [removeCurrentMedia, setRemoveCurrentMedia] = useState(false);
   const [mediaUploading, setMediaUploading] = useState(false);
   const [mediaError, setMediaError] = useState('');
   const [termsOpen, setTermsOpen] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(Boolean(article.id));
 
   // Estado de salvamento
   const [isSaving,  setIsSaving]  = useState(false);
@@ -171,6 +239,7 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
     setMediaPreviewUrl(null);
     setMediaCaption('');
     setMediaAlternativeText('');
+    setMediaCredit('');
     setRemoveCurrentMedia(true);
     setMediaError('');
   };
@@ -180,7 +249,7 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
     setIsSaving(true);
     setSaveError('');
 
-    if (!termsAccepted) {
+    if (!termsAccepted && !article.id) {
       setTermsOpen(true);
       setSaveError('Você precisa ler e concordar com o termo editorial antes de salvar o verbete.');
       setIsSaving(false);
@@ -198,7 +267,7 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
         return [formattedDate, placeStr].filter(Boolean).join(', ');
       };
 
-      const updatedMetadata: any = {
+      let updatedMetadata: any = {
         ...article.metadata,
         bibliography: bibliography.length > 0 ? bibliography : undefined,
         works: works.length > 0 ? works : undefined,
@@ -227,24 +296,32 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
       // Limpa as chaves vazias explicitamente
       Object.keys(updatedMetadata).forEach(key => updatedMetadata[key] === undefined && delete updatedMetadata[key]);
 
-      if (removeCurrentMedia) {
-        delete updatedMetadata.image;
-        delete updatedMetadata.video;
-      }
-
       if (mediaFile) {
         setMediaUploading(true);
         const uploaded = await uploadSubmissionMedia(mediaFile);
-        const mediaPayload = {
-          url: uploaded.url,
-          publicId: uploaded.publicId,
-          caption: mediaCaption.trim() || undefined,
-          alternativeText: mediaAlternativeText.trim() || undefined,
-        };
-
-        delete updatedMetadata.image;
-        delete updatedMetadata.video;
-        updatedMetadata[uploaded.resourceType] = mediaPayload;
+        updatedMetadata = syncMediaMetadataForSave(
+          updatedMetadata,
+          {
+            resourceType: uploaded.resourceType,
+            url: uploaded.url,
+            publicId: uploaded.publicId,
+          },
+          mediaCaption,
+          mediaAlternativeText,
+          false,
+          mediaType,
+          mediaCredit
+        );
+      } else {
+        updatedMetadata = syncMediaMetadataForSave(
+          updatedMetadata,
+          null,
+          mediaCaption,
+          mediaAlternativeText,
+          removeCurrentMedia,
+          mediaType,
+          mediaCredit
+        );
       }
 
       // Monta só os campos que mudaram
@@ -631,6 +708,16 @@ export function ArticleEditor({ article, onSave, onCancel }: ArticleEditorProps)
                   placeholder="Descrição para acessibilidade"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="article-media-credit">Créditos da imagem</Label>
+              <Input
+                id="article-media-credit"
+                value={mediaCredit}
+                onChange={(e) => setMediaCredit(e.target.value)}
+                placeholder="Ex.: Acervo Histórico XYZ"
+              />
             </div>
 
             {mediaError && (
