@@ -13,6 +13,7 @@ export interface SearchState {
   isLoading: boolean;
   error: string | null;
   hasSearched: boolean;
+  page: number;
 }
 
 export function useSearch(options: UseSearchOptions = {}) {
@@ -29,20 +30,26 @@ export function useSearch(options: UseSearchOptions = {}) {
     results: null,
     isLoading: false,
     error: null,
-    hasSearched: false
+    hasSearched: false,
+    page: 1
   });
 
   const search = useCallback(async (
     searchTerm: string,
-    immediate = false
+    immediateOrPage: boolean | number = false,
+    maybePage = 1
   ) => {
+    const immediate = typeof immediateOrPage === 'boolean' ? immediateOrPage : true;
+    const page = typeof immediateOrPage === 'number' ? immediateOrPage : maybePage;
+    const normalizedPage = Number.isFinite(page) && page > 0 ? page : 1;
+
     // Clear previous debounce
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
 
     // Update query immediately
-    setState(prev => ({ ...prev, query: searchTerm }));
+    setState(prev => ({ ...prev, query: searchTerm, page: normalizedPage }));
 
     // Don't search empty terms
     if (!searchTerm.trim()) {
@@ -51,23 +58,26 @@ export function useSearch(options: UseSearchOptions = {}) {
         results: null,
         error: null,
         hasSearched: false,
-        isLoading: false
+        isLoading: false,
+        page: 1
       }));
       return;
     }
 
     const performSearch = async () => {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      setState(prev => ({ ...prev, isLoading: true, error: null, page: normalizedPage }));
 
       try {
-        const results = await apiSearch(searchTerm, { threshold, top });
+        const skip = (normalizedPage - 1) * top;
+        const results = await apiSearch(searchTerm, { threshold, top, skip });
 
         setState(prev => ({
           ...prev,
           results,
           isLoading: false,
           hasSearched: true,
-          error: null
+          error: null,
+          page: normalizedPage
         }));
 
       } catch (error) {
@@ -80,7 +90,8 @@ export function useSearch(options: UseSearchOptions = {}) {
           isLoading: false,
           error: errorMessage,
           hasSearched: true,
-          results: null
+          results: null,
+          page: normalizedPage
         }));
       }
     };
@@ -101,16 +112,17 @@ export function useSearch(options: UseSearchOptions = {}) {
       results: null,
       isLoading: false,
       error: null,
-      hasSearched: false
+      hasSearched: false,
+      page: 1
     });
   }, []);
 
   const setQuery = useCallback((query: string) => {
-    search(query);
+    search(query, false, 1);
   }, [search]);
 
-  const searchImmediate = useCallback((query: string) => {
-    search(query, true);
+  const searchImmediate = useCallback((query: string, page = 1) => {
+    search(query, true, page);
   }, [search]);
 
   // Cleanup on unmount
@@ -124,7 +136,8 @@ export function useSearch(options: UseSearchOptions = {}) {
 
   return {
     ...state,
-    search: searchImmediate,
+    search,
+    searchImmediate,
     setQuery,
     clearSearch,
     // Helper computed values

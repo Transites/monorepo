@@ -11,13 +11,15 @@ interface SearchResultsProps {
   query: string;
   isLoading?: boolean;
   onSubmissionClick?: (id: string) => void;
+  onPageChange?: (page: number) => void;
 }
 
 export function SearchResults({
   results,
   query,
   isLoading = false,
-  onSubmissionClick
+  onSubmissionClick,
+  onPageChange
 }: SearchResultsProps) {
   const navigate = useNavigate();
   if (isLoading) {
@@ -96,7 +98,7 @@ export function SearchResults({
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (
-        <PaginationControls pagination={pagination} />
+        <PaginationControls pagination={pagination} onPageChange={onPageChange} />
       )}
     </div>
   );
@@ -184,27 +186,64 @@ interface PaginationControlsProps {
     hasNext: boolean;
     hasPrev: boolean;
   };
+  onPageChange?: (page: number) => void;
 }
 
-function PaginationControls({ pagination }: PaginationControlsProps) {
+function PaginationControls({ pagination, onPageChange }: PaginationControlsProps) {
   return (
     <div className="flex items-center justify-center gap-2">
-      <Button 
-        variant="outline" 
+      <Button
+        type="button"
+        variant="outline"
         size="sm"
         disabled={!pagination.hasPrev}
+        onMouseDown={(event) => {
+          event.preventDefault();
+        }}
+        onPointerDown={(event) => {
+          event.preventDefault();
+        }}
+        onFocus={(event) => {
+          event.currentTarget.blur();
+        }}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (event.currentTarget && typeof event.currentTarget.blur === 'function') {
+            event.currentTarget.blur();
+          }
+          onPageChange?.(pagination.page - 1);
+        }}
       >
         Anterior
       </Button>
-      
+
       <span className="px-4 py-2 text-sm">
         Página {pagination.page} de {pagination.totalPages}
       </span>
-      
-      <Button 
-        variant="outline" 
+
+      <Button
+        type="button"
+        variant="outline"
         size="sm"
         disabled={!pagination.hasNext}
+        onMouseDown={(event) => {
+          event.preventDefault();
+        }}
+        onPointerDown={(event) => {
+          event.preventDefault();
+        }}
+        onFocus={(event) => {
+          event.currentTarget.blur();
+        }}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          if (event.currentTarget && typeof event.currentTarget.blur === 'function') {
+            event.currentTarget.blur();
+          }
+          onPageChange?.(pagination.page + 1);
+        }}
       >
         Próxima
       </Button>

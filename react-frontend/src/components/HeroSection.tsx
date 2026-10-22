@@ -37,8 +37,27 @@ const HeroSection = () => {
   ];
 
   const handleSuggestionClick = (suggestion: string) => {
-    setQuery(suggestion);
+    search(suggestion, true, 1);
     setShowResults(true);
+  };
+
+  const scrollToSearchBar = () => {
+    const searchSection = document.getElementById('pesquisar');
+    if (!searchSection) return;
+
+    const top = window.scrollY + searchSection.getBoundingClientRect().top - 100;
+    window.scrollTo({
+      top: Math.max(0, top),
+      behavior: 'auto'
+    });
+  };
+
+  const handlePageChange = (nextPage: number) => {
+    if (!query.trim()) return;
+    search(query, true, nextPage);
+    requestAnimationFrame(() => {
+      scrollToSearchBar();
+    });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -142,6 +161,7 @@ const HeroSection = () => {
                       results={results}
                       query={query}
                       isLoading={isLoading}
+                      onPageChange={handlePageChange}
                       onSubmissionClick={(id) => {
                         console.log('View submission:', id);
                         // Here you would navigate to the submission detail page
